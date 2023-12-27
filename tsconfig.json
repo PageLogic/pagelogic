@@ -1,4 +1,9 @@
 {
+  "include": ["src/**/*"],
+  "ts-node": {
+    "transpileOnly": true,
+    "transpiler": "ts-node/transpilers/swc-experimental"
+  },
   "compilerOptions": {
     /* Visit https://aka.ms/tsconfig to read more about this file */
 
