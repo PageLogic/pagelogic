@@ -6,7 +6,7 @@ import { getMarkup } from "./markup";
 import { CodeError } from "./types";
 import { array, fnExpression, literal, object, property } from "./utils";
 import { WebScopeProps } from "../runtime/web/scope";
-import { qualifyIdentifiers } from "./reference";
+import { compileValueRef, qualifyIdentifiers, validateValueRef } from "./reference";
 
 export interface Page {
   fname: string;
@@ -45,7 +45,7 @@ export class CodeCompiler {
 
   compilePage(logic: CodeLogic, ret: Page): Program {
     const root = logic.root!;
-    const ast = this.compileScope(root);
+    const ast = this.compileScope(root, ret);
     return {
       type: 'Program',
       body: [{
@@ -61,7 +61,7 @@ export class CodeCompiler {
   /**
    * @see WebScopeProps
    */
-  compileScope(s: CodeScope): ObjectExpression {
+  compileScope(s: CodeScope, page: Page): ObjectExpression {
     const ret = object(s.node);
     ret.properties.push(property('id', literal(s.id, s.node), s.node));
     if (s.name) {
@@ -71,7 +71,7 @@ export class CodeCompiler {
     if (s.values.length) {
       const valuesObject = object(s.node);
       for (let value of s.values) {
-        const valueObject = this.compileValue(value);
+        const valueObject = this.compileValue(value, s, page);
         const valueProperty = property(value.name, valueObject, value.node);
         valuesObject.properties.push(valueProperty);
       }
@@ -81,14 +81,14 @@ export class CodeCompiler {
     if (s.children.length) {
       const children = array(s.node);
       s.children.forEach(child => {
-        children.elements.push(this.compileScope(child));
+        children.elements.push(this.compileScope(child, page));
       });
       ret.properties.push(property('children', children, s.node));
     }
     return ret;
   }
 
-  compileValue(value: CodeValue): ObjectExpression {
+  compileValue(value: CodeValue, scope: CodeScope, page: Page): ObjectExpression {
     const ret = object(value.node);
     const exp = value.node.type === 'Literal'
         ? value.node
@@ -98,7 +98,20 @@ export class CodeCompiler {
     qualifyIdentifiers(value.name, fn.body as any, refs);
     ret.properties.push(property('exp', fn, value.node));
     if (refs.size) {
-      //TODO
+      const generated = new Set<string>();
+      const aa = array(value.node);
+      ret.properties.push(property('refs', aa, value.node));
+      for (let ref of refs) {
+        const parts = ref.split('.');
+        if (validateValueRef(page.errors, scope, parts, value)) {
+          const path = parts.join('.');
+          if (!generated.has(path)) {
+            generated.add(path);
+            const fn = compileValueRef(parts, value);
+            aa.elements.push(fn as any);
+          }
+        }
+      }
     }
     return ret;
   }

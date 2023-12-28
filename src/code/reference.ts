@@ -1,8 +1,9 @@
 import estraverse from "estraverse";
 import * as es from "estree";
-import { OUTER_KEY, RESERVED_PASSIVE_PREFIX } from "../runtime/core/context";
+import { OUTER_KEY, RESERVED_PASSIVE_PREFIX, VALUE_KEY } from "../runtime/core/context";
 import { CodeLogic, CodeScope, CodeValue } from "./logic";
 import { CodeError } from "./types";
+import { identifier, literal } from "./utils";
 
 export function qualifyIdentifiers(
   key: string | null, body: es.Node, references: Set<string>, locals?: Set<string>
@@ -166,8 +167,8 @@ export function qualifyIdentifiers(
   return ret;
 }
 
-function validateValueRef(
-  errors: CodeError[], scope: CodeScope, addLocation: boolean,
+export function validateValueRef(
+  errors: CodeError[], scope: CodeScope,
   refParts: string[], v: CodeValue
 ): boolean {
   let i, value: CodeValue | undefined;
@@ -228,4 +229,41 @@ function getScopeValue(scope: CodeScope, key: string): CodeValue | null {
     }
   }
   return null;
+}
+
+export function compileValueRef(
+  refParts: string[], v: CodeValue
+): es.FunctionExpression {
+  const parts = refParts.slice();
+  const argument = parts.pop()!;
+  parts.push(VALUE_KEY);
+
+  function chain(i: number, rootObj: es.Expression): es.MemberExpression {
+    return {
+      type: "MemberExpression",
+      computed: false,
+      optional: false,
+      object: i > 0 ? chain(i - 1, rootObj) : rootObj,
+      property: identifier(parts[i], v.node)
+    };
+  }
+
+  const dst: es.FunctionExpression = {
+    type: "FunctionExpression",
+    id: null,
+    params: [],
+    body: {
+      type: "BlockStatement",
+      body: [{
+        type: "ReturnStatement",
+        argument: {
+          type: "CallExpression",
+          optional: false,
+          callee: chain(parts.length - 1, { type: "ThisExpression" }),
+          arguments: [literal(argument, v.node) as any]
+        }
+      }]
+    }
+  };
+  return dst;
 }
