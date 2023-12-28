@@ -7,9 +7,9 @@ import { CodeLogic } from "../../src/code/logic";
 import { getMarkup } from "../../src/code/markup";
 
 const rootPath = path.join(__dirname, 'logic');
-const codeLoader = new CodeLoader(rootPath);
+const loader = new CodeLoader(rootPath);
 
-describe('compiler: logic', function () {
+describe('code: logic', function () {
   let count = 0;
   const limit = 1000;
 
@@ -23,8 +23,8 @@ describe('compiler: logic', function () {
       }
 
       test(file, async () => {
-        const pageIn = await codeLoader.load(file);
-        const logic = new CodeLogic(pageIn);
+        const source = await loader.load(file);
+        const logic = new CodeLogic(source);
 
         let json2: any;
         try {

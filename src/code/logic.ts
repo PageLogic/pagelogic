@@ -8,7 +8,7 @@ import {
   TEXT_VALUE_PREFIX,
   WILL_VALUE_PREFIX
 } from "../runtime/web/context";
-import { CodeSource } from "./types";
+import { CodeError, CodeSource } from "./types";
 import { addJSXAttribute, getJSXElementName } from "./utils";
 import {
   JSXAttribute,
@@ -20,10 +20,12 @@ import {
 
 export class CodeLogic {
   source: CodeSource;
+  errors: CodeError[];
   root?: CodeScope;
 
   constructor(source: CodeSource) {
     this.source = source;
+    this.errors = [];
     let count = 0;
     let currScope: CodeScope | null = null;
     const that = this;
