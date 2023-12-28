@@ -1,0 +1,26 @@
+{
+  "errors": [],
+  "root": {
+    "id": 0,
+    "name": "page",
+    "children": [
+      {
+        "id": 1,
+        "name": "head",
+        "children": [],
+        "values": {}
+      },
+      {
+        "id": 2,
+        "name": "body",
+        "children": [],
+        "values": {
+          "text$0": {
+            "val": "[[name]]"
+          }
+        }
+      }
+    ],
+    "values": {}
+  }
+}

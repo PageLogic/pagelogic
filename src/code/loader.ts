@@ -2,9 +2,9 @@ import { ExpressionStatement, Node, Program } from "acorn";
 import fs from "fs";
 import path from "path";
 import { CodeParser } from "./parser";
-import { CodeError, CodeErrorType, CodeSource, JSXElement, JSXText } from "./types";
+import { CodeError, CodeErrorType, CodeSource } from "./types";
 import { getJSXAttribute } from "./utils";
-import { walker } from "./walker";
+import { walker, JSXElement, JSXText } from "./walker";
 
 const MAX_NESTING = 100;
 const TAGS_PREFIX = ':';

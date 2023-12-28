@@ -20,25 +20,21 @@ export class CodeError {
   }
 }
 
-export interface JSXElement extends Node {
-  type: 'JSXElement';
-  openingElement: any;
-  attributes: JSXAttribute[];
-  children: Node[];
-}
+// export interface CodeLogic {
+//   page: CodeSource;
+//   root?: CodeScope;
+// }
 
-export interface JSXAttribute extends Node {
-  type: 'JSXAttribute';
-  name: JSXIdentifier;
-  value: any;
-}
+// export interface CodeScope {
+//   id: number;
+//   name?: string;
+//   isolate?: boolean;
+//   children: CodeScope[];
+//   values: { [key: string]: CodeValue };
+//   node: Node;
+// }
 
-export interface JSXIdentifier extends Node {
-  type: 'JSXIdentifier';
-  name: string;
-}
-
-export interface JSXText extends Node {
-  type: 'JSXText';
-  value: string;
-}
+// export interface CodeValue {
+//   val: string,
+//   node: Node;
+// }

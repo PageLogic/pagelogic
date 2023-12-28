@@ -1,0 +1,59 @@
+import fs from "fs";
+import path from "path";
+import assert from "node:assert";
+import { describe, test } from "node:test";
+import { CodeLoader } from "../../src/code/loader";
+import { CodeLogic } from "../../src/code/logic";
+
+const rootPath = path.join(__dirname, 'logic');
+const codeLoader = new CodeLoader(rootPath);
+
+describe('compiler: logic', function () {
+
+  fs.readdirSync(rootPath).forEach(file => {
+    if (
+      fs.statSync(path.join(rootPath, file)).isFile() &&
+      file.endsWith('-in.html')
+    ) {
+
+      test(file, async () => {
+        const pageIn = await codeLoader.load(file);
+        // let pageOut: HtmlDocument | undefined;
+        const json = JSON.parse((await fs.promises.readFile(
+          path.join(rootPath, file.replace(/(\-in\.html)$/, '.json'))
+        )).toString());
+        try {
+          const fname = path.join(rootPath, file.replace(/(\-in\.html)$/, '-out.html'));
+          const s = await fs.promises.readFile(fname, { encoding: 'utf8' });
+          // pageOut = htmlParse(s);
+        } catch (ignored: any) {}
+        // const logic = logicLoader(pageIn, false);
+        const logic = new CodeLogic(pageIn, false);
+        // delete (logic as any).page;
+        // // console.log(JSON.stringify(logic));
+        assert.deepEqual(logic.root, json);
+        // if (pageOut) {
+        //   removeLoc(pageIn.doc.children);
+        //   removeLoc(pageOut.children);
+        //   // console.log(serialize(pageIn.doc));
+        //   assert.equal(serialize(pageIn.doc), serialize(pageOut));
+        // }
+      });
+
+    }
+  });
+
+});
+
+// export function removeLoc(nn: HtmlNode[]) {
+//   for (let n of nn) {
+//     delete (n as any).loc;
+//     if (n.type === 'element') {
+//       const e = n as HtmlElement;
+//       for (let key of Reflect.ownKeys(e.attributes) as string[]) {
+//         delete (e.attributes[key] as any).loc;
+//       }
+//       removeLoc(e.children);
+//     }
+//   }
+// }
