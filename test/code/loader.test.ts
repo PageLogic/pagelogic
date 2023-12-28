@@ -1,7 +1,7 @@
 import fs from "fs";
-import path from "path";
-import { describe, test } from "node:test";
 import assert from "node:assert";
+import { describe, test } from "node:test";
+import path from "path";
 import { CodeLoader } from "../../src/code/loader";
 import { getMarkup } from "../../src/code/markup";
 
@@ -25,27 +25,22 @@ describe('code: loader', () => {
             file.endsWith('-in.html')
           ) {
 
-            // test(file, () => {
-            //   assert.strictEqual(1, 1);
-            // });
-            test(`should load ${file}`, async () => {
+            test(file, async () => {
               const source = await loader.load(file);
               if (source.errors.length) {
-                console.log(source.errors);
-                // const fname = file.replace('-in.html', '-err.json');
-                // const pname = path.join(dirPath, fname);
-                // const aerrs = source.errors.map(e => e.msg);
-                // let eerrs = [];
-                // try {
-                //   const etext = (await fs.promises.readFile(pname)).toString();
-                //   eerrs = JSON.parse(etext);
-                //   assert.deepEqual(aerrs, eerrs);
-                // } catch (e) {
-                //   assert.deepEqual(aerrs, eerrs);
-                // }
+                const fname = file.replace('-in.html', '-err.json');
+                const pname = path.join(dirPath, fname);
+                const aerrs = source.errors.map(e => e.msg);
+                let eerrs = [];
+                try {
+                  const etext = (await fs.promises.readFile(pname)).toString();
+                  eerrs = JSON.parse(etext);
+                  assert.deepEqual(aerrs, eerrs);
+                } catch (e) {
+                  assert.deepEqual(aerrs, eerrs);
+                }
               } else {
                 const actualHTML = getMarkup(source.ast!) + '\n';
-                // console.log(actualHTML);
                 const pname = path.join(rootPath, dir, file.replace('-in.', '-out.'));
                 const expectedHTML = await fs.promises.readFile(pname, { encoding: 'utf8' });
                 assert.equal(actualHTML, expectedHTML);

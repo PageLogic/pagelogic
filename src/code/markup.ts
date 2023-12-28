@@ -1,5 +1,4 @@
-import { CodeSource } from "./types";
-import { Program, Node, ExpressionStatement } from "acorn";
+import { Program } from "acorn";
 import walk from 'acorn-walk';
 
 require('acorn-jsx-walk').extend(walk.base);

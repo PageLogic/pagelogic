@@ -5,7 +5,7 @@ export function getJSXAttribute(node: JSXElement, name: string): string | undefi
   for (let attr of node.attributes) {
     if (
       attr.type === 'JSXAttribute' &&
-      attr.value?.type === 'StringLiteral'
+      attr.value?.type === 'Literal'
     ) {
       if (attr.name.name === name) {
         return attr.value.value;

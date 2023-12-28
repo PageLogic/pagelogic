@@ -1,9 +1,9 @@
+import { ExpressionStatement, Node, Program } from "acorn";
+import walk from 'acorn-walk';
 import fs from "fs";
 import path from "path";
-import { Program, Node, ExpressionStatement } from "acorn";
 import { CodeParser } from "./parser";
 import { CodeError, CodeErrorType, CodeSource, JSXElement, JSXText } from "./types";
-import walk from 'acorn-walk';
 import { getJSXAttribute } from "./utils";
 
 require('acorn-jsx-walk').extend(walk.base);

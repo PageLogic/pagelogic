@@ -16,7 +16,7 @@ export class CodeParser {
       p.acorn.isIdentifierStart = (ch: number) => {
         return /^[a-zA-Z_\:\$]$/.test(String.fromCharCode(ch));
       }
-      // jsx keeps a reference to p.acorn.isIdentifierStart
+      // jsx keeps a reference to the p.acorn.isIdentifierStart
       // it finds at instantiation
       const ret = jsx()(p);
       // by restoring the original function the rest of Acorn
