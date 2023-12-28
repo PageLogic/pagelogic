@@ -1,11 +1,11 @@
 import { Program } from "acorn";
-import { walker } from "./walker";
+import { walker, JSXOpeningElement } from "./walker";
 
 export function getMarkup(ast: Program): string {
   const sb = new Array<string>();
   walker.simple(ast, {
     // @ts-ignore
-    JSXOpeningElement(node, _) {
+    JSXOpeningElement(node: JSXOpeningElement, _) {
       if (node.name.type === 'JSXIdentifier' ||
           node.name.type === 'JSXNamespacedName') {
         sb.push('<');
@@ -22,12 +22,16 @@ export function getMarkup(ast: Program): string {
             sb.push(' ');
             sb.push(attr.name.name.toString());
             sb.push('="');
-            sb.push(escape(attr.value.value, '"'));
+            sb.push(escape(attr.value.value as string, '"'));
             sb.push('"');
           }
         }
         sb.push(node.selfClosing ? '/>' : '>');
       }
+    },
+    // @ts-ignore
+    JSXText(node, _) {
+      sb.push(node.value);
     },
     // @ts-ignore
     JSXClosingElement(node, _) {
@@ -37,10 +41,6 @@ export function getMarkup(ast: Program): string {
         sb.push(node.name.name.toString());
         sb.push('>');
       }
-    },
-    // @ts-ignore
-    JSXText(node, _) {
-      sb.push(node.value);
     },
   });
   return sb.join('');

@@ -1,17 +1,22 @@
 import { Literal } from "acorn";
-import { CodeSource } from "./types";
-import {
-  JSXAttribute, JSXExpressionContainer, JSXOpeningElement, JSXClosingElement,
-  walker
-} from "./walker";
+import { generate } from "escodegen";
 import {
   ATTR_VALUE_PREFIX, CLASS_VALUE_PREFIX, DID_VALUE_PREFIX, HANDLE_VALUE_PREFIX,
   ID_DATA_ATTR,
-  LOGIC_VALUE_PREFIX, ON_VALUE_PREFIX, STYLE_VALUE_PREFIX, TEXT_MARKER1_PREFIX, TEXT_MARKER2_PREFIX, TEXT_VALUE_PREFIX,
+  LOGIC_VALUE_PREFIX, ON_VALUE_PREFIX, STYLE_VALUE_PREFIX,
+  TEXT_MARKER1_PREFIX, TEXT_MARKER2_PREFIX,
+  TEXT_VALUE_PREFIX,
   WILL_VALUE_PREFIX
 } from "../runtime/web/context";
-import { generate } from "escodegen";
-import { addJSXAttribute } from "./utils";
+import { CodeSource } from "./types";
+import { addJSXAttribute, getJSXElementName } from "./utils";
+import {
+  JSXAttribute,
+  JSXClosingElement,
+  JSXExpressionContainer,
+  JSXOpeningElement,
+  walker,
+} from "./walker";
 
 export class CodeLogic {
   source: CodeSource;
@@ -39,13 +44,16 @@ export class CodeLogic {
           if (parent.type === 'JSXElement') {
             const id = currScope?.addTextValue(node);
             node.type = 'JSXText';
-            node.value = `<!--${TEXT_MARKER1_PREFIX}${id}--><!--${TEXT_MARKER2_PREFIX}${id}-->`;
+            node.value = `<!--${TEXT_MARKER1_PREFIX}${id}-->`
+                       + `<!--${TEXT_MARKER2_PREFIX}${id}-->`;
           }
         }
       },
       // @ts-ignore
       JSXClosingElement(node: JSXClosingElement, _, ancestors) {
-        if (node.name.name.toLowerCase() === currScope?.node.name.name.toLowerCase()) {
+        const name1 = currScope ? getJSXElementName(currScope.node) : null;
+        const name2 = getJSXElementName(node);
+        if (name1?.toLowerCase() === name2?.toLowerCase()) {
           currScope = currScope!.parent;
         }
       }
@@ -53,7 +61,10 @@ export class CodeLogic {
   }
 
   static needsScope(node: JSXOpeningElement): boolean {
-    if (AUTO_SCOPE_NAMES[node.name.name]) {
+    if (
+      node.name.type === 'JSXIdentifier' &&
+      AUTO_SCOPE_NAMES[node.name.name]
+    ) {
       return true;
     }
     for (let attr of node.attributes) {
@@ -99,7 +110,9 @@ export class CodeScope {
     if (parent) {
       parent.children.push(this);
     }
-    this.name = AUTO_SCOPE_NAMES[node.name.name.toLowerCase()];
+    if (node.name.type === 'JSXIdentifier') {
+      this.name = AUTO_SCOPE_NAMES[node.name.name.toLowerCase()];
+    }
     const obsolete = new Array<number>();
     for (let i = 0; i < node.attributes.length; i++) {
       const attr = node.attributes[i];

@@ -14,13 +14,13 @@ export interface JSXElement extends Node {
 export interface JSXOpeningElement extends Node {
   type: 'JSXOpeningElement';
   attributes: JSXAttribute[];
-  name: JSXIdentifier;
+  name: JSXIdentifier | JSXNamespacedName;
   selfClosing?: boolean;
 }
 
 export interface JSXClosingElement extends Node {
   type: 'JSXClosingElement';
-  name: JSXIdentifier;
+  name: JSXIdentifier | JSXNamespacedName;
 }
 
 export interface JSXAttribute extends Node {
@@ -37,6 +37,12 @@ export interface JSXExpressionContainer extends Node {
 export interface JSXIdentifier extends Node {
   type: 'JSXIdentifier';
   name: string;
+}
+
+export interface JSXNamespacedName extends Node {
+  type: 'JSXNamespacedName';
+  namespace: JSXIdentifier;
+  name: JSXIdentifier;
 }
 
 export interface JSXText extends Node {
