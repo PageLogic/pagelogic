@@ -18,7 +18,10 @@
         x: {
           exp: function () {
             return this.y + '!';
-          }
+          },
+          refs: [function () {
+              return this.$value('y');
+            }]
         }
       }
     }

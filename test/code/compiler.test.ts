@@ -5,13 +5,16 @@ import { describe, test } from "node:test";
 import { CodeCompiler } from "../../src/code/compiler";
 import { CodeLogic } from "../../src/code/logic";
 import { getMarkup } from "../../src/code/markup";
+import { Node, parse } from "acorn";
+import { walker } from "../../src/code/walker";
+import { generate } from "escodegen";
 
 const rootPath = path.join(__dirname, 'compiler');
 const compiler = new CodeCompiler(rootPath);
 
 describe('code: compiler', function () {
   let count = 0;
-  const limit = 1;
+  const limit = 1000;
 
   fs.readdirSync(rootPath).forEach(file => {
     if (
@@ -24,17 +27,48 @@ describe('code: compiler', function () {
 
       test(file, async () => {
         const page = await compiler.compile(file);
+        if (page.errors.length) {
+          console.log(page.errors);
+        }
         assert.equal(page.errors.length, 0);
         assert.ok(page.markup);
         assert.ok(page.code);
-        console.log(page.markup);
-        console.log(page.code);
+        // console.log(page.markup);
+        // console.log(page.code);
+        let markup: string | null = null;
         try {
-          
+          const fname = file.replace('-in.html', '-out.html');
+          const pname = path.join(rootPath, fname);
+          markup = await fs.promises.readFile(pname, { encoding: 'utf8' });
         } catch (ignored: any) {}
+        if (markup) {
+          assert.equal(page.markup + '\n', markup);
+        }
+        let code: string | null = null;
+        try {
+          const fname = file.replace('-in.html', '.js');
+          const pname = path.join(rootPath, fname);
+          code = await fs.promises.readFile(pname, { encoding: 'utf8' });
+        } catch (ignored: any) {}
+        if (code) {
+          assert.equal(
+            generate(parse(page.code, { ecmaVersion: 'latest' })),
+            generate(parse(code, { ecmaVersion: 'latest' }))
+          );
+        }
       });
 
     }
   });
 
 });
+
+// function removePos(ast: Node): Node {
+//   walker.full(ast, ((node: any) => {
+//     delete node.start;
+//     delete node.end;
+//     delete node.range;
+//     delete node.loc;
+//   }));
+//   return ast;
+// }

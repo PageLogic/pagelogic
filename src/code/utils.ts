@@ -1,4 +1,4 @@
-import { Program, Node } from "acorn";
+import { Program, Node, ObjectExpression, Expression, Property, Identifier, ArrayExpression, Literal, FunctionExpression } from "acorn";
 import { JSXClosingElement, JSXElement, JSXOpeningElement } from "./walker";
 
 export function getJSXAttribute(
@@ -71,3 +71,70 @@ export function getJSXElementName(
 //         : undefined;
 //   }
 // }
+
+export function object(ref: Node): ObjectExpression {
+  return {
+    type: 'ObjectExpression',
+    properties: [],
+    start: ref.start, end: ref.end, loc: ref.loc
+  }
+}
+
+export function property(key: string, val: Expression, ref: Node): Property {
+  return {
+    type: 'Property',
+    method: false,
+    shorthand: false,
+    computed: false,
+    key: identifier(key, ref),
+    value: val,
+    kind: 'init',
+    start: ref.start, end: ref.end, loc: ref.loc
+  }
+}
+
+export function identifier(key: string, ref: Node): Identifier {
+  return {
+    type: 'Identifier',
+    name: key,
+    start: ref.start, end: ref.end, loc: ref.loc
+  }
+}
+
+export function array(ref: Node): ArrayExpression {
+  return {
+    type: 'ArrayExpression',
+    elements: [],
+    start: ref.start, end: ref.end, loc: ref.loc
+  }
+}
+
+export function literal(value: any, ref: Node): Literal {
+  return {
+    type: 'Literal',
+    value,
+    start: ref.start, end: ref.end, loc: ref.loc
+  }
+}
+
+export function fnExpression(exp: Literal | Expression, ref: Node): FunctionExpression {
+  return {
+    type: 'FunctionExpression',
+    expression: false,
+    generator: false,
+    async: false,
+    params: [],
+    body: {
+      type: 'BlockStatement',
+      body: [
+        {
+          type: 'ReturnStatement',
+          argument: exp,
+          start: ref.start, end: ref.end, loc: ref.loc
+        }
+      ],
+      start: ref.start, end: ref.end, loc: ref.loc
+    },
+    start: ref.start, end: ref.end, loc: ref.loc
+  }
+}

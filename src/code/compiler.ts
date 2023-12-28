@@ -1,9 +1,11 @@
-import { ArrayExpression, Expression, Identifier, Node, ObjectExpression, Program, Property } from "acorn";
-import { CodeLoader } from "./loader";
-import { CodeLogic, CodeScope } from "./logic";
-import { CodeError } from "./types";
-import { getMarkup } from "./markup";
+import { ObjectExpression, Program } from "acorn";
 import { generate } from "escodegen";
+import { CodeLoader } from "./loader";
+import { CodeLogic, CodeScope, CodeValue } from "./logic";
+import { getMarkup } from "./markup";
+import { CodeError } from "./types";
+import { array, fnExpression, literal, object, property } from "./utils";
+import { WebScopeProps } from "../runtime/web/scope";
 
 export interface Page {
   fname: string;
@@ -42,68 +44,56 @@ export class CodeCompiler {
 
   compilePage(logic: CodeLogic, ret: Page): Program {
     const root = logic.root!;
+    const ast = this.compileScope(root);
     return {
       type: 'Program',
       body: [{
         type: 'ExpressionStatement',
-        expression: this.compileScope(root),
-        start: root.node.start,
-        end: root.node.end,
-        loc: root.node.loc
+        expression: ast,
+        start: root.node.start, end: root.node.end, loc: root.node.loc
       }],
       sourceType: 'script',
-      start: root.node.start,
-      end: root.node.end,
-      loc: root.node.loc
+      start: root.node.start, end: root.node.end, loc: root.node.loc
     }
   }
 
-  compileScope(scope: CodeScope): ObjectExpression {
-    const ret = object(scope.node);
-    if (scope.children.length) {
-      const children = array(scope.node);
-      scope.children.forEach(child => {
+  /**
+   * @see WebScopeProps
+   */
+  compileScope(s: CodeScope): ObjectExpression {
+    const ret = object(s.node);
+    ret.properties.push(property('id', literal(s.id, s.node), s.node));
+    if (s.name) {
+      ret.properties.push(property('name', literal(s.name, s.node), s.node));
+    }
+    // values
+    if (s.values.length) {
+      const valuesObject = object(s.node);
+      for (let value of s.values) {
+        const valueObject = this.compileValue(value);
+        const valueProperty = property(value.name, valueObject, value.node);
+        valuesObject.properties.push(valueProperty);
+      }
+      ret.properties.push(property('values', valuesObject, s.node));
+    }
+    // children
+    if (s.children.length) {
+      const children = array(s.node);
+      s.children.forEach(child => {
         children.elements.push(this.compileScope(child));
       });
-      ret.properties.push(property('children', children, scope.node));
+      ret.properties.push(property('children', children, s.node));
     }
     return ret;
   }
-}
 
-function object(ref: Node): ObjectExpression {
-  return {
-    type: 'ObjectExpression',
-    properties: [],
-    start: ref.start, end: ref.end, loc: ref.loc
-  }
-}
-
-function property(key: string, val: Expression, ref: Node): Property {
-  return {
-    type: 'Property',
-    method: false,
-    shorthand: false,
-    computed: false,
-    key: identifier(key, ref),
-    value: val,
-    kind: 'init',
-    start: ref.start, end: ref.end, loc: ref.loc
-  }
-}
-
-function identifier(key: string, ref: Node): Identifier {
-  return {
-    type: 'Identifier',
-    name: key,
-    start: ref.start, end: ref.end, loc: ref.loc
-  }
-}
-
-function array(ref: Node): ArrayExpression {
-  return {
-    type: 'ArrayExpression',
-    elements: [],
-    start: ref.start, end: ref.end, loc: ref.loc
+  compileValue(value: CodeValue): ObjectExpression {
+    const ret = object(value.node);
+    const exp = value.node.type === 'Literal'
+        ? value.node
+        : value.node.expression;
+    const fn = fnExpression(exp, value.node);
+    ret.properties.push(property('exp', fn, value.node));
+    return ret;
   }
 }
