@@ -16,6 +16,25 @@ export function getJSXAttribute(
   }
 }
 
+export function addJSXAttribute(
+  node: JSXOpeningElement, name: string, value: string
+) {
+  node.attributes.push({
+    type: 'JSXAttribute',
+    name: {
+      type: 'JSXIdentifier',
+      name: name,
+      start: node.start, end: node.end, loc: node.loc
+    },
+    value: {
+      type: 'Literal',
+      value: value,
+      start: node.start, end: node.end, loc: node.loc
+    },
+    start: node.start, end: node.end, loc: node.loc
+  });
+}
+
 export class Stack<T> {
   stack: T[];
 

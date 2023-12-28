@@ -1,22 +1,6 @@
 {
-  "errors": [],
-  "root": {
-    "id": 0,
-    "children": [
-      {
-        "id": 1,
-        "children": [],
-        "values": {},
-        "name": "head"
-      },
-      {
-        "id": 2,
-        "children": [],
-        "values": {},
-        "name": "body"
-      }
-    ],
-    "values": {},
-    "name": "app"
-  }
+  "id": 0,
+  "children": [],
+  "values": [],
+  "name": "app"
 }

@@ -1,11 +1,17 @@
 import { Literal } from "acorn";
 import { CodeSource } from "./types";
-import { JSXAttribute, JSXElement, JSXExpressionContainer, JSXIdentifier, JSXOpeningElement, walker } from "./walker";
+import {
+  JSXAttribute, JSXExpressionContainer, JSXOpeningElement, JSXClosingElement,
+  walker
+} from "./walker";
 import {
   ATTR_VALUE_PREFIX, CLASS_VALUE_PREFIX, DID_VALUE_PREFIX, HANDLE_VALUE_PREFIX,
-  LOGIC_VALUE_PREFIX, ON_VALUE_PREFIX, STYLE_VALUE_PREFIX, TEXT_VALUE_PREFIX,
+  ID_DATA_ATTR,
+  LOGIC_VALUE_PREFIX, ON_VALUE_PREFIX, STYLE_VALUE_PREFIX, TEXT_MARKER1_PREFIX, TEXT_MARKER2_PREFIX, TEXT_VALUE_PREFIX,
   WILL_VALUE_PREFIX
 } from "../runtime/web/context";
+import { generate } from "escodegen";
+import { addJSXAttribute } from "./utils";
 
 export class CodeLogic {
   source: CodeSource;
@@ -18,10 +24,11 @@ export class CodeLogic {
     const that = this;
     walker.ancestor(this.source.ast!, {
       // @ts-ignore
-      JSXOpeningElement(node, _, ancestors) {
+      JSXOpeningElement(node: JSXOpeningElement, _, ancestors) {
         if (CodeLogic.needsScope(node)) {
           currScope = new CodeScope(currScope, node, count++);
           currScope.parent || (that.root = currScope);
+          addJSXAttribute(node, ID_DATA_ATTR, `${currScope.id}`);
           node.selfClosing && (currScope = currScope.parent);
         }
       },
@@ -30,13 +37,15 @@ export class CodeLogic {
         if (ancestors.length > 1) {
           const parent = ancestors[ancestors.length - 2];
           if (parent.type === 'JSXElement') {
-            currScope?.addTextValue(node);
+            const id = currScope?.addTextValue(node);
+            node.type = 'JSXText';
+            node.value = `<!--${TEXT_MARKER1_PREFIX}${id}--><!--${TEXT_MARKER2_PREFIX}${id}-->`;
           }
         }
       },
       // @ts-ignore
-      JSXClosingElement(node, _, ancestors) {
-        if (node === currScope?.node) {
+      JSXClosingElement(node: JSXClosingElement, _, ancestors) {
+        if (node.name.name.toLowerCase() === currScope?.node.name.name.toLowerCase()) {
           currScope = currScope!.parent;
         }
       }
@@ -90,11 +99,15 @@ export class CodeScope {
     if (parent) {
       parent.children.push(this);
     }
-    for (let attr of node.attributes) {
+    this.name = AUTO_SCOPE_NAMES[node.name.name.toLowerCase()];
+    const obsolete = new Array<number>();
+    for (let i = 0; i < node.attributes.length; i++) {
+      const attr = node.attributes[i];
       if (CodeLogic.isValueAttribute(attr)) {
         const attrName = attr.name.name;
         if (attrName === AKA_ATTR && attr.value.type === 'Literal') {
           this.name = attr.value.value as string;
+          obsolete.push(i);
           continue;
         }
         for (let p of VALUE_PREFIXES) {
@@ -103,17 +116,23 @@ export class CodeScope {
             if (p.out !== null) {
               const valueName = p.out + attrName.substring(res[1].length);
               this.values.push(new CodeValue(this, valueName, attr.value));
+              obsolete.push(i);
             }
             break;
           }
         }
       }
     }
+    for (let i = 0; i < obsolete.length; i++) {
+      node.attributes.splice(obsolete[i] - i, 1);
+    }
   }
 
-  addTextValue(node: JSXExpressionContainer) {
-    const name = `${TEXT_VALUE_PREFIX}${this.textCount++}`;
+  addTextValue(node: JSXExpressionContainer): number {
+    const id = this.textCount++;
+    const name = `${TEXT_VALUE_PREFIX}${id}`;
     this.values.push(new CodeValue(this, name, node))
+    return id;
   }
 
   toJSON() {
@@ -140,7 +159,7 @@ const VALUE_PREFIXES = [
   { in: /^(\:did\-)[\w\-]+$/, out: DID_VALUE_PREFIX },
   { in: /^(\:will\-)[\w\-]+$/, out: WILL_VALUE_PREFIX },
   { in: /^(\:)[\w\-]+$/, out: LOGIC_VALUE_PREFIX },
-  { in: /^[\w\-]+$/, out: ATTR_VALUE_PREFIX },
+  { in: /^()[\w\-]+$/, out: ATTR_VALUE_PREFIX },
 ]
 
 export class CodeValue {
@@ -159,7 +178,9 @@ export class CodeValue {
       name: this.name
     };
     if (this.node.type === 'Literal') {
-      ret.name = this.node.value as string;
+      ret.value = this.node.value as string;
+    } else {
+      ret.code = generate(this.node.expression);
     }
     return ret;
   }
