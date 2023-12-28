@@ -1,12 +1,10 @@
 import { Program } from "acorn";
-import walk from 'acorn-walk';
-
-require('acorn-jsx-walk').extend(walk.base);
+import { walker } from "./walker";
 
 // https://babeljs.io/docs/babel-traverse
 export function getMarkup(ast: Program): string {
   const sb = new Array<string>();
-  walk.simple(ast, {
+  walker.simple(ast, {
     // @ts-ignore
     JSXOpeningElement(node, _) {
       if (node.name.type === 'JSXIdentifier' ||

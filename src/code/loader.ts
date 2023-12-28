@@ -1,12 +1,10 @@
 import { ExpressionStatement, Node, Program } from "acorn";
-import walk from 'acorn-walk';
 import fs from "fs";
 import path from "path";
 import { CodeParser } from "./parser";
 import { CodeError, CodeErrorType, CodeSource, JSXElement, JSXText } from "./types";
 import { getJSXAttribute } from "./utils";
-
-require('acorn-jsx-walk').extend(walk.base);
+import { walker } from "./walker";
 
 const MAX_NESTING = 100;
 const TAGS_PREFIX = ':';
@@ -101,7 +99,7 @@ export class CodeLoader {
   ) {
     const directives = new Array<Directive>();
     // https://github.com/acornjs/acorn/blob/master/acorn-walk/README.md
-    walk.ancestor(program, {
+    walker.ancestor(program, {
       // @ts-ignore
       JSXElement(node, _, ancestors) {
         const parent = (ancestors.length > 1 ? ancestors[ancestors.length - 2] : null);
@@ -118,8 +116,8 @@ export class CodeLoader {
     });
     for (let d of directives) {
       const i = d.parent.children.indexOf(d.node);
-      i >= 0 && d.parent.children.splice(i, 1);
       if (d.name === INCLUDE_TAG || d.name === IMPORT_TAG) {
+        i >= 0 && d.parent.children.splice(i, 1);
         await this.processInclude(d, i, currDir, source, nesting);
       } else {
         source.errors.push(new CodeError(
