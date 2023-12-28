@@ -5,7 +5,7 @@ export const DATA_KEY = 'data';
 export const RESERVED_PASSIVE_PREFIX = '$';
 export const SCOPE_KEY = '$scope';
 export const OUTER_KEY = '$outer';
-export const PRINT_KEY = '$print';
+// export const PRINT_KEY = '$print';
 export const VALUE_KEY = '$value';
 
 export interface ContextProps {

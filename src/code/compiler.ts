@@ -6,6 +6,7 @@ import { getMarkup } from "./markup";
 import { CodeError } from "./types";
 import { array, fnExpression, literal, object, property } from "./utils";
 import { WebScopeProps } from "../runtime/web/scope";
+import { qualifyIdentifiers } from "./reference";
 
 export interface Page {
   fname: string;
@@ -93,7 +94,12 @@ export class CodeCompiler {
         ? value.node
         : value.node.expression;
     const fn = fnExpression(exp, value.node);
+    const refs = new Set<string>();
+    qualifyIdentifiers(value.name, fn.body as any, refs);
     ret.properties.push(property('exp', fn, value.node));
+    if (refs.size) {
+      //TODO
+    }
     return ret;
   }
 }
