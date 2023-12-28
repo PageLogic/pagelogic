@@ -1,7 +1,6 @@
 import { Program } from "acorn";
 import { walker } from "./walker";
 
-// https://babeljs.io/docs/babel-traverse
 export function getMarkup(ast: Program): string {
   const sb = new Array<string>();
   walker.simple(ast, {
