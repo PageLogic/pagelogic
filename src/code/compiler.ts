@@ -27,6 +27,7 @@ export class CodeCompiler {
   async compile(fname: string): Promise<Page> {
     const ret: Page = { fname, files: [], errors: [] };
     const source = await this.loader.load(fname);
+    ret.files.splice(0, 0, ...source.files);
     if (source.errors.length > 0) {
       ret.errors.splice(0, 0, ...source.errors);
       return ret;

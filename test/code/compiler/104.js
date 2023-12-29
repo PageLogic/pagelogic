@@ -1,9 +1,9 @@
 ({
-  id: '0',
+  id: 0,
   name: 'page',
   children: [
     {
-      id: '1',
+      id: 1,
       name: 'head',
       values: {
         y: {
@@ -14,12 +14,12 @@
       }
     },
     {
-      id: '2',
+      id: 2,
       name: 'body',
       values: {
         x: {
           exp: function () {
-            return this.$print(this.head.y.z) + '!';
+            return this.head.y.z + '!';
           },
           refs: [function () {
               return this.head.$value('y');

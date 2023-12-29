@@ -27,34 +27,46 @@ describe('code: compiler', function () {
 
       test(file, async () => {
         const page = await compiler.compile(file);
-        if (page.errors.length) {
-          console.log(page.errors);
-        }
-        assert.equal(page.errors.length, 0);
-        assert.ok(page.markup);
-        assert.ok(page.code);
-        // console.log(page.markup);
-        // console.log(page.code);
-        let markup: string | null = null;
+
+        // check errors
+        let errors: string[] = [];
         try {
-          const fname = file.replace('-in.html', '-out.html');
+          const fname = file.replace('-in.html', '-err.json');
           const pname = path.join(rootPath, fname);
-          markup = await fs.promises.readFile(pname, { encoding: 'utf8' });
+          const text = await fs.promises.readFile(pname, { encoding: 'utf8' });
+          errors = JSON.parse(text);
         } catch (ignored: any) {}
-        if (markup) {
-          assert.equal(page.markup + '\n', markup);
-        }
-        let code: string | null = null;
-        try {
-          const fname = file.replace('-in.html', '.js');
-          const pname = path.join(rootPath, fname);
-          code = await fs.promises.readFile(pname, { encoding: 'utf8' });
-        } catch (ignored: any) {}
-        if (code) {
-          assert.equal(
-            generate(parse(page.code, { ecmaVersion: 'latest' })),
-            generate(parse(code, { ecmaVersion: 'latest' }))
-          );
+        assert.deepEqual(page.errors.map(e => e.msg), errors);
+
+        if (!page.errors.length) {
+          // check markup
+          // console.log(page.markup);
+          assert.ok(page.markup);
+          let markup: string | null = null;
+          try {
+            const fname = file.replace('-in.html', '-out.html');
+            const pname = path.join(rootPath, fname);
+            markup = await fs.promises.readFile(pname, { encoding: 'utf8' });
+          } catch (ignored: any) {}
+          if (markup) {
+            assert.equal(page.markup + '\n', markup);
+          }
+
+          // check code
+          // console.log(page.code);
+          assert.ok(page.code);
+          let code: string | null = null;
+          try {
+            const fname = file.replace('-in.html', '.js');
+            const pname = path.join(rootPath, fname);
+            code = await fs.promises.readFile(pname, { encoding: 'utf8' });
+          } catch (ignored: any) {}
+          if (code) {
+            assert.equal(
+              generate(parse(page.code, { ecmaVersion: 'latest' })),
+              generate(parse(code, { ecmaVersion: 'latest' }))
+            );
+          }
         }
       });
 

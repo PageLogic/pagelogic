@@ -1,18 +1,18 @@
 ({
-  id: '0',
+  id: 0,
   name: 'page',
   children: [
     {
-      id: '1',
+      id: 1,
       name: 'head'
     },
     {
-      id: '2',
+      id: 2,
       name: 'body',
       values: {
         x: {
           exp: function () {
-            return this.$print(this.y) + '!';
+            return this.y + '!';
           },
           refs: [function () {
               return this.$value('y');
