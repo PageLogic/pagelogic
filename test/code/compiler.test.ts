@@ -1,16 +1,13 @@
+import { parse } from "acorn";
+import { generate } from "escodegen";
 import fs from "fs";
-import path from "path";
 import assert from "node:assert";
 import { describe, test } from "node:test";
+import path from "path";
 import { CodeCompiler } from "../../src/code/compiler";
-import { CodeLogic } from "../../src/code/logic";
-import { getMarkup } from "../../src/code/markup";
-import { Node, parse } from "acorn";
-import { walker } from "../../src/code/walker";
-import { generate } from "escodegen";
 
 const rootPath = path.join(__dirname, 'compiler');
-const compiler = new CodeCompiler(rootPath, { addDocType: true });
+const compiler = new CodeCompiler(rootPath);
 
 describe('code: compiler', function () {
   let count = 0;
@@ -74,13 +71,3 @@ describe('code: compiler', function () {
   });
 
 });
-
-// function removePos(ast: Node): Node {
-//   walker.full(ast, ((node: any) => {
-//     delete node.start;
-//     delete node.end;
-//     delete node.range;
-//     delete node.loc;
-//   }));
-//   return ast;
-// }

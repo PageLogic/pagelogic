@@ -29,7 +29,11 @@ export class CodeCompiler {
 
   constructor(rootPath: string, props?: CodeCompilerProps) {
     this.loader = new CodeLoader(rootPath);
-    this.props = props || {};
+    this.props = {
+      addDocType: true,
+      addSourceMap: false,
+      ...(props || {})
+    }
   }
 
   async compile(fname: string): Promise<Page> {
