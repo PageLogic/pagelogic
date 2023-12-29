@@ -1,8 +1,9 @@
 import { Program } from "acorn";
 import { walker, JSXOpeningElement } from "./walker";
 
-export function getMarkup(ast: Program): string {
+export function getMarkup(ast: Program, addDoctype = false): string {
   const sb = new Array<string>();
+  addDoctype && sb.push('<!DOCTYPE html>\n');
   walker.simple(ast, {
     // @ts-ignore
     JSXOpeningElement(node: JSXOpeningElement, _) {

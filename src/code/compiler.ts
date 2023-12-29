@@ -24,7 +24,7 @@ export class CodeCompiler {
     this.loader = new CodeLoader(rootPath);
   }
 
-  async compile(fname: string): Promise<Page> {
+  async compile(fname: string, addDocType = true): Promise<Page> {
     const ret: Page = { fname, files: [], errors: [] };
     const source = await this.loader.load(fname);
     ret.files.splice(0, 0, ...source.files);
@@ -39,7 +39,7 @@ export class CodeCompiler {
     }
     const program = this.compilePage(logic, ret);
     if (!ret.errors.length) {
-      ret.markup = getMarkup(source.ast!);
+      ret.markup = getMarkup(source.ast!, addDocType);
       ret.code = generate(program);
     }
     return ret;
