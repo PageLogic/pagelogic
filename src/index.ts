@@ -14,7 +14,7 @@ program.command('build')
   .description('builds a PageLogic project')
   .argument('<src-dir>')
   .option('-o, --out-dir <dst-dir>')
-  .action(async (srcDir, options) => {
+  .action(async (srcDir: string, options: any) => {
     const srcPath = path.normalize(path.join(process.cwd(), srcDir));
     // const dstPath = path.normalize(path.join(process.cwd(), dstDir));
     let dstPath = srcPath;
@@ -29,14 +29,40 @@ program.command('build')
       console.error(`${dstPath} is not a directory`);
       return;
     }
-    const compiler = new CodeCompiler(srcPath);
-    const files = await compiler.list('.pl.html');
+    const compiler = new CodeCompiler(srcPath, { addSourceMap: true });
+    const files = await compiler.list('.html');
     for (let fname of files) {
-      const res = await compiler.compile(fname);
-      for (let e of res.errors) {
-        const source = e.from!.loc!.source!;
-        const pos = e.from!.loc!.start;
-        console.log(source, `[${pos.line}, ${pos.column}]`, e.msg);
+      const page = await compiler.compile(fname);
+      if (page.errors.length) {
+        for (let e of page.errors) {
+          if (e.from?.loc?.source) {
+            const loc = e.from.loc;
+            console.error(
+              `${path.join(srcDir, loc.source!)}` +
+              `[${loc.start.line},${loc.start.column + 1}]`,
+              e.msg
+            );
+          } else {
+            console.error(`${path.join(srcDir, fname)}`, e.msg);
+          }
+        }
+        console.log('');
+        continue;
+      }
+      const srcFilePath = path.join(srcPath, fname);
+      const dstFilePath = path.join(dstPath, fname);
+      if (dstFilePath === srcFilePath) {
+        console.error(`cannot overwrite ${path.join(srcDir, fname)}\n`);
+        continue;
+      }
+      await fs.promises.mkdir(path.dirname(dstFilePath), { recursive: true });
+      await fs.promises.writeFile(dstFilePath, page.markup!, { encoding: 'utf8' });
+      const suffix = path.extname(dstFilePath);
+      const length = dstFilePath.length - suffix.length;
+      const jsFilePath = dstFilePath.substring(0, length) + '.js';
+      await fs.promises.writeFile(jsFilePath, page.code!, { encoding: 'utf8' });
+      if (page.sourceMap) {
+        await fs.promises.writeFile(jsFilePath + '.map', page.sourceMap, { encoding: 'utf8' });
       }
     }
   });

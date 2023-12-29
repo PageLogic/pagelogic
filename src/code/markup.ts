@@ -1,8 +1,9 @@
 import { Program } from "acorn";
-import { walker, JSXOpeningElement } from "./walker";
+import { JSXOpeningElement, walker } from "./walker";
 
 export interface GetMarkupProps {
   addDocType?: boolean;
+  bodyEndScriptURLs?: string[];
 }
 
 export function getMarkup(ast: Program, props?: GetMarkupProps): string {
@@ -43,12 +44,23 @@ export function getMarkup(ast: Program, props?: GetMarkupProps): string {
     JSXClosingElement(node, _) {
       if (node.name.type === 'JSXIdentifier' ||
           node.name.type === 'JSXNamespacedName') {
+        const tagName = node.name.name.toString();
+        if (props?.bodyEndScriptURLs && tagName.toLowerCase() === 'body') {
+          for (let url of props.bodyEndScriptURLs) {
+            sb.push('<script src="');
+            sb.push(url)
+            sb.push('"></script>\n');
+          }
+        }
         sb.push('</');
-        sb.push(node.name.name.toString());
+        sb.push(tagName);
         sb.push('>');
       }
     },
   });
+  // if (sb.length > 0 && !sb[sb.length - 1].endsWith('\n')) {
+  //   sb.push('\n');
+  // }
   return sb.join('');
 }
 

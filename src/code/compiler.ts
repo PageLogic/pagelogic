@@ -1,5 +1,7 @@
-import { ObjectExpression, Program } from "acorn";
+import { Node, ObjectExpression, Program } from "acorn";
 import { generate } from "escodegen";
+import fs from "fs";
+import path from "path";
 import { WebScopeProps } from "../runtime/web/scope";
 import { WebValueProps } from "../runtime/web/value";
 import { CodeLoader } from "./loader";
@@ -8,8 +10,7 @@ import { getMarkup } from "./markup";
 import { compileValueRef, qualifyIdentifiers, validateValueRef } from "./reference";
 import { CodeError } from "./types";
 import { array, fnExpression, literal, object, property } from "./utils";
-import fs from "fs";
-import path from "path";
+import { JSXElement, walker } from "./walker";
 
 export interface Page {
   fname: string;
@@ -76,6 +77,7 @@ export class CodeCompiler {
       ret.errors.splice(0, 0, ...source.errors);
       return ret;
     }
+    this.cleanupPage(source.ast!);
     const logic = new CodeLogic(source);
     if (logic.errors.length > 0) {
       ret.errors.splice(0, 0, ...logic.errors);
@@ -83,15 +85,45 @@ export class CodeCompiler {
     }
     const program = this.compilePage(logic, ret);
     if (!ret.errors.length) {
+      const name = path.basename(fname);
+      const suffix = path.extname(name);
+      const length = name.length - suffix.length;
+      const jsName = name.substring(0, length) + '.js';
       ret.markup = getMarkup(source.ast!, {
         addDocType: this.props.addDocType,
+        bodyEndScriptURLs: [ jsName ],
       });
-      ret.code = generate(program);
+      const format = {
+        indent: {
+          style: '  '
+        }
+      };
+      ret.code = generate(program, { format });
       if (this.props.addSourceMap) {
-        ret.sourceMap = generate(program, { sourceMap: fname });
+        ret.sourceMap = generate(program, { sourceMap: fname, format });
       }
     }
     return ret;
+  }
+
+  cleanupPage(ast: Program) {
+    const toRemove = new Array<{n: Node, p: JSXElement}>();
+    walker.ancestor(ast, {
+      // @ts-ignore
+      JSXEmptyExpression(node, _, ancestors) {
+        if (ancestors.length > 2) {
+          const p1 = ancestors[ancestors.length - 2];
+          const p2 = ancestors[ancestors.length - 3];
+          if (p1.type === 'JSXExpressionContainer' && p2.type === 'JSXElement') {
+            toRemove.push({ n: p1, p: p2 });
+          }
+        }
+      }
+    });
+    for (let r of toRemove) {
+      const i = r.p.children.indexOf(r.n);
+      r.p.children.splice(i, 1);
+    }
   }
 
   compilePage(logic: CodeLogic, ret: Page): Program {
