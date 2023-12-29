@@ -10,7 +10,7 @@ import { walker } from "../../src/code/walker";
 import { generate } from "escodegen";
 
 const rootPath = path.join(__dirname, 'compiler');
-const compiler = new CodeCompiler(rootPath);
+const compiler = new CodeCompiler(rootPath, { addDocType: true });
 
 describe('code: compiler', function () {
   let count = 0;

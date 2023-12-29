@@ -15,16 +15,24 @@ export interface Page {
   errors: CodeError[];
   markup?: string;
   code?: string;
+  sourceMap?: string;
+}
+
+interface CodeCompilerProps {
+  addDocType?: boolean;
+  addSourceMap?: boolean;
 }
 
 export class CodeCompiler {
   loader: CodeLoader;
+  props: CodeCompilerProps;
 
-  constructor(rootPath: string) {
+  constructor(rootPath: string, props?: CodeCompilerProps) {
     this.loader = new CodeLoader(rootPath);
+    this.props = props || {};
   }
 
-  async compile(fname: string, addDocType = true): Promise<Page> {
+  async compile(fname: string): Promise<Page> {
     const ret: Page = { fname, files: [], errors: [] };
     const source = await this.loader.load(fname);
     ret.files.splice(0, 0, ...source.files);
@@ -39,8 +47,13 @@ export class CodeCompiler {
     }
     const program = this.compilePage(logic, ret);
     if (!ret.errors.length) {
-      ret.markup = getMarkup(source.ast!, addDocType);
+      ret.markup = getMarkup(source.ast!, {
+        addDocType: this.props.addDocType,
+      });
       ret.code = generate(program);
+      if (this.props.addSourceMap) {
+        ret.sourceMap = generate(program, { sourceMap: fname });
+      }
     }
     return ret;
   }

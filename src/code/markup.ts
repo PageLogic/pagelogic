@@ -1,9 +1,14 @@
 import { Program } from "acorn";
 import { walker, JSXOpeningElement } from "./walker";
 
-export function getMarkup(ast: Program, addDoctype = false): string {
+export interface GetMarkupProps {
+  addDocType?: boolean;
+}
+
+export function getMarkup(ast: Program, props?: GetMarkupProps): string {
   const sb = new Array<string>();
-  addDoctype && sb.push('<!DOCTYPE html>\n');
+  props ||= {};
+  props.addDocType && sb.push('<!DOCTYPE html>\n');
   walker.simple(ast, {
     // @ts-ignore
     JSXOpeningElement(node: JSXOpeningElement, _) {
