@@ -27,6 +27,13 @@ export class CodeParser {
   }
 
   parse(text: string, fname: string): Program {
+    const res = /^(\s*(<!.*?>)?(\s*))/.exec(text);
+    if (res && res.length > 1 && res[2]) {
+      // remove <!DOCROOT> without changing positions in source
+      let s = text.substring(0, res[1].length);
+      s = s.replace(/[^\n]/g, ' ');
+      text = s + text.substring(res[1].length);
+    }
     const program = this.parser.parse(text, {
       ecmaVersion: 6,
       sourceType: 'script',

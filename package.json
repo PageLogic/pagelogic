@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "npx tsx --test test/**/*.test.ts",
-    "test-only": "npx tsx --test-name-pattern='101b-in.html' test/**/*.test.ts"
+    "test-only": "npx tsx --test-name-pattern='005-in.html' test/code/loader.test.ts"
   },
   "engines": {
     "node": ">=18.0.0"
