@@ -1,7 +1,7 @@
 import estraverse from "estraverse";
 import * as es from "estree";
 import { OUTER_KEY, RESERVED_PASSIVE_PREFIX, VALUE_KEY } from "../runtime/core/context";
-import { CodeLogic, CodeScope, CodeValue } from "./logic";
+import { CodeScope, CodeValue } from "./logic";
 import { CodeError } from "./types";
 import { identifier, literal } from "./utils";
 

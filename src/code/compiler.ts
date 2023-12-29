@@ -1,12 +1,13 @@
 import { ObjectExpression, Program } from "acorn";
 import { generate } from "escodegen";
+import { WebScopeProps } from "../runtime/web/scope";
+import { WebValueProps } from "../runtime/web/value";
 import { CodeLoader } from "./loader";
 import { CodeLogic, CodeScope, CodeValue } from "./logic";
 import { getMarkup } from "./markup";
+import { compileValueRef, qualifyIdentifiers, validateValueRef } from "./reference";
 import { CodeError } from "./types";
 import { array, fnExpression, literal, object, property } from "./utils";
-import { WebScopeProps } from "../runtime/web/scope";
-import { compileValueRef, qualifyIdentifiers, validateValueRef } from "./reference";
 
 export interface Page {
   fname: string;
@@ -88,6 +89,9 @@ export class CodeCompiler {
     return ret;
   }
 
+  /**
+   * @see WebValueProps
+   */
   compileValue(value: CodeValue, scope: CodeScope, page: Page): ObjectExpression {
     const ret = object(value.node);
     const exp = value.node.type === 'Literal'
@@ -98,17 +102,16 @@ export class CodeCompiler {
     qualifyIdentifiers(value.name, fn.body as any, refs);
     ret.properties.push(property('exp', fn, value.node));
     if (refs.size) {
-      const generated = new Set<string>();
+      const seenPaths = new Set<string>();
       const aa = array(value.node);
       ret.properties.push(property('refs', aa, value.node));
       for (let ref of refs) {
         const parts = ref.split('.');
         if (validateValueRef(page.errors, scope, parts, value)) {
           const path = parts.join('.');
-          if (!generated.has(path)) {
-            generated.add(path);
-            const fn = compileValueRef(parts, value);
-            aa.elements.push(fn as any);
+          if (!seenPaths.has(path)) {
+            seenPaths.add(path);
+            aa.elements.push(compileValueRef(parts, value) as any);
           }
         }
       }
