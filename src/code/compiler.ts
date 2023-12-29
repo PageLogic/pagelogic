@@ -8,6 +8,8 @@ import { getMarkup } from "./markup";
 import { compileValueRef, qualifyIdentifiers, validateValueRef } from "./reference";
 import { CodeError } from "./types";
 import { array, fnExpression, literal, object, property } from "./utils";
+import fs from "fs";
+import path from "path";
 
 export interface Page {
   fname: string;
@@ -34,6 +36,36 @@ export class CodeCompiler {
       addSourceMap: false,
       ...(props || {})
     }
+  }
+
+  async list(suffix: string, depth = 0): Promise<string[]> {
+    const ret: string[] = [];
+    const root = this.loader.rootPath;
+    const fn = async (dir: string, level: number) => {
+      if (depth > 0 && level >= depth) {
+        return;
+      }
+      const ff = await fs.promises.readdir(path.join(root, dir));
+      for (let f of ff) {
+        if (f.startsWith('.')) {
+          continue;
+        }
+        if (f.endsWith(suffix)) {
+          ret.push(path.join(dir, f));
+        }
+      }
+      for (let f of ff) {
+        if (f.startsWith('.')) {
+          continue;
+        }
+        const stat = await fs.promises.stat(path.join(root, dir, f));
+        if (stat.isDirectory()) {
+          await fn(path.join(dir, f), level + 1);
+        }
+      }
+    }
+    await fn('.', 0);
+    return ret;
   }
 
   async compile(fname: string): Promise<Page> {
