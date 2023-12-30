@@ -37,7 +37,7 @@ export class CodeCompiler {
     this.props = {
       addDocType: true,
       addSourceMap: false,
-      clientFile: 'client.js',
+      clientFile: 'pagelogic.js',
       ...(props || {})
     }
   }
