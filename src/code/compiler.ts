@@ -24,6 +24,7 @@ export interface Page {
 interface CodeCompilerProps {
   addDocType?: boolean;
   addSourceMap?: boolean;
+  clientFile?: string;
 }
 
 export class CodeCompiler {
@@ -35,6 +36,7 @@ export class CodeCompiler {
     this.props = {
       addDocType: true,
       addSourceMap: false,
+      clientFile: 'pagelogic.js',
       ...(props || {})
     }
   }
@@ -91,7 +93,7 @@ export class CodeCompiler {
       const jsName = name.substring(0, length) + '.js';
       ret.markup = getMarkup(source.ast!, {
         addDocType: this.props.addDocType,
-        bodyEndScriptURLs: [ jsName ],
+        bodyEndScriptURLs: [ this.props.clientFile!, jsName ],
       });
       const format = {
         indent: {
@@ -126,6 +128,21 @@ export class CodeCompiler {
     }
   }
 
+  // compilePage(logic: CodeLogic, ret: Page): Program {
+  //   const root = logic.root!;
+  //   const ast = this.compileScope(root, ret);
+  //   return {
+  //     type: 'Program',
+  //     body: [{
+  //       type: 'ExpressionStatement',
+  //       expression: ast,
+  //       start: root.node.start, end: root.node.end, loc: root.node.loc
+  //     }],
+  //     sourceType: 'script',
+  //     start: root.node.start, end: root.node.end, loc: root.node.loc
+  //   }
+  // }
+
   compilePage(logic: CodeLogic, ret: Page): Program {
     const root = logic.root!;
     const ast = this.compileScope(root, ret);
@@ -133,7 +150,39 @@ export class CodeCompiler {
       type: 'Program',
       body: [{
         type: 'ExpressionStatement',
-        expression: ast,
+        expression: {
+          type: 'CallExpression',
+          optional: false,
+          callee: {
+            type: 'MemberExpression',
+            computed: false,
+            optional: false,
+            object: {
+              type: 'MemberExpression',
+              computed: false,
+              optional: false,
+              object: {
+                type: 'Identifier',
+                name: 'window',
+                start: root.node.start, end: root.node.end, loc: root.node.loc
+              },
+              property: {
+                type: 'Identifier',
+                name: 'pagelogic',
+                start: root.node.start, end: root.node.end, loc: root.node.loc
+              },
+              start: root.node.start, end: root.node.end, loc: root.node.loc
+            },
+            property: {
+              type: 'Identifier',
+              name: 'init',
+              start: root.node.start, end: root.node.end, loc: root.node.loc
+            },
+            start: root.node.start, end: root.node.end, loc: root.node.loc
+          },
+          arguments: [ast],
+          start: root.node.start, end: root.node.end, loc: root.node.loc
+        },
         start: root.node.start, end: root.node.end, loc: root.node.loc
       }],
       sourceType: 'script',

@@ -3,6 +3,9 @@ import fs from 'fs';
 import path from "path";
 import { CodeCompiler } from './code/compiler';
 
+const SRC_CLIENT_CODE = 'pagelogic.js';
+const DST_CLIENT_CODE = 'pagelogic.js';
+
 const program = new Command();
 
 program
@@ -15,8 +18,10 @@ program.command('build')
   .argument('<src-dir>')
   .option('-o, --out-dir <dst-dir>')
   .action(async (srcDir: string, options: any) => {
+    //
+    // check paths
+    //
     const srcPath = path.normalize(path.join(process.cwd(), srcDir));
-    // const dstPath = path.normalize(path.join(process.cwd(), dstDir));
     let dstPath = srcPath;
     if (options.outDir) {
       dstPath = path.normalize(path.join(process.cwd(), options.outDir));
@@ -29,7 +34,17 @@ program.command('build')
       console.error(`${dstPath} is not a directory`);
       return;
     }
-    const compiler = new CodeCompiler(srcPath, { addSourceMap: true });
+
+    //
+    // copy client code
+    //
+    const s = await fs.promises.readFile(path.join(__dirname, SRC_CLIENT_CODE), { encoding: 'utf8' });
+    await fs.promises.writeFile(path.join(dstPath, DST_CLIENT_CODE), s, { encoding: 'utf8' });
+
+    //
+    // compile pages
+    //
+    const compiler = new CodeCompiler(srcPath, { addSourceMap: true, clientFile: DST_CLIENT_CODE });
     const files = await compiler.list('.html');
     for (let fname of files) {
       const page = await compiler.compile(fname);

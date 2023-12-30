@@ -1,5 +1,5 @@
 import { Expression, Literal, Node } from "acorn";
-import walk from 'acorn-walk';
+import * as walk from 'acorn-walk';
 
 require('acorn-jsx-walk').extend(walk.base);
 export const walker = walk;

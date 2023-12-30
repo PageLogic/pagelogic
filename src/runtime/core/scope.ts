@@ -1,4 +1,4 @@
-import { Context, DATA_KEY, OUTER_KEY, PRINT_KEY, SCOPE_KEY, VALUE_KEY } from "./context";
+import { Context, DATA_KEY, OUTER_KEY, SCOPE_KEY, VALUE_KEY } from "./context";
 import { Value, ValueProps } from "./value";
 
 export interface ScopeProps {
@@ -41,7 +41,7 @@ export class Scope {
     }
     this.object[SCOPE_KEY] = this;
     this.object[OUTER_KEY] = () => parent?.proxy;
-    this.object[PRINT_KEY] = (v: any) => v != null ? `${v}` : '';
+    // this.object[PRINT_KEY] = (v: any) => v != null ? `${v}` : '';
     this.object[VALUE_KEY] = (key: string) => {
       let scope: Scope | null = this;
       let value = undefined;

@@ -26,12 +26,12 @@ export class Context {
     this.refreshLevel = this.pushLevel = 0;
   }
 
-  load(props: ScopeProps) {
+  load(props: ScopeProps): this {
     this.root = this.loadScope(null, props);
     return this;
   }
 
-  refresh(scope?: Scope, nextCycle = true) {
+  refresh(scope?: Scope, nextCycle = true): this {
     this.refreshLevel++;
     try {
       nextCycle && this.cycle++;
