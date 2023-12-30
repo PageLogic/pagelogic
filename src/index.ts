@@ -11,14 +11,14 @@ const program = new Command();
 
 program
   .name('pagelogic')
-  .description('PageLogic CLI - https://github.com/fcapolini/231227')
+  .description('PageLogic CLI - https://github.com/fcapolini/pagelogic')
   .version('1.0.0');
 
 program.command('build')
   .description('builds a PageLogic project')
   .argument('<src-dir>')
   .option('-o, --out-dir <dst-dir>')
-  .option('-g, --global-alias <alias>', 'alias for pagelogic object in browser', 'page')
+  .option('-g, --global-alias <alias>', 'alias for PageLogic object in browser', 'page')
   .action(async (srcDir: string, options: any) => {
     //
     // check arguments
@@ -45,13 +45,11 @@ program.command('build')
         return;
       }
     }
-
     //
     // copy client code
     //
     const s = await fs.promises.readFile(path.join(__dirname, SRC_CLIENT_CODE), { encoding: 'utf8' });
     await fs.promises.writeFile(path.join(dstPath, DST_CLIENT_CODE), s, { encoding: 'utf8' });
-
     //
     // compile pages
     //
