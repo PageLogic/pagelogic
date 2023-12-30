@@ -4,7 +4,7 @@ import path from "path";
 import { CodeCompiler } from './code/compiler';
 
 const SRC_CLIENT_CODE = 'pagelogic.js';
-const DST_CLIENT_CODE = 'pagelogic.js';
+const DST_CLIENT_CODE = '/pagelogic.js';
 
 const program = new Command();
 

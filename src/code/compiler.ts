@@ -2,6 +2,7 @@ import { Node, ObjectExpression, Program } from "acorn";
 import { generate } from "escodegen";
 import fs from "fs";
 import path from "path";
+import { GLOBAL_NAME } from "../runtime/web/context";
 import { WebScopeProps } from "../runtime/web/scope";
 import { WebValueProps } from "../runtime/web/value";
 import { CodeLoader } from "./loader";
@@ -36,7 +37,7 @@ export class CodeCompiler {
     this.props = {
       addDocType: true,
       addSourceMap: false,
-      clientFile: 'pagelogic.js',
+      clientFile: 'client.js',
       ...(props || {})
     }
   }
@@ -168,7 +169,7 @@ export class CodeCompiler {
               },
               property: {
                 type: 'Identifier',
-                name: 'pagelogic',
+                name: GLOBAL_NAME,
                 start: root.node.start, end: root.node.end, loc: root.node.loc
               },
               start: root.node.start, end: root.node.end, loc: root.node.loc

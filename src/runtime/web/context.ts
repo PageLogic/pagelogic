@@ -2,6 +2,8 @@ import { Context, ContextProps } from "../core/context";
 import { Scope, ScopeProps } from "../core/scope";
 import { WebScope } from "./scope";
 
+export const GLOBAL_NAME = 'logic';
+
 export const LOGIC_ATTR_PREFIX = ':';
 export const LOGIC_NAME_ATTR = LOGIC_ATTR_PREFIX + 'aka';
 
