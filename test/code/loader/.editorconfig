@@ -1,0 +1,8 @@
+# EditorConfig is awesome: https://EditorConfig.org
+
+# top-most EditorConfig file
+root = false
+
+[*]
+trim_trailing_whitespace = false
+insert_final_newline = false

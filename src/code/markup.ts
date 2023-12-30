@@ -29,7 +29,8 @@ export function getMarkup(ast: Program, props?: GetMarkupProps): string {
             sb.push(' ');
             sb.push(attr.name.name.toString());
             sb.push('="');
-            sb.push(escape(attr.value.value as string, '"'));
+            // https://stackoverflow.com/a/9189067
+            sb.push(escape(attr.value.value as string, '&<"'));
             sb.push('"');
           }
         }
@@ -66,6 +67,7 @@ export function getMarkup(ast: Program, props?: GetMarkupProps): string {
 
 function escape(text: string, chars = ""): string {
   let r = text;
+  if (chars.indexOf("&") >= 0) r = r.split("&").join("&amp;");
   if (chars.indexOf('<') >= 0) r = r.split("<").join("&lt;");
   if (chars.indexOf('>') >= 0) r = r.split(">").join("&gt;");
   if (chars.indexOf('"') >= 0) r = r.split('"').join("&quot;");

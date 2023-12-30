@@ -27,6 +27,8 @@ export class CodeParser {
   }
 
   parse(text: string, fname: string): Program {
+    text = text.replace(/<!--/g, '{/* ');
+    text = text.replace(/-->/g, '*/}');
     const res = /^(\s*(<!.*?>)?(\s*))/.exec(text);
     if (res && res.length > 1 && res[2]) {
       // remove <!DOCROOT> without changing positions in source

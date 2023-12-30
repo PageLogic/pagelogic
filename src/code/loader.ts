@@ -76,7 +76,7 @@ export class CodeLoader {
     try {
       program = this.parser.parse(text, relPath);
     } catch (error: any) {
-      this.addError('error', `failed to parse "${relPath}"`, source, from);
+      this.addError('error', `${error} in "${relPath}"`, source, from);
       return;
     }
     const body = program.body;
