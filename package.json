@@ -8,8 +8,7 @@
     "test-only": "tsx --test-name-pattern='005-in.html' test/code/loader.test.ts",
     "build": "rm -rf dist/* && tsc && npm run build-client",
     "build-client": "esbuild src/runtime/web/client.ts --bundle --outfile=dist/pagelogic.js",
-    "pl-build-1": "tsx src/index.ts build -o ./www ./www-src",
-    "pl-build": "node dist/index.js build -o ./www ./www-src"
+    "pl-build": "node dist/index.js build -g page -o ./www ./www-src"
   },
   "engines": {
     "node": ">=18.0.0"

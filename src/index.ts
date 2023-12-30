@@ -2,6 +2,7 @@ import { Command } from 'commander';
 import fs from 'fs';
 import path from "path";
 import { CodeCompiler } from './code/compiler';
+import { GLOBAL_NAME } from './runtime/web/context';
 
 const SRC_CLIENT_CODE = 'pagelogic.js';
 const DST_CLIENT_CODE = '/pagelogic.js';
@@ -17,9 +18,10 @@ program.command('build')
   .description('builds a PageLogic project')
   .argument('<src-dir>')
   .option('-o, --out-dir <dst-dir>')
+  .option('-g, --global-alias <alias>', 'alias for pagelogic object in browser', 'page')
   .action(async (srcDir: string, options: any) => {
     //
-    // check paths
+    // check arguments
     //
     const srcPath = path.normalize(path.join(process.cwd(), srcDir));
     let dstPath = srcPath;
@@ -33,6 +35,15 @@ program.command('build')
     if (!fs.statSync(dstPath).isDirectory()) {
       console.error(`${dstPath} is not a directory`);
       return;
+    }
+    let globalAlias = '';
+    if (options.globalAlias) {
+      if (/^\w+$/.test(options.globalAlias)) {
+        globalAlias = options.globalAlias;
+      } else {
+        console.error(`invalid global alias ${options.globalAlias}`);
+        return;
+      }
     }
 
     //
@@ -75,7 +86,11 @@ program.command('build')
       const suffix = path.extname(dstFilePath);
       const length = dstFilePath.length - suffix.length;
       const jsFilePath = dstFilePath.substring(0, length) + '.js';
-      await fs.promises.writeFile(jsFilePath, page.code!, { encoding: 'utf8' });
+      let code = page.code!;
+      if (globalAlias && globalAlias !== GLOBAL_NAME) {
+        code += `\nwindow.${globalAlias} = window.${GLOBAL_NAME}`;
+      }
+      await fs.promises.writeFile(jsFilePath, code + '\n', { encoding: 'utf8' });
       if (page.sourceMap) {
         await fs.promises.writeFile(jsFilePath + '.map', page.sourceMap, { encoding: 'utf8' });
       }
