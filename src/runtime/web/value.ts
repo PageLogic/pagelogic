@@ -1,5 +1,5 @@
 import { Value, ValueProps } from "../core/value";
-import { ATTR_VALUE_PREFIX, CLASS_VALUE_PREFIX, STYLE_VALUE_PREFIX, TEXT_VALUE_PREFIX } from "./context";
+import { ATTR_VALUE_PREFIX, CLASS_VALUE_PREFIX, EVENT_VALUE_PREFIX, STYLE_VALUE_PREFIX, TEXT_VALUE_PREFIX } from "./context";
 import { WebScope } from "./scope";
 
 export interface WebValueProps extends ValueProps {
@@ -9,8 +9,8 @@ export class WebValue extends Value {
   classParts?: Set<string>;
   styleParts?: Map<string, string>;
 
-  constructor(block: WebScope, key: string, props: WebValueProps) {
-    super(block, key, props);
+  constructor(scope: WebScope, key: string, props: WebValueProps) {
+    super(scope, key, props);
     if (key.startsWith(ATTR_VALUE_PREFIX)) {
       const name = key.substring(ATTR_VALUE_PREFIX.length);
       if (name === 'class') {

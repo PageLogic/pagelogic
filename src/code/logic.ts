@@ -3,7 +3,7 @@ import { generate } from "escodegen";
 import {
   ATTR_VALUE_PREFIX, CLASS_VALUE_PREFIX, DID_VALUE_PREFIX, HANDLE_VALUE_PREFIX,
   ID_DATA_ATTR,
-  LOGIC_VALUE_PREFIX, ON_VALUE_PREFIX, STYLE_VALUE_PREFIX,
+  LOGIC_VALUE_PREFIX, EVENT_VALUE_PREFIX, STYLE_VALUE_PREFIX,
   TEXT_MARKER1_PREFIX, TEXT_MARKER2_PREFIX,
   TEXT_VALUE_PREFIX,
   WILL_VALUE_PREFIX
@@ -169,7 +169,7 @@ const VALUE_PREFIXES = [
   { in: /^(\:aka)$/, out: null },
   { in: /^(\:class\-)[\w\-]+$/, out: CLASS_VALUE_PREFIX },
   { in: /^(\:style\-)[\w\-]+$/, out: STYLE_VALUE_PREFIX },
-  { in: /^(\:on\-)[\w\-]+$/, out: ON_VALUE_PREFIX },
+  { in: /^(\:on\-)[\w\-]+$/, out: EVENT_VALUE_PREFIX },
   { in: /^(\:handle\-)[\w\-]+$/, out: HANDLE_VALUE_PREFIX },
   { in: /^(\:did\-)[\w\-]+$/, out: DID_VALUE_PREFIX },
   { in: /^(\:will\-)[\w\-]+$/, out: WILL_VALUE_PREFIX },

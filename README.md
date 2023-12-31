@@ -29,19 +29,19 @@ npm i -g pagelogic
 pagelogic serve ./www
 ```
 
-> By default the server starts in dev mode, meaning it will automatically detect changes and refresh the browser as needed.
+<!-- > By default the server starts in dev mode, meaning it will automatically detect changes and refresh the browser as needed. -->
 
-With `pagelogic build` we can statically compile pages and use them as standard HTML pages. For example `index.pl.html` will generate `index.html` and `index.js` which, together, implement page behaviour.
+Alternatively we can statically compile pages with `pagelogic build` and use them as standard HTML pages. In our example `index.pl.html` will generate `index.html` and `index.js` which, together, implement page behaviour.
 
 ## Why PageLogic
 
-* **Zero boilerplate** &mdash; forget all the obscure cerimonies like `useState()` etc. PageLogic handles these details behind the scenes, keeping our code clean.
+* **Zero boilerplate** &mdash; forget all the obscure cerimonies like React's `useState()` etc.: PageLogic handles these details behind the scenes, keeping our code clean.
 
 * **No Virtual DOM** &mdash; PageLogic uses direct DOM reflection, a much lighter and efficient solution.
 
 * **Isomorphic by design** &mdash; while making other frameworks deliver content-ready pages for [SEO]() can be complex, PageLogic does it by default.
 
-* **Super lightweight** &mdash; because its runtime, compiler and server were designed and optimized together, it sports a tiny size of ~2.5kB (minified, gzipped) in the client.
+* **Super lightweight** &mdash; because its runtime, compiler and server were designed and optimized together, it sports a tiny size of ~2.5kB (minified, gzipped) in the browser.
 
 <!-- * **Incrementally adoptable** &mdash; TBD -->
 

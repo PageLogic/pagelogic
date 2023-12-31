@@ -1,7 +1,7 @@
 import { Scope, ScopeProps } from "../core/scope";
 import { Value } from "../core/value";
 import { COMMENT_NODE, ELEMENT_NODE, TEXT_NODE } from "./util/dom-util";
-import { ID_DATA_ATTR, TEXT_MARKER1_PREFIX, WebContext } from "./context";
+import { EVENT_VALUE_PREFIX, ID_DATA_ATTR, TEXT_MARKER1_PREFIX, WebContext } from "./context";
 import { WebValue } from "./value";
 
 export interface WebScopeProps extends ScopeProps {
@@ -27,6 +27,10 @@ export class WebScope extends Scope {
     e.setAttribute(ID_DATA_ATTR, e.getAttribute(ID_DATA_ATTR) + `.${cloneIndex}`);
     this.dom.parentNode?.insertBefore(e, this.dom);
     return new WebScope(this.webCtx, this.webParent, this.props, cloneIndex);
+  }
+
+  dispose() {
+    this.disposeListeners();
   }
 
   get webCtx(): WebContext {
@@ -71,7 +75,52 @@ export class WebScope extends Scope {
       }
     };
     collect(ret!);
+    for (let key of this.values.keys()) {
+      if (key.startsWith(EVENT_VALUE_PREFIX)) {
+        const id = key.substring(EVENT_VALUE_PREFIX.length);
+        ret!.addEventListener(id, (ev) => this.proxy[key]());
+      }
+    }
     return ret!;
   }
 
+  // ---------------------------------------------------------------------------
+  // events
+  // ---------------------------------------------------------------------------
+  listeners?: Array<EventListener>;
+
+  addListener(
+    target: EventTarget,
+    type: string,
+    callback: EventListenerOrEventListenerObject | null,
+    options?: AddEventListenerOptions | boolean
+  ) {
+    const listener = { target, type, callback, options };
+    this.listeners ? this.listeners.push(listener) : this.listeners = [listener];
+  }
+
+  removeListener(
+    target: EventTarget,
+    type: string,
+    callback: EventListenerOrEventListenerObject | null,
+    options?: AddEventListenerOptions | boolean
+  ) {
+    const listener = { target, type, callback, options };
+    const i = this.listeners ? this.listeners.indexOf(listener) : -1;
+    i >= 0 && this.listeners?.splice(i, 1);
+  }
+
+  disposeListeners() {
+    while (this.listeners?.length) {
+      let l = this.listeners.pop() as EventListener;
+      l.target.removeEventListener(l.type, l.callback, l.options);
+    }
+  }
+}
+
+type EventListener = {
+  target: EventTarget,
+  type: string,
+  callback: EventListenerOrEventListenerObject | null,
+  options?: AddEventListenerOptions | boolean
 }

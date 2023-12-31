@@ -10,7 +10,7 @@ export const LOGIC_NAME_ATTR = LOGIC_ATTR_PREFIX + 'aka';
 export const LOGIC_VALUE_PREFIX = '';
 export const CLASS_VALUE_PREFIX = 'class$';
 export const STYLE_VALUE_PREFIX = 'style$';
-export const ON_VALUE_PREFIX = 'on$';
+export const EVENT_VALUE_PREFIX = 'on$';
 export const HANDLE_VALUE_PREFIX = 'handle$';
 export const DID_VALUE_PREFIX = 'did$';
 export const WILL_VALUE_PREFIX = 'will$';
@@ -41,4 +41,36 @@ export class WebContext extends Context {
     return ret;
   }
 
+  // ---------------------------------------------------------------------------
+  // events
+  // ---------------------------------------------------------------------------
+
+  initEvents() {
+    const origAdd = EventTarget.prototype.addEventListener;
+    const origRemove = EventTarget.prototype.removeEventListener;
+
+    const lookupScope = (e: any) => {
+      if (e.hasAttribute) {
+        while (e && !e.hasAttribute(ID_DATA_ATTR)) {
+          e = e.parentElement;
+        }
+        if (e && e.getAttribute) {
+          return this.scopes.get(e.getAttribute(ID_DATA_ATTR));
+        }
+      }
+      return null;
+    }
+
+    EventTarget.prototype.addEventListener = function(type, callback, options) {
+      const scope = lookupScope(this) as WebScope | null;
+      scope && scope.addListener(this, type, callback, options);
+      origAdd.call(this, type, callback, options);
+    }
+
+    EventTarget.prototype.removeEventListener = function(type, callback, options) {
+      const scope = lookupScope(this) as WebScope | null;
+      scope && scope.removeListener(this, type, callback, options);
+      origRemove.call(this, type, callback, options);
+    }
+  }
 }
