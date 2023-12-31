@@ -1,5 +1,8 @@
 # PageLogic
 
+[![CodeQL](https://github.com/fcapolini/pagelogic/actions/workflows/codeql.yml/badge.svg)](https://github.com/fcapolini/pagelogic/actions/workflows/codeql.yml)
+[![Node.js CI](https://github.com/fcapolini/pagelogic/actions/workflows/node.js.yml/badge.svg)](https://github.com/fcapolini/pagelogic/actions/workflows/node.js.yml)
+
 > An HTML-based reactive web framework.
 
 Modern web development is mostly done using some reactive framework, like [React](), [Vue]() or [Angular](). This has many advantages, but they all add plenty of complexity and make the experience more akin to desktop development.
@@ -32,14 +35,14 @@ With `pagelogic build` we can statically compile pages and use them as standard 
 
 ## Why PageLogic
 
-* **Zero boilerplate** &mdash; forget all the obscure cerimonies like `useState()` etc. It's not "modern API" stuff, it's just forcing implementation details on you.
+* **Zero boilerplate** &mdash; forget all the obscure cerimonies like `useState()` etc. PageLogic handles these details behind the scenes, keeping our code clean.
 
-* **No Virtual DOM** &mdash; starting out with markup templates, they had to add it to make them perform reasonably. But it's heavy and still not as fast as direct DOM reflection.
+* **No Virtual DOM** &mdash; PageLogic uses direct DOM reflection, a much lighter and efficient solution.
 
-* **Isomorphic by design** &mdash; making React, Vue or Angular projects deliver content-ready pages for [SEO]() can be complex, as they were originally designed just for the client.
+* **Isomorphic by design** &mdash; while making other frameworks deliver content-ready pages for [SEO]() can be complex, PageLogic does it by default.
 
-* **Super lightweight** &mdash; thanks to a design where runtime, compiler and server were designed and optimized together, it sports a tiny ~2.5kB (minified, gzipped) size in the client.
+* **Super lightweight** &mdash; because its runtime, compiler and server were designed and optimized together, it sports a tiny size of ~2.5kB (minified, gzipped) in the client.
 
 <!-- * **Incrementally adoptable** &mdash; TBD -->
 
-* **Simple and fun** &mdash; web development used to be simple and gratifying. JavaScript-oriented frameworks took away much of the fun, and PageLogic aims to bring it back 🙂
+<!-- * **Simple and fun** &mdash; web development used to be simple and gratifying. JavaScript-oriented frameworks took away much of the fun. PageLogic aims to bring it back 🙂 -->
