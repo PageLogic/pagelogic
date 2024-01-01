@@ -1,3 +1,4 @@
+import { DID_VALUE_PREFIX, WILL_VALUE_PREFIX } from "../web/context";
 import { Context, DATA_KEY, NAME_KEY, OUTER_KEY, PRINT_KEY, SCOPE_KEY, VALUE_KEY } from "./context";
 import { Value, ValueProps } from "./value";
 
@@ -21,6 +22,7 @@ export class Scope {
   proxy: any;
   values: Map<string, Value>;
   replicator?: Replicator;
+  inited = false;
 
   constructor(ctx: Context, parent: Scope | null, props: ScopeProps, cloneIndex?: number) {
     this.ctx = ctx;
@@ -59,6 +61,9 @@ export class Scope {
   }
 
   dispose() {
+    if (this.inited) {
+      this.callDelegate(WILL_VALUE_PREFIX + 'dispose');
+    }
     this.unlinkValues();
     while (this.children.length > 0) {
       this.children.pop()!.dispose();
@@ -72,6 +77,10 @@ export class Scope {
         delete this.parent.object[this.props.name];
       }
     }
+    if (this.inited) {
+      this.callDelegate(DID_VALUE_PREFIX + 'dispose');
+    }
+    this.inited = false;
   }
 
   unlinkValues() {
@@ -85,8 +94,15 @@ export class Scope {
   }
 
   updateValues() {
+    if (!this.inited) {
+      this.callDelegate(WILL_VALUE_PREFIX + 'init');
+    }
     this.values.forEach(v => this.proxy[v.key]);
     this.children.forEach(s => s.updateValues());
+    if (!this.inited) {
+      this.callDelegate(DID_VALUE_PREFIX + 'init');
+    }
+    this.inited = true;
   }
 
   get(key: string | symbol): any {
@@ -103,6 +119,11 @@ export class Scope {
   getReplicator(): Replicator {
     !this.replicator && (this.replicator = new Replicator(this));
     return this.replicator;
+  }
+
+  protected callDelegate(name: string) {
+    const d = this.proxy[name];
+    d && d();
   }
 
   protected lookup(target: any, prop: string) {

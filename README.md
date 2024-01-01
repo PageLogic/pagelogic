@@ -15,14 +15,16 @@ This is a minimal but complete PageLogic app:
 
 ```jsx
 <html>
-<body :count={0}
-      :on-click={() => count++}>
-  Clicks: {count}
+<body>
+  <button :count={0}
+          :on-click={() => count++}>
+    Clicks: {count}
+  </button>
 </body>
 </html>
 ```
 
-We'll save it as `index.pl.html` in `./www`. We can now install PageLogic and serve it like this:
+We'll save it as `index.html` in `./www`. We can now install PageLogic and serve it like this:
 
 ```bash
 npm i -g pagelogic
@@ -31,7 +33,7 @@ pagelogic serve ./www
 
 <!-- > By default the server starts in dev mode, meaning it will automatically detect changes and refresh the browser as needed. -->
 
-Alternatively we can statically compile pages with `pagelogic build` and use them as standard HTML pages. In our example `index.pl.html` will generate `index.html` and `index.js` which, together, implement page behaviour.
+Alternatively we can statically compile it with `pagelogic build` and use them as static HTML pages. Our example generate a compiled `index.html` and its accompanying `index.js` which, together, implement page behaviour.
 
 ## Why PageLogic
 
