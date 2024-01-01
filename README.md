@@ -11,7 +11,7 @@ PageLogic aims to restore simplicity while preserving the benefits of modern fra
 
 ## Hello world
 
-This is a minimal but complete PageLogic app:
+This is a minimal but complete PageLogic page:
 
 ```jsx
 <html>
@@ -28,7 +28,7 @@ We'll save it as `index.html` in `./www`. We can now install PageLogic and serve
 
 ```bash
 npm i -g pagelogic
-pagelogic serve ./www
+pagelogic serve www
 ```
 
 <!-- > By default the server starts in dev mode, meaning it will automatically detect changes and refresh the browser as needed. -->
@@ -41,9 +41,13 @@ Alternatively we can statically compile it with `pagelogic build` and use them a
 
 * **No Virtual DOM** &mdash; PageLogic uses direct DOM reflection, a much lighter and efficient solution.
 
-* **Isomorphic by design** &mdash; while making other frameworks deliver content-ready pages for [SEO]() can be complex, PageLogic does it by default.
+* **Isomorphic by design** &mdash; with other frameworks, delivering content-ready pages for [SEO]() can be complex: PageLogic's server does it by default.
 
-* **Super lightweight** &mdash; because its runtime, compiler and server were designed and optimized together, it sports a tiny size of ~2.5kB (minified, gzipped) in the browser.
+* **Super lightweight** &mdash; because runtime, compiler and server were designed together, it sports a tiny size of ~2.5kB (minified, gzipped) in the browser.
+
+* **Flexible deployment** &mdash; PageLogic pages can be served using its own Node.js server, its Express middleware in the context of your project, or as static precompiled HTML pages.
+
+* **Advanced routing** &mdash; the same set of pages can work as a classic website and as a modern [SPA]() at the same time with simple page annotations.
 
 <!-- * **Incrementally adoptable** &mdash; TBD -->
 
