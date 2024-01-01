@@ -223,12 +223,7 @@ function lookup(scope: CodeScope | null, key: string
 }
 
 function getScopeValue(scope: CodeScope, key: string): CodeValue | null {
-  for (let value of scope.values) {
-    if (value.name === key) {
-      return value;
-    }
-  }
-  return null;
+  return scope.values[key] || null;
 }
 
 export function compileValueRef(

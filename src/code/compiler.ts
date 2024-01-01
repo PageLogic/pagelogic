@@ -129,21 +129,6 @@ export class CodeCompiler {
     }
   }
 
-  // compilePage(logic: CodeLogic, ret: Page): Program {
-  //   const root = logic.root!;
-  //   const ast = this.compileScope(root, ret);
-  //   return {
-  //     type: 'Program',
-  //     body: [{
-  //       type: 'ExpressionStatement',
-  //       expression: ast,
-  //       start: root.node.start, end: root.node.end, loc: root.node.loc
-  //     }],
-  //     sourceType: 'script',
-  //     start: root.node.start, end: root.node.end, loc: root.node.loc
-  //   }
-  // }
-
   compilePage(logic: CodeLogic, ret: Page): Program {
     const root = logic.root!;
     const ast = this.compileScope(root, ret);
@@ -201,11 +186,13 @@ export class CodeCompiler {
       ret.properties.push(property('name', literal(s.name, s.node), s.node));
     }
     // values
-    if (s.values.length) {
+    const names = Reflect.ownKeys(s.values) as string[];
+    if (names.length) {
       const valuesObject = object(s.node);
-      for (let value of s.values) {
-        const valueObject = this.compileValue(value, s, page);
-        const valueProperty = property(value.name, valueObject, value.node);
+      for (let name of names) {
+        const value = s.values[name]!;
+        const valueObject = this.compileValue(name, value, s, page);
+        const valueProperty = property(name, valueObject, value.node);
         valuesObject.properties.push(valueProperty);
       }
       ret.properties.push(property('values', valuesObject, s.node));
@@ -224,14 +211,14 @@ export class CodeCompiler {
   /**
    * @see WebValueProps
    */
-  compileValue(value: CodeValue, scope: CodeScope, page: Page): ObjectExpression {
+  compileValue(name: string, value: CodeValue, scope: CodeScope, page: Page): ObjectExpression {
     const ret = object(value.node);
     const exp = value.node.type === 'Literal'
         ? value.node
         : value.node.expression;
     const fn = fnExpression(exp, value.node);
     const refs = new Set<string>();
-    qualifyIdentifiers(value.name, fn.body as any, refs);
+    qualifyIdentifiers(name, fn.body as any, refs);
     ret.properties.push(property('exp', fn, value.node));
     if (refs.size) {
       const seenPaths = new Set<string>();

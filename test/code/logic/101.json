@@ -6,19 +6,18 @@
       "id": 1,
       "name": "head",
       "children": [],
-      "values": []
+      "values": {}
     },
     {
       "id": 2,
       "name": "body",
       "children": [],
-      "values": [
-        {
-          "name": "text$0",
+      "values": {
+        "text$0": {
           "code": "name"
         }
-      ]
+      }
     }
   ],
-  "values": []
+  "values": {}
 }

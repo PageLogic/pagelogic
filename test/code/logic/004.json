@@ -2,18 +2,15 @@
   "id": 0,
   "name": "page",
   "children": [],
-  "values": [
-    {
-      "name": "x",
+  "values": {
+    "x": {
       "value": "en"
     },
-    {
-      "code": "1",
-      "name": "y"
+    "y": {
+      "code": "1"
     },
-    {
-      "code": "x",
-      "name": "attr$en"
+    "attr$en": {
+      "code": "x"
     }
-  ]
+  }
 }

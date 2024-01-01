@@ -99,7 +99,7 @@ export class CodeScope {
   node: JSXOpeningElement;
   id: number;
   name?: string;
-  values: CodeValue[];
+  values: { [key: string]: CodeValue };
   textCount: number;
 
   constructor(parent: CodeScope | null, node: JSXOpeningElement, id: number) {
@@ -107,7 +107,7 @@ export class CodeScope {
     this.children = [];
     this.node = node;
     this.id = id;
-    this.values = [];
+    this.values = {};
     this.textCount = 0;
     if (parent) {
       parent.children.push(this);
@@ -115,14 +115,15 @@ export class CodeScope {
     if (node.name.type === 'JSXIdentifier') {
       this.name = AUTO_SCOPE_NAMES[node.name.name.toLowerCase()];
     }
-    const obsolete = new Array<number>();
+    this.addDefaultValues();
+    const extracted = new Array<number>();
     for (let i = 0; i < node.attributes.length; i++) {
       const attr = node.attributes[i];
       if (CodeLogic.isValueAttribute(attr)) {
         const attrName = attr.name.name;
         if (attrName === AKA_ATTR && attr.value.type === 'Literal') {
           this.name = attr.value.value as string;
-          obsolete.push(i);
+          extracted.push(i);
           continue;
         }
         for (let p of VALUE_PREFIXES) {
@@ -130,23 +131,27 @@ export class CodeScope {
           if (res) {
             if (p.out !== null) {
               const valueName = p.out + attrName.substring(res[1].length);
-              this.values.push(new CodeValue(this, valueName, attr.value));
-              obsolete.push(i);
+              this.values[valueName] = new CodeValue(this/*, valueName*/, attr.value);
+              extracted.push(i);
             }
             break;
           }
         }
       }
     }
-    for (let i = 0; i < obsolete.length; i++) {
-      node.attributes.splice(obsolete[i] - i, 1);
+    for (let i = 0; i < extracted.length; i++) {
+      node.attributes.splice(extracted[i] - i, 1);
     }
+  }
+
+  addDefaultValues() {
+
   }
 
   addTextValue(node: JSXExpressionContainer): number {
     const id = this.textCount++;
     const name = `${TEXT_VALUE_PREFIX}${id}`;
-    this.values.push(new CodeValue(this, name, node))
+    this.values[name] = new CodeValue(this, node)
     return id;
   }
 
@@ -179,18 +184,15 @@ const VALUE_PREFIXES = [
 
 export class CodeValue {
   scope: CodeScope;
-  name: string;
   node: Literal | JSXExpressionContainer;
 
-  constructor(scope: CodeScope, name: string, node: Literal | JSXExpressionContainer) {
+  constructor(scope: CodeScope, node: Literal | JSXExpressionContainer) {
     this.scope = scope;
-    this.name = name;
     this.node = node;
   }
 
   toJSON() {
     const ret: any = {
-      name: this.name
     };
     if (this.node.type === 'Literal') {
       ret.value = this.node.value as string;
