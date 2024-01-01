@@ -226,7 +226,8 @@ export class CodeCompiler {
       ret.properties.push(property('refs', aa, value.node));
       for (let ref of refs) {
         const parts = ref.split('.');
-        if (validateValueRef(page.errors, scope, parts, value)) {
+        const res = validateValueRef(page.errors, scope, parts, value);
+        if (res === 'ref') {
           const path = parts.join('.');
           if (!seenPaths.has(path)) {
             seenPaths.add(path);

@@ -4,6 +4,7 @@ import { OUTER_KEY, RESERVED_PASSIVE_PREFIX, VALUE_KEY } from "../runtime/core/c
 import { CodeScope, CodeValue } from "./logic";
 import { CodeError } from "./types";
 import { identifier, literal } from "./utils";
+import { SCOPE_METHODS } from "../runtime/web/scope";
 
 export function qualifyIdentifiers(
   key: string | null, body: es.Node, references: Set<string>, locals?: Set<string>
@@ -170,11 +171,15 @@ export function qualifyIdentifiers(
 export function validateValueRef(
   errors: CodeError[], scope: CodeScope,
   refParts: string[], v: CodeValue
-): boolean {
+): 'invalid' | 'noref' | 'ref' {
   let i, value: CodeValue | undefined;
   for (i = 0; i < refParts.length; i++) {
     const part = refParts[i];
     const ret = lookup(scope, part);
+    if (typeof ret === "boolean") {
+      // it's a scope method
+      return 'noref';
+    }
     if (ret.type === 'scope') {
       scope = ret.target as CodeScope;
     } else if (ret.type === 'value') {
@@ -188,29 +193,32 @@ export function validateValueRef(
   // if we exausted the chain, it leads to either a scope or a value
   if (i >= refParts.length) {
     // if it's a value, generate the reference
-    return !!value;
+    return !!value ? 'ref' : 'invalid';
   }
   // if we stopped before the end, it's ok as long as we found a value
   if (value) {
     // generate its reference
-    return true;
+    return 'ref';
   }
   errors.push({
     type: 'error',
     msg: `invalid reference "${refParts.join('.')}"`,
     from: v.node
   });
-  return false;
+  return 'invalid';
 }
 
 function lookup(scope: CodeScope | null, key: string
 ): {
   type: 'scope' | 'value', target: CodeScope | CodeValue | null
-} {
+} | boolean {
   while (scope) {
     const value = getScopeValue(scope, key);
     if (value) {
       return { type: 'value', target: value };
+    }
+    if (SCOPE_METHODS[key]) {
+      return true;
     }
     for (let child of scope?.children || []) {
       if (child.name === key) {

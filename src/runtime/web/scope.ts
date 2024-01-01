@@ -1,8 +1,13 @@
 import { Scope, ScopeProps } from "../core/scope";
 import { Value } from "../core/value";
-import { COMMENT_NODE, ELEMENT_NODE, TEXT_NODE } from "./util/dom-util";
 import { EVENT_VALUE_PREFIX, ID_DATA_ATTR, TEXT_MARKER1_PREFIX, WebContext } from "./context";
+import { COMMENT_NODE, ELEMENT_NODE, TEXT_NODE } from "./util/dom-util";
 import { WebValue } from "./value";
+
+export const SCOPE_METHODS: { [key: string]: any } = {
+  setInterval: true, clearInterval: true,
+  setTimeout: true, clearTimeout: true,
+};
 
 export interface WebScopeProps extends ScopeProps {
 }
@@ -15,6 +20,7 @@ export class WebScope extends Scope {
     super(ctx, parent, props, cloneIndex);
     this.texts = new Map();
     this.dom = this.initDom();
+    // this.initTimers();
     if (!parent || props.isolate) {
       this.object['window'] = ctx.win;
       this.object['setTimeout'] = ctx.win.setTimeout;
@@ -83,6 +89,58 @@ export class WebScope extends Scope {
     }
     return ret!;
   }
+
+  // // ---------------------------------------------------------------------------
+  // // timers
+  // // ---------------------------------------------------------------------------
+  // timeouts?: Set<any>;
+  // intervals?: Set<any>;
+
+  // initTimers() {
+  //   const that = this;
+
+  //   this.object['setTimeout'] = new Value(this, 'setTimeout', {
+  //     exp: function() {
+  //       return (cb: () => void, delay: number) => {
+  //         const ret = setTimeout(cb, delay);
+  //         that.timeouts ? that.timeouts.add(ret) : that.timeouts = new Set([ret]);
+  //         return ret;
+  //       }
+  //     },
+  //   });
+
+  //   this.object['setInterval'] = new Value(this, 'setInterval', {
+  //     exp: function() {
+  //       return (cb: () => void, delay: number) => {
+  //         const ret = setInterval(cb, delay);
+  //         that.intervals ? that.intervals.add(ret) : that.intervals = new Set([ret]);
+  //         return ret;
+  //       }
+  //     },
+  //   });
+
+  //   // this.object['clearTimeout'] = new Value(this, 'clearTimeout', {
+  //   //   exp: function(id: any) {
+  //   //     clearTimeout(id);
+  //   //     that.timeouts?.delete(id);
+  //   //   },
+  //   // }, this);
+
+  //   // this.object['clearInterval'] = new Value(this, 'clearInterval', {
+  //   //   exp: function(id: any) {
+  //   //     clearInterval(id);
+  //   //     that.intervals?.delete(id);
+  //   //   },
+  //   // }, this);
+
+  // }
+
+  // disposeTimers() {
+  //   // this.timeouts?.forEach(id => clearTimeout(id));
+  //   // this.timeouts?.clear();
+  //   // this.intervals?.forEach(id => clearInterval(id));
+  //   // this.intervals?.clear();
+  // }
 
   // ---------------------------------------------------------------------------
   // events
