@@ -11,7 +11,6 @@ export const SCOPE_MEMBERS: { [key: string]: any } = {
 
 export const ROOT_MEMBERS: { [key: string]: any } = {
   window: true,
-  console: true,
 };
 
 export interface WebScopeProps extends ScopeProps {
@@ -57,7 +56,6 @@ export class WebScope extends Scope {
     // root members
     if (!parent) {
       this.object['window'] = window;
-      this.object['console'] = console;
     }
     // default members
     // scope values
