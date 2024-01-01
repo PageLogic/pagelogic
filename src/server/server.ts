@@ -1,7 +1,6 @@
 import express, { Application } from "express";
 import rateLimit from "express-rate-limit";
 import * as http from 'http';
-import { TrafficLimit } from "trillo";
 import { PageLogicConfig, pageLogic } from "./middleware";
 import exitHook from "./exit-hook";
 
@@ -12,6 +11,11 @@ interface ServerConfig extends PageLogicConfig {
   logger?: ServerLogger;
   mute?: boolean;
   ssr?: boolean;
+}
+
+export interface TrafficLimit {
+  windowMs: number,
+  maxRequests: number,
 }
 
 export type ServerLogger = (type: 'error' | 'warn' | 'info' | 'debug', msg: any) => void;
