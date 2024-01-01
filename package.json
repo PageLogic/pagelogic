@@ -5,11 +5,12 @@
   "main": "index.js",
   "scripts": {
     "test": "tsx --test test/**/*.test.ts",
-    "test-one": "tsx --test-name-pattern='007-in.html' test/code/loader.test.ts",
+    "test-one": "tsx --test-name-pattern='001-in.html' test/code/compiler.test.ts",
     "build": "rm -rf dist/* && tsc && npm run build-client",
     "build-client": "esbuild src/runtime/web/client.ts --bundle --outfile=dist/pagelogic.js",
     "build-mini-client": "esbuild src/runtime/web/client.ts --bundle --minify --outfile=dist/pagelogic.js",
-    "pl-build": "node dist/index.js build -g page -o ./www ./www-src"
+    "pl-build": "node dist/index.js build -g page www-src www",
+    "server-dev": "tsx src/index serve www"
   },
   "engines": {
     "node": ">=18.0.0"
@@ -24,11 +25,13 @@
     "acorn-walk": "^8.3.1",
     "commander": "^11.1.0",
     "escodegen": "^2.1.0",
+    "express": "^4.18.2",
     "happy-dom": "^12.10.3"
   },
   "devDependencies": {
     "@types/escodegen": "^0.0.10",
     "@types/estraverse": "^5.1.7",
+    "@types/express": "^4.17.21",
     "@types/node": "^20.10.5",
     "esbuild": "^0.19.11",
     "tsx": "^4.7.0"

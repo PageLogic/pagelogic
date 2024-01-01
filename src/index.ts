@@ -20,23 +20,24 @@ program
 program.command('build')
   .description('builds a PageLogic project')
   .argument('<src-dir>')
-  .option('-o, --out-dir <dst-dir>')
+  .argument('<dst-dir>')
   .option('-g, --global-alias <alias>', 'alias for PageLogic object in browser', 'page')
-  .action(async (srcDir: string, options: any) => {
+  .action(async (srcDir: string, dstDir: string, options: any) => {
     //
     // check arguments
     //
     const srcPath = path.normalize(path.join(process.cwd(), srcDir));
-    let dstPath = srcPath;
-    if (options.outDir) {
-      dstPath = path.normalize(path.join(process.cwd(), options.outDir));
-    }
+    const dstPath = path.normalize(path.join(process.cwd(), dstDir));
     if (!fs.statSync(srcPath).isDirectory()) {
       console.error(`${srcPath} is not a directory`);
       return;
     }
     if (!fs.statSync(dstPath).isDirectory()) {
       console.error(`${dstPath} is not a directory`);
+      return;
+    }
+    if (dstPath === srcPath) {
+      console.error(`<src-dir> and <dst-dir> cannot be the same`);
       return;
     }
     let globalAlias = '';
@@ -81,10 +82,10 @@ program.command('build')
       }
       const srcFilePath = path.join(srcPath, fname);
       const dstFilePath = path.join(dstPath, fname);
-      if (dstFilePath === srcFilePath) {
-        console.error(`cannot overwrite ${path.join(srcDir, fname)}\n`);
-        continue;
-      }
+      // if (dstFilePath === srcFilePath) {
+      //   console.error(`cannot overwrite ${path.join(srcDir, fname)}\n`);
+      //   continue;
+      // }
       const html = HTML_MARKER + '\n' + page.markup;
       await fs.promises.mkdir(path.dirname(dstFilePath), { recursive: true });
       await fs.promises.writeFile(dstFilePath, html, { encoding: 'utf8' });
