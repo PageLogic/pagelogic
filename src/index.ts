@@ -139,25 +139,28 @@ program.command('build')
     ok && await cleanup(dstPath);
   });
 
-// program.command('serve')
-//   .description('serves a PageLogic project')
-//   .argument('<pathname>', 'path to docroot')
-//   .option('-p, --port <number>', 'port number, default: 3000')
-//   // .option('-l, --live', 'enable auto reload on page changes')
-//   .action((pathname, options) => {
-//     const root = path.normalize(path.join(process.cwd(), pathname));
-//     const port = parseInt(options.port) || 3000;
-//     // const live = options.live || false;
-//     new Server({
-//       port: port,
-//       rootPath: root,
-//       trustProxy: false,
-//       pageLimit: {
-//         windowMs: 5000,
-//         maxRequests: 50
-//       },
-//       // liveUpdate: true,
-//     }).start();
-//   });
+program.command('serve')
+  .description('serves a PageLogic project')
+  .argument('<pathname>', 'path to docroot')
+  .option('-p, --port <number>', 'port number', '3000')
+  .option('-ssr, --enable-ssr <boolean>', 'enables server-side rendering', 'true')
+  // .option('-l, --live', 'enable auto reload on page changes')
+  .action((pathname, options) => {
+    const root = path.normalize(path.join(process.cwd(), pathname));
+    const port = parseInt(options.port) || 3000;
+    const ssr = options.ssr !== 'false';
+    // const live = options.live || false;
+    new Server({
+      port: port,
+      rootPath: root,
+      trustProxy: false,
+      pageLimit: {
+        windowMs: 5000,
+        maxRequests: 50
+      },
+      ssr
+      // liveUpdate: true,
+    }).start();
+  });
 
 program.parse();

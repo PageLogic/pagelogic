@@ -10,7 +10,7 @@
     "build-client": "esbuild src/runtime/web/client.ts --bundle --outfile=dist/pagelogic.js",
     "build-mini-client": "esbuild src/runtime/web/client.ts --bundle --minify --outfile=dist/pagelogic.js",
     "pl-build": "node dist/index.js build -g page www-src www",
-    "server-dev": "tsx src/index serve www"
+    "server-dev": "node dist/index.js serve www-src"
   },
   "engines": {
     "node": ">=18.0.0"

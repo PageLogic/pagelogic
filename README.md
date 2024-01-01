@@ -43,7 +43,7 @@ Alternatively we can statically compile it with `pagelogic build` and use them a
 
 * **Isomorphic by design** &mdash; with other frameworks, delivering content-ready pages for [SEO]() can be complex: PageLogic's server does it by default.
 
-* **Super lightweight** &mdash; because runtime, compiler and server were designed together, it sports a tiny size of ~2.5kB (minified, gzipped) in the browser.
+* **Super lightweight** &mdash; because runtime, compiler and server were designed together, it sports a tiny size of less than 3kB (minified, gzipped) in the browser.
 
 * **Flexible deployment** &mdash; PageLogic pages can be served using its own Node.js server, its Express middleware in the context of your project, or as static precompiled HTML pages.
 
