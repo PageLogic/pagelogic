@@ -4,7 +4,7 @@ import { OUTER_KEY, RESERVED_PASSIVE_PREFIX, VALUE_KEY } from "../runtime/core/c
 import { CodeScope, CodeValue } from "./logic";
 import { CodeError } from "./types";
 import { identifier, literal } from "./utils";
-import { SCOPE_METHODS } from "../runtime/web/scope";
+import { ROOT_MEMBERS, SCOPE_MEMBERS } from "../runtime/web/scope";
 
 export function qualifyIdentifiers(
   key: string | null, body: es.Node, references: Set<string>, locals?: Set<string>
@@ -217,7 +217,10 @@ function lookup(scope: CodeScope | null, key: string
     if (value) {
       return { type: 'value', target: value };
     }
-    if (SCOPE_METHODS[key]) {
+    if (SCOPE_MEMBERS[key]) {
+      return true;
+    }
+    if (!scope.parent && ROOT_MEMBERS[key]) {
       return true;
     }
     for (let child of scope?.children || []) {

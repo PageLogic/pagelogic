@@ -4,9 +4,14 @@ import { EVENT_VALUE_PREFIX, ID_DATA_ATTR, TEXT_MARKER1_PREFIX, WebContext } fro
 import { COMMENT_NODE, ELEMENT_NODE, TEXT_NODE } from "./util/dom-util";
 import { WebValue } from "./value";
 
-export const SCOPE_METHODS: { [key: string]: any } = {
-  setInterval: true, clearInterval: true,
-  setTimeout: true, clearTimeout: true,
+export const SCOPE_MEMBERS: { [key: string]: any } = {
+  // setInterval: true, clearInterval: true,
+  // setTimeout: true, clearTimeout: true,
+};
+
+export const ROOT_MEMBERS: { [key: string]: any } = {
+  window: true,
+  console: true,
 };
 
 export interface WebScopeProps extends ScopeProps {
@@ -49,6 +54,13 @@ export class WebScope extends Scope {
 
   protected override initValues(): Map<string, Value> {
     const ret = new Map();
+    // root members
+    if (!parent) {
+      this.object['window'] = window;
+      this.object['console'] = console;
+    }
+    // default members
+    // scope values
     if (this.props.values) {
       for (let key of Reflect.ownKeys(this.props.values)) {
         if (typeof key === 'string') {

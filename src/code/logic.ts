@@ -115,7 +115,6 @@ export class CodeScope {
     if (node.name.type === 'JSXIdentifier') {
       this.name = AUTO_SCOPE_NAMES[node.name.name.toLowerCase()];
     }
-    this.addDefaultValues();
     const extracted = new Array<number>();
     for (let i = 0; i < node.attributes.length; i++) {
       const attr = node.attributes[i];
@@ -142,10 +141,6 @@ export class CodeScope {
     for (let i = 0; i < extracted.length; i++) {
       node.attributes.splice(extracted[i] - i, 1);
     }
-  }
-
-  addDefaultValues() {
-
   }
 
   addTextValue(node: JSXExpressionContainer): number {
