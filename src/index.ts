@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { Command } from 'commander';
+import { program, createCommand } from 'commander-version';
 import fs from 'fs';
 import path from "path";
 import { CodeCompiler } from './code/compiler';
@@ -11,17 +11,9 @@ import { DST_CLIENT_CODE, SRC_CLIENT_CODE } from './consts';
 export const HTML_MARKER = '<!-- pagelogic-generated -->';
 export const JS_MARKER = '/* pagelogic-generated */';
 
-const program = new Command();
-
-program
-  .name('pagelogic')
-  .description('PageLogic CLI - https://github.com/fcapolini/pagelogic')
-  .version('1.0.0');
-
-program.command('build')
+const build = createCommand('build')
   .description('builds a PageLogic project')
-  .argument('<src-dir>')
-  .argument('<dst-dir>')
+  .arguments('<src-dir> <dst-dir>')
   .option('-g, --global-alias <alias>', 'alias for PageLogic object in browser', 'page')
   .action(async (srcDir: string, dstDir: string, options: any) => {
     //
@@ -140,9 +132,9 @@ program.command('build')
     ok && await cleanup(dstPath);
   });
 
-program.command('serve')
+  const serve = createCommand('serve')
   .description('serves a PageLogic project')
-  .argument('<pathname>', 'path to docroot')
+  .arguments('<pathname>')
   .option('-p, --port <number>', 'port number', '3000')
   .option('-ssr, --enable-ssr <boolean>', 'enables server-side rendering', 'true')
   // .option('-l, --live', 'enable auto reload on page changes')
@@ -164,4 +156,9 @@ program.command('serve')
     }).start();
   });
 
-program.parse();
+program(__dirname)
+  .name('pagelogic')
+  .description('PageLogic CLI - https://github.com/fcapolini/pagelogic')
+  .addCommand(build)
+  .addCommand(serve)
+  .parse();

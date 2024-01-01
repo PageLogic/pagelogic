@@ -48,7 +48,7 @@ Alternatively we can statically compile with `pagelogic build` and use the gener
 
 * **Flexible deployment** &mdash; PageLogic pages can be served using its own Node.js server, its Express middleware in the context of your project, or as static precompiled HTML pages.
 
-* **Advanced routing** &mdash; the same set of pages can work as a classic website and as a modern [SPA]() at the same time with simple page annotations.
+* **Advanced routing** &mdash; the same set of pages can work as a classic website and as a modern [SPA]() at the same time.
 
 <!-- * **Incrementally adoptable** &mdash; TBD -->
 
