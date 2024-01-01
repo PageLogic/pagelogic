@@ -29,11 +29,12 @@ We'll save it as `index.html` in `./www`. We can now install PageLogic and serve
 ```bash
 npm i -g pagelogic
 pagelogic serve www
+# address http://127.0.0.1:3000/
 ```
 
 <!-- > By default the server starts in dev mode, meaning it will automatically detect changes and refresh the browser as needed. -->
 
-Alternatively we can statically compile it with `pagelogic build` and use them as static HTML pages. Our example generate a compiled `index.html` and its accompanying `index.js` which, together, implement page behaviour.
+Alternatively we can statically compile with `pagelogic build` and use the generated HTML pages. Our example will generate a `index.html` + `index.js` pair of files which, together, implement page behaviour.
 
 ## Why PageLogic
 

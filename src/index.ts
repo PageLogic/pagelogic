@@ -1,14 +1,15 @@
+#!/usr/bin/env node
+
 import { Command } from 'commander';
 import fs from 'fs';
 import path from "path";
 import { CodeCompiler } from './code/compiler';
 import { GLOBAL_NAME } from './runtime/web/context';
 import { Server } from './server/server';
+import { DST_CLIENT_CODE, SRC_CLIENT_CODE } from './consts';
 
-const SRC_CLIENT_CODE = 'pagelogic.js';
-const DST_CLIENT_CODE = '/page.logic.js';
-const HTML_MARKER = '<!-- pagelogic-generated -->';
-const JS_MARKER = '/* pagelogic-generated */';
+export const HTML_MARKER = '<!-- pagelogic-generated -->';
+export const JS_MARKER = '/* pagelogic-generated */';
 
 const program = new Command();
 

@@ -1,23 +1,41 @@
 {
   "name": "pagelogic",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Isomorphic, HTML-oriented reactive web framework for Node.js and the browser",
+  "keywords": [
+    "reactive",
+    "web",
+    "framework",
+    "server",
+    "middleware",
+    "browser",
+    "runtime",
+    "HTML"
+  ],
+  "homepage": "https://github.com/fcapolini/pagelogic/blob/main/README.md",
+  "bugs": "https://github.com/fcapolini/pagelogic/issues",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:fcapolini/pagelogic.git"
+  },
+  "author": "Fabrizio Capolini",
+  "license": "MIT",
   "scripts": {
+    "build": "rm -rf dist/* && tsc && npm run build-client && cp package.json dist && cp README.md dist && cp LICENSE dist && chmod a+x dist/index.js",
+    "build-client": "esbuild src/runtime/web/client.ts --bundle --outfile=dist/runtime.js",
+    "build-mini-client": "esbuild src/runtime/web/client.ts --bundle --minify --outfile=dist/runtime.js",
     "test": "tsx --test test/**/*.test.ts",
     "test-one": "tsx --test-name-pattern='001-in.html' test/code/compiler.test.ts",
-    "build": "rm -rf dist/* && tsc && npm run build-client",
-    "build-client": "esbuild src/runtime/web/client.ts --bundle --outfile=dist/pagelogic.js",
-    "build-mini-client": "esbuild src/runtime/web/client.ts --bundle --minify --outfile=dist/pagelogic.js",
     "pl-build": "node dist/index.js build -g page www-src www",
-    "server-dev": "node dist/index.js serve www-src"
+    "server-dev": "tsx src/index.ts serve www-src"
+  },
+  "main": "index.js",
+  "bin": {
+    "pagelogic": "./index.js"
   },
   "engines": {
     "node": ">=18.0.0"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
     "acorn": "^8.11.2",
     "acorn-jsx": "^5.3.2",

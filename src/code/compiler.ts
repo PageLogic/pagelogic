@@ -12,6 +12,7 @@ import { compileValueRef, qualifyIdentifiers, validateValueRef } from "./referen
 import { CodeError } from "./types";
 import { array, fnExpression, literal, object, property } from "./utils";
 import { JSXElement, walker } from "./walker";
+import { SRC_CLIENT_CODE } from "../consts";
 
 export interface Page {
   fname: string;
@@ -37,7 +38,7 @@ export class CodeCompiler {
     this.props = {
       addDocType: true,
       addSourceMap: false,
-      clientFile: 'pagelogic.js',
+      clientFile: SRC_CLIENT_CODE,
       ...(props || {})
     }
   }

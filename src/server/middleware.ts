@@ -3,6 +3,7 @@ import { Window } from 'happy-dom';
 import { CodeCompiler, Page } from '../code/compiler';
 import fs from "fs";
 import path from "path";
+import { DST_CLIENT_CODE, SRC_CLIENT_CODE } from '../consts';
 
 // https://expressjs.com/en/guide/writing-middleware.html
 // https://typescript.tv/hands-on/how-to-type-express-js-middleware/
@@ -13,29 +14,35 @@ export interface PageLogicConfig {
   // virtualFiles?: Array<VirtualFile>;
 }
 
-const CLIENT_FILE = '/pagelogic-rt.js';
 const pages = new Map<string, Page>();
 let runtimeJs = '';
 
 try {
-  // add initial pseudo-page for runtime js delivery
   runtimeJs = fs.readFileSync(
-    path.join(__dirname, '../pagelogic.js'),
+    path.join(__dirname, `../${SRC_CLIENT_CODE}`),
     { encoding: 'utf8' }
   );
-  pages.set('/pagelogic-rt', {
-    fname: CLIENT_FILE,
-    errors: [],
-    files: [],
-    code: runtimeJs,
-  });
 } catch (error: any) {
   console.log('runtimeJs', error);
+  // tempdebug
+  try {
+    runtimeJs = fs.readFileSync(
+      path.join(__dirname, `../../dist/${SRC_CLIENT_CODE}`),
+      { encoding: 'utf8' }
+    );
+  } catch (ignored: any) {}
 }
+// add initial pseudo-page for runtime js delivery
+pages.set('/pagelogic-rt', {
+  fname: DST_CLIENT_CODE,
+  errors: [],
+  files: [],
+  code: runtimeJs,
+});
 
 export function pageLogic(config: PageLogicConfig) {
   const rootPath = config.rootPath || process.cwd();
-  const compiler = new CodeCompiler(rootPath, { clientFile: CLIENT_FILE });
+  const compiler = new CodeCompiler(rootPath, { clientFile: DST_CLIENT_CODE });
 
   return async function (req: Request, res: Response, next: NextFunction) {
     const i = req.path.indexOf('.');
@@ -45,13 +52,15 @@ export function pageLogic(config: PageLogicConfig) {
     }
     let pathname = i < 0 ? req.path : req.path.substring(0, i).toLowerCase();
     if (i < 0) {
-      const fullPath = path.join(rootPath, pathname);
-      const stat = await fs.promises.stat(fullPath);
-      if (stat.isDirectory()) {
-        // if has no suffix and it's a directory,
-        // it means the index.html inside
-        pathname = path.join(pathname, 'index');
-      }
+      try {
+        const fullPath = path.join(rootPath, pathname);
+        const stat = await fs.promises.stat(fullPath);
+        if (stat.isDirectory()) {
+          // if has no suffix and it's a directory,
+          // it means the index.html inside
+          pathname = path.join(pathname, 'index');
+        }
+      } catch (ignored: any) {}
     }
     if (extname === '.html') {
       const page = await compiler.compile(pathname + extname);
