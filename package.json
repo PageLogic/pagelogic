@@ -1,6 +1,6 @@
 {
   "name": "pagelogic",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "HTML-based isomorphic reactive web framework for Node.js and the browser",
   "keywords": [
     "reactive",
