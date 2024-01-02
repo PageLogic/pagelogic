@@ -1,4 +1,4 @@
-import { Node, ObjectExpression, Program } from "acorn";
+import { Expression, Node, ObjectExpression, Program, ReturnStatement } from "acorn";
 import { generate } from "escodegen";
 import fs from "fs";
 import path from "path";
@@ -219,8 +219,22 @@ export class CodeCompiler {
         : value.node.expression;
     const fn = fnExpression(exp, value.node);
     const refs = new Set<string>();
-    qualifyIdentifiers(name, fn.body as any, refs);
     ret.properties.push(property('exp', fn, value.node));
+    if (fn.body.body.length < 1) {
+      return ret;
+    }
+    qualifyIdentifiers(name, fn.body as any, refs);
+    if (fn.body.body[0].type === 'ReturnStatement') {
+      const s: ReturnStatement = fn.body.body[0];
+      if (
+        s.argument?.type === 'ArrowFunctionExpression' ||
+        s.argument?.type === 'FunctionExpression'
+      ) {
+        // function values are not dependent on their references
+        // (they shouldn't be refreshed on referenced value changes)
+        return ret;
+      }
+    }
     if (refs.size) {
       const seenPaths = new Set<string>();
       const aa = array(value.node);
