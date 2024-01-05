@@ -80,7 +80,7 @@ export class CodeLogic {
   static isValueAttribute(attr: JSXAttribute): boolean {
     return (
       attr.name.name.startsWith(LOGIC_ATTR_PREFIX) ||
-      attr.value.type === 'JSXExpressionContainer'
+      attr.value?.type === 'JSXExpressionContainer'
     );
   }
 }
