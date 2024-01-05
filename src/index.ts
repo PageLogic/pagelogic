@@ -2,19 +2,29 @@
 
 import { createCommand, program } from 'commander-version';
 import path from "path";
-import { compiler } from './code/compiler';
+import { CompilerOptions, compiler } from './code/compiler';
 import { Server } from './server/server';
+const debounce = require('debounce-promise')
+const chokidar = require('chokidar');
 
 const build = createCommand('build')
   .description('builds a PageLogic project')
   .arguments('<src-dir> <dst-dir>')
   .option('-g, --global-alias <alias>', 'alias for PageLogic object in browser', 'page')
+  .option('-w, --watch', 'watch for changes', false)
   .action(async (srcDir: string, dstDir: string, options: any) => {
-    const errors = new Array<string>();
-    if (!await compiler(srcDir, dstDir, options, errors)) {
-      for (let error of errors) {
-        console.error(error);
-      }
+    const srcPath = path.normalize(path.join(process.cwd(), srcDir));
+    await compile(srcDir, dstDir, options);
+    if (options.watch) {
+      const deboucedCompile = debounce(compile, 500);
+      chokidar.watch(srcPath, {
+        ignored: /([\/\\]\.)/,
+        ignorePermissionErrors: true,
+        depth: 20,
+        ignoreInitial: true,
+      }).on('all', (event: string, filename?: string) => {
+        deboucedCompile(srcDir, dstDir, options);
+      });
     }
   });
 
@@ -48,3 +58,12 @@ program(__dirname)
   .addCommand(build)
   .addCommand(serve)
   .parse();
+
+async function compile(srcDir: string, dstDir: string, options: CompilerOptions) {
+  const errors = new Array<string>();
+  if (!await compiler(srcDir, dstDir, options, errors)) {
+    for (let error of errors) {
+      console.error(error);
+    }
+  }
+}

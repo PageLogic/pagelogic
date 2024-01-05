@@ -20,6 +20,8 @@ export interface TrafficLimit {
 
 export type ServerLogger = (type: 'error' | 'warn' | 'info' | 'debug', msg: any) => void;
 
+//TODO: prevent loading remote stuff in ssr environment
+//TODO: serialize compiler calls
 export class Server {
   config: ServerConfig;
   server?: http.Server;
