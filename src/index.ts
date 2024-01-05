@@ -11,7 +11,7 @@ const build = createCommand('build')
   .option('-g, --global-alias <alias>', 'alias for PageLogic object in browser', 'page')
   .action(async (srcDir: string, dstDir: string, options: any) => {
     const errors = new Array<string>();
-    if (!await compiler(errors, srcDir, dstDir, options.globalAlias)) {
+    if (!await compiler(srcDir, dstDir, options, errors)) {
       for (let error of errors) {
         console.error(error);
       }
