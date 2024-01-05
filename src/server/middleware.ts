@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import { Window } from 'happy-dom';
-import { CodeCompiler, Page } from '../code/compiler';
+import { CodeTranspiler, Page } from '../code/transpiler';
 import fs from "fs";
 import path from "path";
 import { DST_CLIENT_CODE, SRC_CLIENT_CODE } from '../consts';
@@ -44,7 +44,7 @@ pages.set('/pagelogic-rt', {
 
 export function pageLogic(config: PageLogicConfig) {
   const rootPath = config.rootPath || process.cwd();
-  const compiler = new CodeCompiler(rootPath, { clientFile: DST_CLIENT_CODE });
+  const transpiler = new CodeTranspiler(rootPath, { clientFile: DST_CLIENT_CODE });
 
   return async function (req: Request, res: Response, next: NextFunction) {
     const i = req.path.indexOf('.');
@@ -65,7 +65,7 @@ export function pageLogic(config: PageLogicConfig) {
       } catch (ignored: any) {}
     }
     if (extname === '.html') {
-      const page = await compiler.compile(pathname + extname);
+      const page = await transpiler.compile(pathname + extname);
       if (page.errors.length) {
         res.header('Content-Type', 'text/plain;charset=UTF-8');
         res.send(page.errors.map(error => error.msg).join('\n'));

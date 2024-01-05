@@ -4,12 +4,12 @@ import fs from "fs";
 import assert from "node:assert";
 import { describe, test } from "node:test";
 import path from "path";
-import { CodeCompiler } from "../../src/code/compiler";
+import { CodeTranspiler } from "../../src/code/transpiler";
 
-const rootPath = path.join(__dirname, 'compiler');
-const compiler = new CodeCompiler(rootPath);
+const rootPath = path.join(__dirname, 'transpiler');
+const transpiler = new CodeTranspiler(rootPath);
 
-describe('code: compiler', function () {
+describe('code: transpiler', function () {
   let count = 0;
   const limit = 1000;
 
@@ -23,7 +23,7 @@ describe('code: compiler', function () {
       }
 
       test(file, async () => {
-        const page = await compiler.compile(file);
+        const page = await transpiler.compile(file);
 
         // check errors
         let errors: string[] = [];

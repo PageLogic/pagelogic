@@ -3,7 +3,7 @@
 import { program, createCommand } from 'commander-version';
 import fs from 'fs';
 import path from "path";
-import { CodeCompiler } from './code/compiler';
+import { CodeTranspiler } from './code/transpiler';
 import { GLOBAL_NAME } from './runtime/web/context';
 import { Server } from './server/server';
 import { DST_CLIENT_CODE, SRC_CLIENT_CODE } from './consts';
@@ -50,12 +50,12 @@ const build = createCommand('build')
     //
     // compile pages
     //
-    const compiler = new CodeCompiler(srcPath, { addSourceMap: true, clientFile: DST_CLIENT_CODE });
-    const files = await compiler.list('.html');
+    const transpiler = new CodeTranspiler(srcPath, { addSourceMap: true, clientFile: DST_CLIENT_CODE });
+    const files = await transpiler.list('.html');
     const generated = new Set<string>();
     let ok = true;
     for (let fname of files) {
-      const page = await compiler.compile(fname);
+      const page = await transpiler.compile(fname);
       if (page.errors.length) {
         ok = false;
         for (let e of page.errors) {

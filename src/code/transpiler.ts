@@ -23,17 +23,17 @@ export interface Page {
   sourceMap?: string;
 }
 
-interface CodeCompilerProps {
+interface CodeTranspilerProps {
   addDocType?: boolean;
   addSourceMap?: boolean;
   clientFile?: string;
 }
 
-export class CodeCompiler {
+export class CodeTranspiler {
   loader: CodeLoader;
-  props: CodeCompilerProps;
+  props: CodeTranspilerProps;
 
-  constructor(rootPath: string, props?: CodeCompilerProps) {
+  constructor(rootPath: string, props?: CodeTranspilerProps) {
     this.loader = new CodeLoader(rootPath);
     this.props = {
       addDocType: true,

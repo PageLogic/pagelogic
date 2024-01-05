@@ -26,7 +26,7 @@
     "build-client": "esbuild src/runtime/web/client.ts --bundle --outfile=dist/runtime.js",
     "build-mini-client": "esbuild src/runtime/web/client.ts --bundle --minify --outfile=dist/runtime.js",
     "test": "tsx --test test/**/*.test.ts",
-    "test-one": "tsx --test-name-pattern='001-in.html' test/code/compiler.test.ts",
+    "test-one": "tsx --test-name-pattern='001-in.html' test/code/transpiler.test.ts",
     "pl-build": "node dist/index.js build -g page www-src www",
     "server": "node dist/index.js serve www-src",
     "server-dev": "tsx src/index.ts serve www-src",
