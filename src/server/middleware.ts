@@ -4,6 +4,8 @@ import { CodeCompiler, Page } from '../code/compiler';
 import fs from "fs";
 import path from "path";
 import { DST_CLIENT_CODE, SRC_CLIENT_CODE } from '../consts';
+import { WebContext } from '../runtime/web/context';
+import { ScopeProps } from '../runtime/core/scope';
 
 // https://expressjs.com/en/guide/writing-middleware.html
 // https://typescript.tv/hands-on/how-to-type-express-js-middleware/
@@ -73,30 +75,48 @@ export function pageLogic(config: PageLogicConfig) {
         if (config.ssr) {
           try {
             //TODO; optimize js code swapping
-            const window = new Window();
-            const name = path.basename(pathname);
-            const html = page.markup!.replace(
-                '<script src="/pagelogic-rt.js"></script>',
-                `<script id="pl-ssr-script-1">${runtimeJs}</script>`
-              ).replace(
-                `<script src="${name}.js"></script>`,
-                `<script id="pl-ssr-script-2">${page.code!}</script>`
-              );
+            // https://github.com/capricorn86/happy-dom/wiki/Settings#changing-settings
+            const window = new Window({
+              settings: {
+                disableJavaScriptFileLoading: true,
+                disableJavaScriptEvaluation: false,
+                disableCSSFileLoading: true,
+                enableFileSystemHttpRequests: false
+              }
+            });
+            // const name = path.basename(pathname);
+            // const html = page.markup!.replace(
+            //     '<script src="/pagelogic-rt.js"></script>',
+            //     `<script id="pl-ssr-script-1">${runtimeJs}</script>`
+            //   ).replace(
+            //     `<script src="${name}.js"></script>`,
+            //     `<script id="pl-ssr-script-2">${page.code!}</script>`
+            //   );
             const doc = window.document;
-            doc.write(html);
+            doc.write(page.markup!);
             const out = doc.documentElement.outerHTML;
-            const i1 = out.indexOf('<script id="pl-ssr-script-1">');
-            const i2 = out.indexOf('</script>', i1);
-            const i3 = out.indexOf('<script id="pl-ssr-script-2">', i2);
-            const i4 = out.indexOf('</script>', i3);
-            const i5 = i4 + '</script>'.length;
-            const p = [];
-            p.push(out.substring(0, i1));
-            p.push('<script src="/pagelogic-rt.js"></script>\n');
-            p.push(`<script src="${name}.js"></script>`);
-            p.push(out.substring(i5));
+            // const i1 = out.indexOf('<script id="pl-ssr-script-1">');
+            // const i2 = out.indexOf('</script>', i1);
+            // const i3 = out.indexOf('<script id="pl-ssr-script-2">', i2);
+            // const i4 = out.indexOf('</script>', i3);
+            // const i5 = i4 + '</script>'.length;
+            // const p = [];
+            // p.push(out.substring(0, i1));
+            // p.push('<script src="/pagelogic-rt.js"></script>\n');
+            // p.push(`<script src="${name}.js"></script>`);
+            // p.push(out.substring(i5));
+
+            // window.happyDOM.settings.disableJavaScriptEvaluation = false;
+            (window as any)['pagelogic'] = {
+              init: (props: ScopeProps) => {
+                const context = new WebContext(window as any, window.document as any, {});
+                context.load(props);
+              }
+            }
+            window.eval(page.code!);
+
             res.header('Content-Type', 'text/html;charset=UTF-8');
-            res.send(`<!DOCTYPE html>\n${p.join('')}`);
+            res.send(`<!DOCTYPE html>\n${out}`);
             return;
           } catch (error: any) {
             res.header('Content-Type', 'text/plain;charset=UTF-8');

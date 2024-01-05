@@ -54,8 +54,8 @@ export class WebScope extends Scope {
   protected override initValues(): Map<string, Value> {
     const ret = new Map();
     // root members
-    if (!parent) {
-      this.object['window'] = window;
+    if (!this.parent) {
+      this.object['window'] = this.webCtx.win;
     }
     // default members
     // scope values

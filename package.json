@@ -28,6 +28,7 @@
     "test": "tsx --test test/**/*.test.ts",
     "test-one": "tsx --test-name-pattern='001-in.html' test/code/compiler.test.ts",
     "pl-build": "node dist/index.js build -g page www-src www",
+    "server": "node dist/index.js serve www-src",
     "server-dev": "tsx src/index.ts serve www-src",
     "bump-minor": "npm version $(semver $npm_package_version -i minor)",
     "bump-patch": "npm version $(semver $npm_package_version -i patch)",
@@ -38,7 +39,7 @@
     "pagelogic": "./index.js"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=16.0.0"
   },
   "dependencies": {
     "acorn": "^8.11.2",
