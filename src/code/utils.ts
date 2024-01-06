@@ -1,17 +1,26 @@
 import { Program, Node, ObjectExpression, Expression, Property, Identifier, ArrayExpression, Literal, FunctionExpression } from "acorn";
-import { JSXClosingElement, JSXElement, JSXOpeningElement } from "./walker";
+import { JSXAttribute, JSXClosingElement, JSXElement, JSXOpeningElement } from "./walker";
 
-export function getLiteralJSXAttributeKeys(node: JSXOpeningElement): string[] {
+export function getJSXAttributeKeys(node: JSXOpeningElement): string[] {
   const ret = new Array<string>();
   for (let attr of node.attributes) {
-    if (
-      attr.type === 'JSXAttribute' &&
-      attr.value?.type === 'Literal'
-    ) {
+    if (attr.type === 'JSXAttribute') {
       ret.push(attr.name.name);
     }
   }
   return ret;
+}
+
+export function getJSXAttributeNode(
+  node: JSXOpeningElement, name: string
+): JSXAttribute | undefined {
+  for (let attr of node.attributes) {
+    if (attr.type === 'JSXAttribute') {
+      if (attr.name.name === name) {
+        return attr;
+      }
+    }
+  }
 }
 
 export function getJSXAttribute(

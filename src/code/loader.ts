@@ -3,8 +3,8 @@ import fs from "fs";
 import path from "path";
 import { CodeParser } from "./parser";
 import { CodeError, CodeErrorType, CodeSource } from "./types";
-import { addJSXAttribute, getJSXAttribute, getLiteralJSXAttributeKeys } from "./utils";
-import { walker, JSXElement, JSXText } from "./walker";
+import { addJSXAttribute, getJSXAttribute, getJSXAttributeKeys, getJSXAttributeNode } from "./utils";
+import { JSXElement, JSXText, walker } from "./walker";
 
 const MAX_NESTING = 100;
 const TAGS_PREFIX = ':';
@@ -171,12 +171,12 @@ export class CodeLoader {
   applyIncludedAttributes(directive: Directive, rootElement: JSXElement) {
     const p = directive.parent.openingElement;
     const r = rootElement.openingElement;
-    const existing = getLiteralJSXAttributeKeys(p);
-    const included = getLiteralJSXAttributeKeys(r)
+    const existing = getJSXAttributeKeys(p);
+    const included = getJSXAttributeKeys(r)
     for (let key of included) {
       if (!existing.includes(key)) {
-        const val = getJSXAttribute(r, key);
-        addJSXAttribute(p, key, val || '');
+        const attr = getJSXAttributeNode(r, key);
+        p.attributes.push(attr!);
       }
     }
   }
