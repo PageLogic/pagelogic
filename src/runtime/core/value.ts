@@ -76,9 +76,6 @@ export class Value {
       this.cycle = this.scope.ctx.cycle;
       const old = this.v1;
       try {
-        if (this.key === 'v') {
-          debugger;
-        }
         this.v1 = this.props.exp.apply(this.scope.proxy);
       } catch (ignored: any) {}
       if (old == null ? this.v1 != null : old !== this.v1) {

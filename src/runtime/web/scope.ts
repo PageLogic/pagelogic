@@ -26,9 +26,14 @@ export class WebScope extends Scope {
     this.dom = this.initDom();
     // this.initTimers();
     if (!parent || props.isolate) {
-      this.object['window'] = ctx.win;
-      this.object['setTimeout'] = ctx.win.setTimeout;
-      this.object['setInterval'] = ctx.win.setInterval;
+      const win = ctx.win;
+      this.object['window'] = win;
+      this.object['setTimeout'] = (fn: () => void, ms: number) => {
+        return win.setTimeout.apply(win, [fn, ms]);
+      }
+      this.object['setInterval'] = (fn: () => void, ms: number) => {
+        return win.setInterval.apply(win, [fn, ms]);
+      }
     }
   }
 
