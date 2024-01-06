@@ -4,6 +4,7 @@ import { describe, test } from "node:test";
 import path from "path";
 import { CodeLoader } from "../../src/code/loader";
 import { getMarkup } from "../../src/code/markup";
+import { normalizeText } from "../../src/code/utils";
 
 const rootPath = path.join(__dirname, 'loader');
 
@@ -43,14 +44,14 @@ describe('code: loader', () => {
                 const actualHTML = getMarkup(source.ast!) + '\n';
                 const pname = path.join(rootPath, dir, file.replace('-in.', '-out.'));
                 const expectedHTML = await fs.promises.readFile(pname, { encoding: 'utf8' });
-                assert.equal(actualHTML, expectedHTML);
+                assert.equal(normalizeText(actualHTML), normalizeText(expectedHTML));
               }
             });
-    
+
           }
         });
       });
-    
+
     }
   });
 

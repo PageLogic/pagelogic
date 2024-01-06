@@ -1,6 +1,19 @@
 import { Program, Node, ObjectExpression, Expression, Property, Identifier, ArrayExpression, Literal, FunctionExpression } from "acorn";
 import { JSXClosingElement, JSXElement, JSXOpeningElement } from "./walker";
 
+export function getLiteralJSXAttributeKeys(node: JSXOpeningElement): string[] {
+  const ret = new Array<string>();
+  for (let attr of node.attributes) {
+    if (
+      attr.type === 'JSXAttribute' &&
+      attr.value?.type === 'Literal'
+    ) {
+      ret.push(attr.name.name);
+    }
+  }
+  return ret;
+}
+
 export function getJSXAttribute(
   node: JSXOpeningElement, name: string
 ): string | undefined {
@@ -44,6 +57,14 @@ export function getJSXElementName(
   } else {
     return `${name.namespace.name}:${name.name.name}`;
   }
+}
+
+export function normalizeText(s?: string): string | undefined {
+  return s?.split(/\n\s+/).join('\n').split(/\s{2,}/).join(' ');
+}
+
+export function normalizeSpace(s?: string): string | undefined {
+  return s?.split(/\s+/).join(' ');
 }
 
 // export class Stack<T> {

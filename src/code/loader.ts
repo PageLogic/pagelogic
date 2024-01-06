@@ -3,7 +3,7 @@ import fs from "fs";
 import path from "path";
 import { CodeParser } from "./parser";
 import { CodeError, CodeErrorType, CodeSource } from "./types";
-import { getJSXAttribute } from "./utils";
+import { addJSXAttribute, getJSXAttribute, getLiteralJSXAttributeKeys } from "./utils";
 import { walker, JSXElement, JSXText } from "./walker";
 
 const MAX_NESTING = 100;
@@ -146,9 +146,7 @@ export class CodeLoader {
     const es = program.body[0] as ExpressionStatement;
     const rootElement = es.expression as unknown as JSXElement;
     // root attributes
-    for (let attr of rootElement.openingElement.attributes) {
-      //TODO
-    }
+    this.applyIncludedAttributes(d, rootElement);
     // include contents
     const nn = [...rootElement.children];
     if (nn.length > 0) {
@@ -168,5 +166,18 @@ export class CodeLoader {
 
   addError(type: CodeErrorType, msg: string, ret: CodeSource, from?: Node) {
     ret.errors.push(new CodeError(type, msg, from));
+  }
+
+  applyIncludedAttributes(directive: Directive, rootElement: JSXElement) {
+    const p = directive.parent.openingElement;
+    const r = rootElement.openingElement;
+    const existing = getLiteralJSXAttributeKeys(p);
+    const included = getLiteralJSXAttributeKeys(r)
+    for (let key of included) {
+      if (!existing.includes(key)) {
+        const val = getJSXAttribute(r, key);
+        addJSXAttribute(p, key, val || '');
+      }
+    }
   }
 }
