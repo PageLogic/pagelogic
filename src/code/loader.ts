@@ -3,8 +3,8 @@ import fs from "fs";
 import path from "path";
 import { CodeParser } from "./parser";
 import { CodeError, CodeErrorType, CodeSource } from "./types";
-import { addJSXAttribute, getJSXAttribute, getJSXAttributeKeys, getJSXAttributeNode, removeJSXAttribute } from "./utils";
-import { JSXAttribute, JSXElement, JSXOpeningElement, JSXText, walker } from "./walker";
+import { getJSXAttribute, getJSXAttributeKeys, getJSXAttributeNode, removeJSXAttribute } from "./utils";
+import { JSXElement, JSXText, walker } from "./walker";
 
 const MAX_NESTING = 100;
 const TAGS_PREFIX = ':';
@@ -221,7 +221,7 @@ export class CodeLoader {
       ));
       return;
     }
-    const res = /^(\w+\-\w+)(\:[\-\w]+)?$/.exec(tag);
+    const res = /^([\-\w]+)(\:[\-\w]+)?$/.exec(tag);
     if (!res) {
       source.errors.push(new CodeError(
         'warning',
@@ -253,7 +253,8 @@ export class CodeLoader {
   }
 
   collectSlots(
-    node: JSXElement, source: CodeLoaderSource
+    node: JSXElement, source: CodeLoaderSource,
+    ignore?: { [key: string]: { node: JSXElement, parent: JSXElement } }
   ): { [key: string]: { node: JSXElement, parent: JSXElement } } {
     const ret: { [key: string]: { node: JSXElement, parent: JSXElement } } = {};
     walker.ancestor(node, {
@@ -271,53 +272,21 @@ export class CodeLoader {
             source.errors.push(new CodeError(
               'error', 'missing slot "name" attribute', node.openingElement
             ));
-          } else {
-            ret[name] = { node, parent };
+            return;
           }
+          if (ignore) {
+            const islot = ignore[name];
+            if (node === islot?.node) {
+              return;
+            }
+          }
+          ret[name] = { node, parent };
         }
       }
     });
-    if (!ret[SLOT_DEFAULT_NAME]) {
-      const defaultSlot: JSXElement = {
-        type: 'JSXElement',
-        openingElement: {
-          type: 'JSXOpeningElement',
-          name: {
-            type: 'JSXIdentifier',
-            name: SLOT_TAG,
-            start: node.start, end: node.end, loc: node.loc
-          },
-          attributes: [{
-            type: 'JSXAttribute',
-            name: {
-              type: 'JSXIdentifier',
-              name: SLOT_NAME_ATTR,
-              start: node.start, end: node.end, loc: node.loc
-            },
-            value: {
-              type: 'Literal',
-              value: SLOT_DEFAULT_NAME,
-              start: node.start, end: node.end, loc: node.loc
-            },
-            start: node.start, end: node.end, loc: node.loc
-          }],
-          selfClosing: false,
-          start: node.start, end: node.end, loc: node.loc
-        },
-        closingElement: {
-          type: 'JSXClosingElement',
-          name: {
-            type: 'JSXIdentifier',
-            name: SLOT_TAG,
-            start: node.start, end: node.end, loc: node.loc
-          },
-          start: node.start, end: node.end, loc: node.loc
-        },
-        children: [],
-        start: node.start, end: node.end, loc: node.loc
-      }
-      node.children.push(defaultSlot);
-      ret[SLOT_DEFAULT_NAME] = { node: defaultSlot, parent: node };
+    if (!ret[SLOT_DEFAULT_NAME] && !ignore) {
+      const slot = this.addDefaultSlot(node);
+      ret[SLOT_DEFAULT_NAME] = slot;
     }
     return ret;
   }
@@ -351,7 +320,8 @@ export class CodeLoader {
     // replace usages
     for (let e of ee) {
       const i = e.parent.children.indexOf(e.use);
-      i >= 0 && e.parent.children.splice(i, 1, e.res);
+      e.parent.children.splice(i, 1, e.res);
+      this.expandMacros(e.res, source, nesting + 1);
     }
   }
 
@@ -366,38 +336,24 @@ export class CodeLoader {
       return use;
     }
     let ret: JSXElement = JSON.parse(JSON.stringify(macro.node));
-    // const slots = this.collectSlots(ret, source);
-    this.populateMacro(use, ret, source, removeSlots);
-    // if (!removeSlots) {
-    //   return ret;
-    // }
-    // // remove slot tags from macro usage
-    // const slots: { node: JSXElement, parent: JSXElement }[] = [];
-    // walker.ancestor(ret, {
-    //   // @ts-ignore
-    //   JSXElement(node, _, ancestors) {
-    //     const parent = (ancestors.length > 1 ? ancestors[ancestors.length - 2] : null);
-    //     if (
-    //       node.type === 'JSXElement' &&
-    //       parent?.type === 'JSXElement' &&
-    //       node.openingElement.name.type === 'JSXIdentifier' &&
-    //       node.openingElement.name.name === SLOT_TAG
-    //     ) {
-    //       slots.push({ node, parent });
-    //     }
-    //   }
-    // });
-    // for (let slot of slots) {
-    //   const i = slot.parent.children.indexOf(slot.node);
-    //   slot.parent.children.splice(i, 1, ...slot.node.children);
-    // }
+    const oldSlots = this.populateMacro(use, ret, source, removeSlots);
+    if (!removeSlots) {
+      const newSlots = this.collectSlots(ret, source, oldSlots);
+      for (let key of Reflect.ownKeys(newSlots) as string[]) {
+        const oldSlot = oldSlots[key];
+        if (oldSlot) {
+          const i = oldSlot.parent.children.indexOf(oldSlot.node);
+          oldSlot.parent.children.splice(i, 1);
+        }
+      }
+    }
     return ret;
   }
 
   populateMacro(
     src: JSXElement, dst: JSXElement, source: CodeLoaderSource,
     removeSlots: boolean
-  ) {
+  ): { [key: string]: { node: JSXElement, parent: JSXElement } } {
     for (let key of getJSXAttributeKeys(src.openingElement)) {
       const srcAttr = getJSXAttributeNode(src.openingElement, key)!;
       const dstAttr = getJSXAttributeNode(dst.openingElement, key);
@@ -409,8 +365,6 @@ export class CodeLoader {
     }
     const slots = this.collectSlots(dst, source);
     for (let node of src.children) {
-      // dst.children.push(node);
-
       let slotName = SLOT_DEFAULT_NAME;
       if (node.type === 'JSXElement') {
         const e = node as JSXElement;
@@ -420,26 +374,62 @@ export class CodeLoader {
       if (!slot) {
         //TODO: error
       } else {
-        slot.node.children.push(node);
-      }
-    }
-    if (removeSlots) {
-      for (let key of Reflect.ownKeys(slots) as string[]) {
-        const slot = slots[key];
+        // slot.node.children.push(node);
         const i = slot.parent.children.indexOf(slot.node);
-        slot.parent.children.splice(i, 1, ...slot.node.children);
+        slot.parent.children.splice(i, 0, node);
       }
     }
+    if (!removeSlots) {
+      return slots;
+    }
+    for (let key of Reflect.ownKeys(slots) as string[]) {
+      const slot = slots[key];
+      const i = slot.parent.children.indexOf(slot.node);
+      slot.parent.children.splice(i, 1, ...slot.node.children);
+    }
+    return {};
   }
-}
 
-function log(n: Node) {
-  if (n.type === 'JSXElement') {
-    const e = n as JSXElement;
-    return `JSXElement(${e.openingElement.name.name})`
-  } else if (n.type === 'JSXOpeningElement') {
-    const e = n as JSXOpeningElement;
-    return `JSXElement(${e.name.name})`
+  addDefaultSlot(node: JSXElement): { node: JSXElement, parent: JSXElement } {
+    const defaultSlot: JSXElement = {
+      type: 'JSXElement',
+      openingElement: {
+        type: 'JSXOpeningElement',
+        name: {
+          type: 'JSXIdentifier',
+          name: SLOT_TAG,
+          start: node.start, end: node.end, loc: node.loc
+        },
+        attributes: [{
+          type: 'JSXAttribute',
+          name: {
+            type: 'JSXIdentifier',
+            name: SLOT_NAME_ATTR,
+            start: node.start, end: node.end, loc: node.loc
+          },
+          value: {
+            type: 'Literal',
+            value: SLOT_DEFAULT_NAME,
+            start: node.start, end: node.end, loc: node.loc
+          },
+          start: node.start, end: node.end, loc: node.loc
+        }],
+        selfClosing: false,
+        start: node.start, end: node.end, loc: node.loc
+      },
+      closingElement: {
+        type: 'JSXClosingElement',
+        name: {
+          type: 'JSXIdentifier',
+          name: SLOT_TAG,
+          start: node.start, end: node.end, loc: node.loc
+        },
+        start: node.start, end: node.end, loc: node.loc
+      },
+      children: [],
+      start: node.start, end: node.end, loc: node.loc
+    }
+    node.children.push(defaultSlot);
+    return { node: defaultSlot, parent: node };
   }
-  return n.type;
 }

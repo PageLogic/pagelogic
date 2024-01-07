@@ -1,4 +1,4 @@
-import { Program } from "acorn";
+import { Node } from "acorn";
 import { JSXOpeningElement, walker } from "./walker";
 
 export interface GetMarkupProps {
@@ -6,11 +6,11 @@ export interface GetMarkupProps {
   bodyEndScriptURLs?: string[];
 }
 
-export function getMarkup(ast: Program, props?: GetMarkupProps): string {
+export function getMarkup(root: Node, props?: GetMarkupProps): string {
   const sb = new Array<string>();
   props ||= {};
   props.addDocType && sb.push('<!DOCTYPE html>\n');
-  walker.simple(ast, {
+  walker.simple(root, {
     // @ts-ignore
     JSXOpeningElement(node: JSXOpeningElement, _) {
       if (node.name.type === 'JSXIdentifier' ||
