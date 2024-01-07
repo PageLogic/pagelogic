@@ -4,7 +4,7 @@ import path from "path";
 import { CodeParser } from "./parser";
 import { CodeError, CodeErrorType, CodeSource } from "./types";
 import { addJSXAttribute, getJSXAttribute, getJSXAttributeKeys, getJSXAttributeNode, removeJSXAttribute } from "./utils";
-import { JSXElement, JSXText, walker } from "./walker";
+import { JSXElement, JSXOpeningElement, JSXText, walker } from "./walker";
 
 const MAX_NESTING = 100;
 const TAGS_PREFIX = ':';
@@ -22,15 +22,19 @@ type Directive = {
   parent: JSXElement
 };
 
-type Macro = {
+type MacroDefinition = {
   name: string;
   node: JSXElement;
   base: string;
-  from?: Macro;
+  from?: MacroDefinition;
+}
+
+type MacroUsage = {
+  //TODO
 }
 
 export interface CodeLoaderSource extends CodeSource {
-  macros: Map<string, Macro>;
+  macros: { [key: string]: MacroDefinition };
 }
 
 /**
@@ -52,7 +56,7 @@ export class CodeLoader {
     const ret: CodeLoaderSource = {
       files: [],
       errors: [],
-      macros: new Map()
+      macros: {}
     };
     ret.ast = await this.parse(fname, '.', ret, 0);
     this.expandMacros(ret.ast!, ret, 0);
@@ -137,7 +141,7 @@ export class CodeLoader {
       if (d.name === INCLUDE_TAG || d.name === IMPORT_TAG) {
         await this.processInclude(d, i, currDir, source, nesting);
       } else if (d.name === DEFINE_TAG) {
-        this.processDefinition(d, source);
+        this.collectMacro(d, source);
       } else {
         i >= 0 && d.parent.children.splice(i, 1);
         source.errors.push(new CodeError(
@@ -209,7 +213,7 @@ export class CodeLoader {
   // macros
   // ===========================================================================
 
-  processDefinition(d: Directive, source: CodeLoaderSource) {
+  collectMacro(d: Directive, source: CodeLoaderSource) {
     const tag = getJSXAttribute(d.node.openingElement, DEFINE_TAG_ATTR);
     if (!tag) {
       source.errors.push(new CodeError(
@@ -228,10 +232,9 @@ export class CodeLoader {
     }
     const name = res[1];
     const base = (res.length > 1 && res[2] ? res[2].substring(1) : 'div');
-    const from = base.indexOf('-') > 0 ? source.macros.get(base) : undefined;
-    // d.node.openingElement.name.name = name;
-    // d.node.openingElement && (d.node.openingElement.name.name = name);
+    const from = base.indexOf('-') > 0 ? source.macros[base] : undefined;
     removeJSXAttribute(d.node.openingElement, DEFINE_TAG_ATTR);
+    d.node.openingElement.name.name = base;
     if (d.node.openingElement.selfClosing) {
       d.node.openingElement.selfClosing = false;
       d.node.closingElement = {
@@ -239,12 +242,14 @@ export class CodeLoader {
         name: d.node.openingElement.name,
         start: d.node.start, end: d.node.end, loc: d.node.loc
       }
+    } else {
+      d.node.closingElement.name.name = base;
     }
+    let node = d.node;
     if (from) {
-      debugger;
+      node = this.expandMacro(d.node, from, source, 0);
     }
-    this.expandMacros(d.node, source, 0);
-    source.macros.set(name, { name, node: d.node, base, from });
+    source.macros[name] = { name, node, base, from };
   }
 
   expandMacros(root: Node, source: CodeLoaderSource, nesting: number) {
@@ -265,7 +270,7 @@ export class CodeLoader {
           node.openingElement.name.type === 'JSXIdentifier'
         ) {
           const name = node.openingElement.name.name;
-          const macro = source.macros.get(name);
+          const macro = source.macros[name];
           if (macro) {
             const res = that.expandMacro(node, macro, source, nesting);
             res && ee.push({ use: node, res, parent });
@@ -281,47 +286,33 @@ export class CodeLoader {
   }
 
   expandMacro(
-    use: JSXElement, macro: Macro, source: CodeLoaderSource, nesting: number
+    use: JSXElement, macro: MacroDefinition, source: CodeLoaderSource, nesting: number
   ): JSXElement {
     if (nesting > MAX_NESTING) {
       source.errors.push(new CodeError(
-        'error',
-        `too many nested macros "${macro.name}"`,
-        use
+        'error', `too many nested macros "${macro.name}"`, use
       ));
       return use;
     }
-    let ret: JSXElement;
-    if (macro.from) {
-      const e = JSON.parse(JSON.stringify(macro.from.node));
-      ret = this.expandMacro(e, macro.from, source, nesting + 1);
-    } else {
-      ret = JSON.parse(JSON.stringify(macro.node));
-      ret.openingElement.name.name = macro.base;
-      ret.closingElement && (ret.closingElement.name.name = macro.base);
-    }
-    this.populateMacro(use, ret, source, nesting);
+    let ret: JSXElement = JSON.parse(JSON.stringify(macro.node));
+    this.populateMacro(use, ret, source);
     return ret;
   }
 
-  populateMacro(
-    src: JSXElement, dst: JSXElement, source: CodeLoaderSource, nesting: number
-  ) {
-    console.log('populateMacro()', src.openingElement.name.name, dst.openingElement.name.name);
-    // apply attributes
-    for (let key of getJSXAttributeKeys(src.openingElement)) {
-      if (getJSXAttributeNode(dst.openingElement, key)) {
-        removeJSXAttribute(dst.openingElement, key);
-      }
-      const attr = getJSXAttributeNode(src.openingElement, key)!;
-      dst.openingElement.attributes.push(attr);
+  populateMacro(src: JSXElement, dst: JSXElement, source: CodeLoaderSource) {
+    for (let n of src.children) {
+      dst.children.push(n);
     }
-    // apply content
-    for (let node of src.children) {
-      //TODO: slot
-      dst.children.push(node);
-    }
-    this.expandMacros(dst, source, nesting + 1);
   }
+}
 
+function log(n: Node) {
+  if (n.type === 'JSXElement') {
+    const e = n as JSXElement;
+    return `JSXElement(${e.openingElement.name.name})`
+  } else if (n.type === 'JSXOpeningElement') {
+    const e = n as JSXOpeningElement;
+    return `JSXElement(${e.name.name})`
+  }
+  return n.type;
 }
