@@ -4,7 +4,7 @@ import path from "path";
 import { CodeParser } from "./parser";
 import { CodeError, CodeErrorType, CodeSource } from "./types";
 import { addJSXAttribute, getJSXAttribute, getJSXAttributeKeys, getJSXAttributeNode, removeJSXAttribute } from "./utils";
-import { JSXElement, JSXOpeningElement, JSXText, walker } from "./walker";
+import { JSXAttribute, JSXElement, JSXOpeningElement, JSXText, walker } from "./walker";
 
 const MAX_NESTING = 100;
 const TAGS_PREFIX = ':';
@@ -15,6 +15,7 @@ const DEFINE_TAG = ':define';
 const DEFINE_TAG_ATTR = 'tag';
 const SLOT_TAG = ':slot';
 const SLOT_NAME_ATTR = 'name';
+const SLOT_DEFAULT_NAME = 'default';
 
 type Directive = {
   name: string,
@@ -27,10 +28,6 @@ type MacroDefinition = {
   node: JSXElement;
   base: string;
   from?: MacroDefinition;
-}
-
-type MacroUsage = {
-  //TODO
 }
 
 export interface CodeLoaderSource extends CodeSource {
@@ -137,11 +134,14 @@ export class CodeLoader {
     });
     for (let d of directives) {
       const i = d.parent.children.indexOf(d.node);
-      i >= 0 && d.parent.children.splice(i, 1);
       if (d.name === INCLUDE_TAG || d.name === IMPORT_TAG) {
+        i >= 0 && d.parent.children.splice(i, 1);
         await this.processInclude(d, i, currDir, source, nesting);
       } else if (d.name === DEFINE_TAG) {
+        i >= 0 && d.parent.children.splice(i, 1);
         this.collectMacro(d, source);
+      } else if (d.name === SLOT_TAG) {
+        // nop
       } else {
         i >= 0 && d.parent.children.splice(i, 1);
         source.errors.push(new CodeError(
@@ -247,9 +247,79 @@ export class CodeLoader {
     }
     let node = d.node;
     if (from) {
-      node = this.expandMacro(d.node, from, source, 0);
+      node = this.expandMacro(d.node, from, source, false, 0);
     }
     source.macros[name] = { name, node, base, from };
+  }
+
+  collectSlots(
+    node: JSXElement, source: CodeLoaderSource
+  ): { [key: string]: { node: JSXElement, parent: JSXElement } } {
+    const ret: { [key: string]: { node: JSXElement, parent: JSXElement } } = {};
+    walker.ancestor(node, {
+      // @ts-ignore
+      JSXElement(node, _, ancestors) {
+        const parent = (ancestors.length > 1 ? ancestors[ancestors.length - 2] : null);
+        if (
+          node.type === 'JSXElement' &&
+          parent?.type === 'JSXElement' &&
+          node.openingElement.name.type === 'JSXIdentifier' &&
+          node.openingElement.name.name === SLOT_TAG
+        ) {
+          const name = getJSXAttribute(node.openingElement, SLOT_NAME_ATTR);
+          if (!name) {
+            source.errors.push(new CodeError(
+              'error', 'missing slot "name" attribute', node.openingElement
+            ));
+          } else {
+            ret[name] = { node, parent };
+          }
+        }
+      }
+    });
+    if (!ret[SLOT_DEFAULT_NAME]) {
+      const defaultSlot: JSXElement = {
+        type: 'JSXElement',
+        openingElement: {
+          type: 'JSXOpeningElement',
+          name: {
+            type: 'JSXIdentifier',
+            name: SLOT_TAG,
+            start: node.start, end: node.end, loc: node.loc
+          },
+          attributes: [{
+            type: 'JSXAttribute',
+            name: {
+              type: 'JSXIdentifier',
+              name: SLOT_NAME_ATTR,
+              start: node.start, end: node.end, loc: node.loc
+            },
+            value: {
+              type: 'Literal',
+              value: SLOT_DEFAULT_NAME,
+              start: node.start, end: node.end, loc: node.loc
+            },
+            start: node.start, end: node.end, loc: node.loc
+          }],
+          selfClosing: false,
+          start: node.start, end: node.end, loc: node.loc
+        },
+        closingElement: {
+          type: 'JSXClosingElement',
+          name: {
+            type: 'JSXIdentifier',
+            name: SLOT_TAG,
+            start: node.start, end: node.end, loc: node.loc
+          },
+          start: node.start, end: node.end, loc: node.loc
+        },
+        children: [],
+        start: node.start, end: node.end, loc: node.loc
+      }
+      node.children.push(defaultSlot);
+      ret[SLOT_DEFAULT_NAME] = { node: defaultSlot, parent: node };
+    }
+    return ret;
   }
 
   expandMacros(root: Node, source: CodeLoaderSource, nesting: number) {
@@ -272,7 +342,7 @@ export class CodeLoader {
           const name = node.openingElement.name.name;
           const macro = source.macros[name];
           if (macro) {
-            const res = that.expandMacro(node, macro, source, nesting);
+            const res = that.expandMacro(node, macro, source, true, nesting);
             res && ee.push({ use: node, res, parent });
           }
         }
@@ -286,7 +356,8 @@ export class CodeLoader {
   }
 
   expandMacro(
-    use: JSXElement, macro: MacroDefinition, source: CodeLoaderSource, nesting: number
+    use: JSXElement, macro: MacroDefinition, source: CodeLoaderSource,
+    removeSlots: boolean, nesting: number
   ): JSXElement {
     if (nesting > MAX_NESTING) {
       source.errors.push(new CodeError(
@@ -295,13 +366,69 @@ export class CodeLoader {
       return use;
     }
     let ret: JSXElement = JSON.parse(JSON.stringify(macro.node));
-    this.populateMacro(use, ret, source);
+    // const slots = this.collectSlots(ret, source);
+    this.populateMacro(use, ret, source, removeSlots);
+    // if (!removeSlots) {
+    //   return ret;
+    // }
+    // // remove slot tags from macro usage
+    // const slots: { node: JSXElement, parent: JSXElement }[] = [];
+    // walker.ancestor(ret, {
+    //   // @ts-ignore
+    //   JSXElement(node, _, ancestors) {
+    //     const parent = (ancestors.length > 1 ? ancestors[ancestors.length - 2] : null);
+    //     if (
+    //       node.type === 'JSXElement' &&
+    //       parent?.type === 'JSXElement' &&
+    //       node.openingElement.name.type === 'JSXIdentifier' &&
+    //       node.openingElement.name.name === SLOT_TAG
+    //     ) {
+    //       slots.push({ node, parent });
+    //     }
+    //   }
+    // });
+    // for (let slot of slots) {
+    //   const i = slot.parent.children.indexOf(slot.node);
+    //   slot.parent.children.splice(i, 1, ...slot.node.children);
+    // }
     return ret;
   }
 
-  populateMacro(src: JSXElement, dst: JSXElement, source: CodeLoaderSource) {
-    for (let n of src.children) {
-      dst.children.push(n);
+  populateMacro(
+    src: JSXElement, dst: JSXElement, source: CodeLoaderSource,
+    removeSlots: boolean
+  ) {
+    for (let key of getJSXAttributeKeys(src.openingElement)) {
+      const srcAttr = getJSXAttributeNode(src.openingElement, key)!;
+      const dstAttr = getJSXAttributeNode(dst.openingElement, key);
+      if (dstAttr) {
+        dstAttr.value = srcAttr.value
+      } else {
+        dst.openingElement.attributes.push(srcAttr);
+      }
+    }
+    const slots = this.collectSlots(dst, source);
+    for (let node of src.children) {
+      // dst.children.push(node);
+
+      let slotName = SLOT_DEFAULT_NAME;
+      if (node.type === 'JSXElement') {
+        const e = node as JSXElement;
+        slotName = getJSXAttribute(e.openingElement, SLOT_NAME_ATTR) || SLOT_DEFAULT_NAME;
+      }
+      const slot = slots[slotName];
+      if (!slot) {
+        //TODO: error
+      } else {
+        slot.node.children.push(node);
+      }
+    }
+    if (removeSlots) {
+      for (let key of Reflect.ownKeys(slots) as string[]) {
+        const slot = slots[key];
+        const i = slot.parent.children.indexOf(slot.node);
+        slot.parent.children.splice(i, 1, ...slot.node.children);
+      }
     }
   }
 }
