@@ -3,7 +3,7 @@ import fs from "fs";
 import path from "path";
 import { CodeParser } from "./parser";
 import { CodeError, CodeErrorType, CodeSource } from "./types";
-import { addJSXAttribute, getJSXAttribute, getJSXAttributeKeys, getJSXAttributeNode } from "./utils";
+import { addJSXAttribute, getJSXAttribute, getJSXAttributeKeys, getJSXAttributeNode, removeJSXAttribute } from "./utils";
 import { JSXElement, JSXText, walker } from "./walker";
 
 const MAX_NESTING = 100;
@@ -11,12 +11,27 @@ const TAGS_PREFIX = ':';
 const INCLUDE_TAG = ':include';
 const IMPORT_TAG = ':import';
 const INCLUDE_SRC_ATTR = 'src';
+const DEFINE_TAG = ':define';
+const DEFINE_TAG_ATTR = 'tag';
+const SLOT_TAG = ':slot';
+const SLOT_NAME_ATTR = 'name';
 
 type Directive = {
   name: string,
   node: JSXElement,
   parent: JSXElement
 };
+
+type Macro = {
+  name: string;
+  node: JSXElement;
+  base: string;
+  from?: Macro;
+}
+
+export interface CodeLoaderSource extends CodeSource {
+  macros: Map<string, Macro>;
+}
 
 /**
  * Loads page source files from a given document root directory,
@@ -34,16 +49,18 @@ export class CodeLoader {
   }
 
   async load(fname: string): Promise<CodeSource> {
-    const ret: CodeSource = {
+    const ret: CodeLoaderSource = {
       files: [],
-      errors: []
+      errors: [],
+      macros: new Map()
     };
     ret.ast = await this.parse(fname, '.', ret, 0);
+    this.expandMacros(ret.ast!, ret, 0);
     return ret;
   }
 
   async parse(
-    fname: string, currDir: string, source: CodeSource,
+    fname: string, currDir: string, source: CodeLoaderSource,
     nesting: number, once = false, from?: any
   ): Promise<Program | undefined> {
     let program: Program | undefined;
@@ -95,7 +112,7 @@ export class CodeLoader {
   }
 
   async processDirectives(
-    program: Program, currDir: string, source: CodeSource, nesting: number
+    program: Program, currDir: string, source: CodeLoaderSource, nesting: number
   ) {
     const directives = new Array<Directive>();
     // https://github.com/acornjs/acorn/blob/master/acorn-walk/README.md
@@ -116,10 +133,13 @@ export class CodeLoader {
     });
     for (let d of directives) {
       const i = d.parent.children.indexOf(d.node);
+      i >= 0 && d.parent.children.splice(i, 1);
       if (d.name === INCLUDE_TAG || d.name === IMPORT_TAG) {
-        i >= 0 && d.parent.children.splice(i, 1);
         await this.processInclude(d, i, currDir, source, nesting);
+      } else if (d.name === DEFINE_TAG) {
+        this.processDefinition(d, source);
       } else {
+        i >= 0 && d.parent.children.splice(i, 1);
         source.errors.push(new CodeError(
           'warning', `unknown directive ${d.name}`, d.node
         ));
@@ -127,8 +147,12 @@ export class CodeLoader {
     }
   }
 
+  // ===========================================================================
+  // inclusions
+  // ===========================================================================
+
   async processInclude(
-    d: Directive, i: number, currDir: string, source: CodeSource, nesting: number,
+    d: Directive, i: number, currDir: string, source: CodeLoaderSource, nesting: number,
   ) {
     const src = getJSXAttribute(d.node.openingElement, INCLUDE_SRC_ATTR);
     if (!src?.trim()) {
@@ -145,7 +169,7 @@ export class CodeLoader {
     }
     const es = program.body[0] as ExpressionStatement;
     const rootElement = es.expression as unknown as JSXElement;
-    // root attributes
+    // apply root attributes
     this.applyIncludedAttributes(d, rootElement);
     // include contents
     const nn = [...rootElement.children];
@@ -164,7 +188,7 @@ export class CodeLoader {
     d.parent.children.splice(i, 0, ...nn);
   }
 
-  addError(type: CodeErrorType, msg: string, ret: CodeSource, from?: Node) {
+  addError(type: CodeErrorType, msg: string, ret: CodeLoaderSource, from?: Node) {
     ret.errors.push(new CodeError(type, msg, from));
   }
 
@@ -180,4 +204,105 @@ export class CodeLoader {
       }
     }
   }
+
+  // ===========================================================================
+  // macros
+  // ===========================================================================
+
+  processDefinition(d: Directive, source: CodeLoaderSource) {
+    const tag = getJSXAttribute(d.node.openingElement, DEFINE_TAG_ATTR);
+    if (!tag) {
+      source.errors.push(new CodeError(
+        'warning', `bad or missing ${DEFINE_TAG_ATTR} attribute`, d.node
+      ));
+      return;
+    }
+    const res = /^(\w+\-\w+)(\:\w+\-\w+)?$/.exec(tag);
+    if (!res) {
+      source.errors.push(new CodeError(
+        'warning',
+        `invalid tag name "${tag} (does it include a dash?)"`,
+        d.node
+      ));
+      return;
+    }
+    const name = res[1];
+    const base = (res.length > 1 && res[2] ? res[2].substring(1) : 'div');
+    const from = base.indexOf('-') > 0 ? source.macros.get(base) : undefined;
+    removeJSXAttribute(d.node.openingElement, DEFINE_TAG_ATTR);
+    if (d.node.openingElement.selfClosing) {
+      d.node.openingElement.selfClosing = false;
+      d.node.closingElement = {
+        type: "JSXClosingElement",
+        name: d.node.openingElement.name,
+        start: d.node.start, end: d.node.end, loc: d.node.loc
+      }
+    }
+    this.expandMacros(d.node, source, 0);
+    source.macros.set(name, { name, node: d.node, base, from });
+  }
+
+  expandMacros(root: Node, source: CodeLoaderSource, nesting: number) {
+    const that = this;
+    const ee = new Array<{
+      use: JSXElement,
+      res: JSXElement,
+      parent: JSXElement
+    }>();
+    // expand macros
+    walker.ancestor(root, {
+      // @ts-ignore
+      JSXElement(node, _, ancestors) {
+        const parent = (ancestors.length > 1 ? ancestors[ancestors.length - 2] : null);
+        if (
+          node.type === 'JSXElement' &&
+          parent?.type === 'JSXElement' &&
+          node.openingElement.name.type === 'JSXIdentifier'
+        ) {
+          const name = node.openingElement.name.name;
+          const macro = source.macros.get(name);
+          if (macro) {
+            const res = that.expandMacro(node, macro, source, nesting);
+            res && ee.push({ use: node, res, parent });
+          }
+        }
+      }
+    });
+    // replace usages
+    for (let e of ee) {
+      const i = e.parent.children.indexOf(e.use);
+      i >= 0 && e.parent.children.splice(i, 1, e.res);
+    }
+  }
+
+  expandMacro(
+    use: JSXElement, macro: Macro, source: CodeLoaderSource, nesting: number
+  ): JSXElement {
+    if (nesting > MAX_NESTING) {
+      source.errors.push(new CodeError(
+        'error',
+        `too many nested macros "${macro.name}"`,
+        use
+      ));
+      return use;
+    }
+    let ret: JSXElement;
+    if (macro.from) {
+      const e = JSON.parse(JSON.stringify(macro.from.node));
+      ret = this.expandMacro(e, macro.from, source, nesting + 1);
+    } else {
+      ret = JSON.parse(JSON.stringify(macro.node));
+      ret.openingElement.name.name = macro.base;
+      ret.closingElement && (ret.closingElement.name.name = macro.base);
+    }
+    this.populateMacro(use, ret, source, nesting);
+    return ret;
+  }
+
+  populateMacro(
+    src: JSXElement, dst: JSXElement, source: CodeLoaderSource, nesting: number
+  ) {
+
+  }
+
 }

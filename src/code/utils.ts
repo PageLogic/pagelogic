@@ -1,6 +1,14 @@
 import { Program, Node, ObjectExpression, Expression, Property, Identifier, ArrayExpression, Literal, FunctionExpression } from "acorn";
 import { JSXAttribute, JSXClosingElement, JSXElement, JSXOpeningElement } from "./walker";
 
+// http://xahlee.info/js/html5_non-closing_tag.html
+export const VOID_ELEMENTS = new Set([
+  'AREA', 'BASE', 'BR', 'COL', 'EMBED', 'HR', 'IMG', 'INPUT',
+  'LINK', 'META', 'PARAM', 'SOURCE', 'TRACK', 'WBR',
+  // obsolete
+  'COMMAND', 'KEYGEN', 'MENUITEM'
+]);
+
 export function getJSXAttributeKeys(node: JSXOpeningElement): string[] {
   const ret = new Array<string>();
   for (let attr of node.attributes) {
@@ -19,6 +27,18 @@ export function getJSXAttributeNode(
       if (attr.name.name === name) {
         return attr;
       }
+    }
+  }
+}
+
+export function removeJSXAttribute(
+  node: JSXOpeningElement, name: string
+) {
+  for (let i = 0; i < node.attributes.length; i++) {
+    const attr = node.attributes[i];
+    if (attr.name.name === name) {
+      node.attributes.splice(i, 1);
+      return;
     }
   }
 }
