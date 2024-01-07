@@ -299,7 +299,7 @@ export class CodeLoader {
       parent: JSXElement
     }>();
     // expand macros
-    walker.ancestor(root, {
+    root && walker.ancestor(root, {
       // @ts-ignore
       JSXElement(node, _, ancestors) {
         const parent = (ancestors.length > 1 ? ancestors[ancestors.length - 2] : null);

@@ -219,6 +219,7 @@ export class CodeTranspiler {
         : value.node.expression;
     const fn = fnExpression(exp, value.node);
     const refs = new Set<string>();
+    let returnRefs = true;
     ret.properties.push(property('exp', fn, value.node));
     if (fn.body.body.length < 1) {
       return ret;
@@ -232,13 +233,12 @@ export class CodeTranspiler {
       ) {
         // function values are not dependent on their references
         // (they shouldn't be refreshed on referenced value changes)
-        return ret;
+        returnRefs = false;
       }
     }
     if (refs.size) {
       const seenPaths = new Set<string>();
       const aa = array(value.node);
-      ret.properties.push(property('refs', aa, value.node));
       for (let ref of refs) {
         const parts = ref.split('.');
         const res = validateValueRef(page.errors, scope, parts, value);
@@ -250,6 +250,7 @@ export class CodeTranspiler {
           }
         }
       }
+      returnRefs && ret.properties.push(property('refs', aa, value.node));
     }
     return ret;
   }
