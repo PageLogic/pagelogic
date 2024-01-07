@@ -217,7 +217,7 @@ export class CodeLoader {
       ));
       return;
     }
-    const res = /^(\w+\-\w+)(\:\w+\-\w+)?$/.exec(tag);
+    const res = /^(\w+\-\w+)(\:[\-\w]+)?$/.exec(tag);
     if (!res) {
       source.errors.push(new CodeError(
         'warning',
@@ -229,6 +229,8 @@ export class CodeLoader {
     const name = res[1];
     const base = (res.length > 1 && res[2] ? res[2].substring(1) : 'div');
     const from = base.indexOf('-') > 0 ? source.macros.get(base) : undefined;
+    // d.node.openingElement.name.name = name;
+    // d.node.openingElement && (d.node.openingElement.name.name = name);
     removeJSXAttribute(d.node.openingElement, DEFINE_TAG_ATTR);
     if (d.node.openingElement.selfClosing) {
       d.node.openingElement.selfClosing = false;
@@ -237,6 +239,9 @@ export class CodeLoader {
         name: d.node.openingElement.name,
         start: d.node.start, end: d.node.end, loc: d.node.loc
       }
+    }
+    if (from) {
+      debugger;
     }
     this.expandMacros(d.node, source, 0);
     source.macros.set(name, { name, node: d.node, base, from });
@@ -302,7 +307,21 @@ export class CodeLoader {
   populateMacro(
     src: JSXElement, dst: JSXElement, source: CodeLoaderSource, nesting: number
   ) {
-
+    console.log('populateMacro()', src.openingElement.name.name, dst.openingElement.name.name);
+    // apply attributes
+    for (let key of getJSXAttributeKeys(src.openingElement)) {
+      if (getJSXAttributeNode(dst.openingElement, key)) {
+        removeJSXAttribute(dst.openingElement, key);
+      }
+      const attr = getJSXAttributeNode(src.openingElement, key)!;
+      dst.openingElement.attributes.push(attr);
+    }
+    // apply content
+    for (let node of src.children) {
+      //TODO: slot
+      dst.children.push(node);
+    }
+    this.expandMacros(dst, source, nesting + 1);
   }
 
 }
