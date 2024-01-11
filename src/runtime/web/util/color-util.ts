@@ -22,10 +22,9 @@ export function mixColors(col1:string, col2:string, ratio:number): string {
 		r: Math.round((r2 * ratio + r1 * (1.0 - ratio)) * 255),
 		g: Math.round((g2 * ratio + g1 * (1.0 - ratio)) * 255),
 		b: Math.round((b2 * ratio + b1 * (1.0 - ratio)) * 255),
-    a: (rgba1 && rgba1.a != null || rgba2 && rgba2.a != null) ?
-       a2 * ratio + a1 * (1.0 - ratio) :
-       undefined
-
+    a: (rgba1 && rgba1.a != null || rgba2 && rgba2.a != null)
+        ? a2 * ratio + a1 * (1.0 - ratio)
+        : undefined
 	});
 	return ret;
 }

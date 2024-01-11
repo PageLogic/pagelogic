@@ -30,8 +30,7 @@ export class Value {
     this.v2 = undefined;
     this.cb = cb;
     if (key === DATA_KEY) {
-      const replicator = this.scope.getReplicator();
-      this.cb = (v) => replicator.dataValueCB(v);
+      this.cb = (v) => this.scope.getReplicator().dataValueCB(v);
     }
   }
 

@@ -92,7 +92,7 @@ async function compilePages(
   options: CompilerOptions, errors: string[]
 ) {
   const transpiler = new CodeTranspiler(srcPath, {
-    addSourceMap: true,
+    addSourceMap: false,
     clientFile: DST_CLIENT_CODE
   });
   const files = await transpiler.list('.html');
@@ -162,6 +162,9 @@ async function generatePage(
   let code = JS_MARKER + '\n' + page.code!;
   if (options.globalAlias && options.globalAlias !== GLOBAL_NAME) {
     code += `\nwindow.${options.globalAlias} = window.${GLOBAL_NAME}`;
+  }
+  if (page.sourceMap) {
+    code += `\n//# sourceMappingURL=${path.basename(jsFilePath)}.map`;
   }
   await fs.promises.writeFile(jsFilePath, code + '\n', { encoding: 'utf8' });
   generated.add(jsFilePath);

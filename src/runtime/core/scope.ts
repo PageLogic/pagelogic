@@ -18,7 +18,6 @@ export class Scope {
   isClone: boolean;
   children: Scope[];
   object: any;
-  handler: any;
   proxy: any;
   values: Map<string, Value>;
   replicator?: Replicator;
@@ -31,9 +30,8 @@ export class Scope {
     this.id = props.id + (cloneIndex != null ? `.${cloneIndex}` : '');
     this.isClone = (cloneIndex != null);
     this.children = [];
-    this.object = {};
-    this.handler = this.initHandler();
-    this.proxy = new Proxy(this.object, this.handler);
+    this.object = Object.create(null);
+    this.proxy = new Proxy(this.object, this.initHandler());
     this.values = this.initValues();
     if (parent) {
       parent.children.push(this);
@@ -105,19 +103,8 @@ export class Scope {
     this.inited = true;
   }
 
-  get(key: string | symbol): any {
-    return this.proxy[key];
-  }
-
-  set(key: string | symbol, val: any) {
-    this.proxy[key] = val;
-  }
-
-  call(key: string | symbol, args: any[]): any {
-  }
-
   getReplicator(): Replicator {
-    !this.replicator && (this.replicator = new Replicator(this));
+    this.replicator || (this.replicator = new Replicator(this));
     return this.replicator;
   }
 

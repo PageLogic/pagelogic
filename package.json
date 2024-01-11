@@ -34,7 +34,7 @@
     "server-dev": "tsx src/index.ts serve www-src",
     "bump-minor": "npm version $(semver $npm_package_version -i minor)",
     "bump-patch": "npm version $(semver $npm_package_version -i patch)",
-    "release": "npm publish ./dist --tag latest"
+    "release": "npm run build && npm publish ./dist --tag latest"
   },
   "main": "index.js",
   "bin": {
