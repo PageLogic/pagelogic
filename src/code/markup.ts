@@ -39,7 +39,7 @@ export function getMarkup(root: Node, props?: GetMarkupProps): string {
     },
     // @ts-ignore
     JSXText(node, _) {
-      sb.push(node.value);
+      sb.push(unescape(node.value));
     },
     // @ts-ignore
     JSXClosingElement(node, _) {
@@ -70,10 +70,28 @@ function escape(text: string, chars = ""): string {
   if (chars.indexOf("&") >= 0) r = r.split("&").join("&amp;");
   if (chars.indexOf('<') >= 0) r = r.split("<").join("&lt;");
   if (chars.indexOf('>') >= 0) r = r.split(">").join("&gt;");
+  if (chars.indexOf('{') >= 0) r = r.split("{").join("&lbrace;");
+  if (chars.indexOf('}') >= 0) r = r.split("}").join("&rbrace;");
   if (chars.indexOf('"') >= 0) r = r.split('"').join("&quot;");
   if (chars.indexOf("'") >= 0) r = r.split("'").join("&apos;");
   if (chars.indexOf(" ") >= 0) r = r.split(" ").join("&nbsp;");
   if (chars.indexOf("\n") >= 0) r = r.split("\n").join("&#xA;");
   if (chars.indexOf("\r") >= 0) r = r.split("\r").join("&#xD;");
+  return r;
+}
+
+function unescape(text: string): string {
+  let r = text;
+  r = r.split("&lbrace;").join("{");
+  r = r.split("&rbrace;").join("}");
+  // if (chars.indexOf('<') >= 0) r = r.split("<").join("&lt;");
+  // if (chars.indexOf('>') >= 0) r = r.split(">").join("&gt;");
+  // if (chars.indexOf('{') >= 0) r = r.split("<").join("&lcub;");
+  // if (chars.indexOf('}') >= 0) r = r.split(">").join("&rcub;");
+  // if (chars.indexOf('"') >= 0) r = r.split('"').join("&quot;");
+  // if (chars.indexOf("'") >= 0) r = r.split("'").join("&apos;");
+  // if (chars.indexOf(" ") >= 0) r = r.split(" ").join("&nbsp;");
+  // if (chars.indexOf("\n") >= 0) r = r.split("\n").join("&#xA;");
+  // if (chars.indexOf("\r") >= 0) r = r.split("\r").join("&#xD;");
   return r;
 }

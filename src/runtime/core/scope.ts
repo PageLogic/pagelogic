@@ -108,6 +108,10 @@ export class Scope {
     return this.replicator;
   }
 
+  loadChildren(props: ScopeProps[]) {
+    props.forEach(p => this.ctx.loadScope(this, p));
+  }
+
   protected callDelegate(name: string) {
     const d = this.proxy[name];
     d && d();

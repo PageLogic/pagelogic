@@ -47,11 +47,14 @@ export class Context {
     return this;
   }
 
-  protected loadScope(parent: Scope | null, props: ScopeProps): Scope {
-    const ret = new Scope(this, parent, props);
+  loadScope(parent: Scope | null, props: ScopeProps): Scope {
+    const ret = this.scopeFactory(parent, props);
     this.scopes.set(props.id, ret);
-    props.children?.forEach(p => this.loadScope(ret, p));
+    props.children && ret.loadChildren(props.children);
     return ret;
   }
 
+  scopeFactory(parent: Scope | null, props: ScopeProps): Scope {
+    return new Scope(this, parent, props);
+  }
 }

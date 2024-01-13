@@ -13,6 +13,9 @@ const build = createCommand('build')
   .option('-g, --global-alias <alias>', 'alias for PageLogic object in browser', 'page')
   .option('-w, --watch', 'watch for changes', false)
   .action(async (srcDir: string, dstDir: string, options: any) => {
+    process.on('uncaughtException', (err) => {
+      console.error(err.stack ? err.stack : `${err}`);
+    });
     const srcPath = path.normalize(path.join(process.cwd(), srcDir));
     await compile(srcDir, dstDir, options);
     if (options.watch) {

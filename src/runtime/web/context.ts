@@ -34,11 +34,8 @@ export class WebContext extends Context {
     this.doc = doc;
   }
 
-  protected override loadScope(parent: Scope | null, props: ScopeProps): Scope {
-    const ret = new WebScope(this, parent as WebScope, props);
-    this.scopes.set(props.id, ret);
-    props.children?.forEach(p => this.loadScope(ret, p));
-    return ret;
+  override scopeFactory(parent: Scope | null, props: ScopeProps): Scope {
+    return new WebScope(this, parent as WebScope, props);
   }
 
   // ---------------------------------------------------------------------------

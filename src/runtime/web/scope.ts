@@ -44,8 +44,10 @@ export class WebScope extends Scope {
     return new WebScope(this.webCtx, this.webParent, this.props, cloneIndex);
   }
 
-  dispose() {
+  dispose(unlinkDOM = true) {
     this.disposeListeners();
+    unlinkDOM && this.dom.remove();
+    super.dispose();
   }
 
   get webCtx(): WebContext {
@@ -54,6 +56,13 @@ export class WebScope extends Scope {
 
   get webParent(): WebScope | null {
     return this.parent ? this.parent as WebScope : null;
+  }
+
+  override loadChildren(props: ScopeProps[]) {
+    if (this.dom.tagName === 'TEMPLATE') {
+      return;
+    }
+    super.loadChildren(props);
   }
 
   protected override initValues(): Map<string, Value> {
