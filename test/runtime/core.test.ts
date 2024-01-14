@@ -1,5 +1,5 @@
 import { assert } from "chai";
-import { Context, Scope } from "../../src/runtime/core";
+import { Context, Scope, UNINITED, Value } from "../../src/runtime/core";
 
 describe('runtime: core', function () {
 
@@ -70,16 +70,45 @@ describe('runtime: core', function () {
 
     it("can add value", () => {
       const { context, root } = contextWithRoot();
+      const v1 = new Value(context, root, () => 1);
+      assert.isUndefined(v1.get());
+      context.refresh();
+      assert.equal(v1.get(), 1);
+    });
 
+    it("can add value callback", () => {
+      const { context, root } = contextWithRoot();
+      const v1 = new Value(context, root, () => 1);
+      v1.cb = v => v * 3;
+      context.refresh();
+      assert.equal(v1.get(), 3);
+    });
+
+    it("can update local dependent value", () => {
+      const { context, root } = contextWithRoot();
+      const v1 = new Value(context, root, () => 1, 'x1');
+      // @ts-ignore
+      const v2 = new Value(context, root, () => { with(root.proxy) return x1 + 3 }, 'x2', [
+        // @ts-ignore
+        () => $value('x1')
+      ]);
+      context.refresh();
+      assert.equal(v1.get(), 1);
+      assert.equal(v2.get(), 4);
+      v1.set(2);
+      assert.equal(v1.get(), 2);
+      assert.equal(v2.get(), 5);
     });
 
   });
 
 });
 
-function contextWithRoot(): { root: Scope, context: Context } {
+function contextWithRoot(): {
+  root: Scope, global: Scope, context: Context
+} {
   const context = new Context();
-  const root = new Scope(context);
-  root.link(context.global, 'root');
-  return { root, context };
+  const global = context.global;
+  const root = new Scope(context).link(global, 'root');
+  return { root, global, context };
 }

@@ -1,15 +1,15 @@
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/with#creating_dynamic_namespaces_using_the_with_statement_and_a_proxy
 
-const SCOPE_KEY = '$scope';
-const VALUE_KEY = '$value';
-const UNINITED = Symbol('uninited');
+export const SCOPE_KEY = '$scope';
+export const VALUE_KEY = '$value';
+export const ANON_PREFIX = '$v$';
+export const UNINITED = Symbol('uninited');
 
 /**
  * Root of a reactive context.
  */
 export class Context {
   global: Scope;
-  root?: Scope;
 
   cycle: number;
   refreshLevel: number;
@@ -22,7 +22,7 @@ export class Context {
   }
 
   refresh(scope?: Scope) {
-    if (!scope && !(scope = this.root)) {
+    if (!scope && !(scope = this.global)) {
       return this;
     }
     this.refreshLevel++;
@@ -156,22 +156,29 @@ export class Value {
   v1: any;
   v2: any;
 
-  constructor(context: Context, scope: Scope, exp: ValueExp, ref?: ValueRef[]) {
+  constructor(context: Context, scope: Scope, exp: ValueExp, key?: string, ref?: ValueRef[]) {
     this.context = context;
     this.scope = scope;
     this.exp = exp;
     this.ref = ref;
     this.cycle = 0;
     this.v1 = UNINITED;
+    key && (scope.object[key] = this);
+    key || (key = ANON_PREFIX + scope.values.size);
+    scope.values.set(key, this);
   }
 
   link() {
     this.ref?.forEach(ref => {
       let that = undefined;
       try {
-        that = runExp(this.scope.proxy, ref);
+        // that = runExp(this.scope.proxy, ref);
+        that = ref();
         if (that === this) {
-          that = this.scope.parent ? runExp(this.scope.parent.proxy, ref) : undefined;
+          that = this.scope.parent
+              // ? runExp(this.scope.parent.proxy, ref)
+              ? ref()
+              : undefined;
         }
       } catch (ignored: any) {}
       if (that) {
@@ -192,15 +199,24 @@ export class Value {
   }
 
   set(v: any) {
-
+    const old = this.v1;
+    this.v1 = v;
+    this.exp = () => v;
+    if (old == null ? v != null : old !== v) {
+      this.cb ? this.v2 = this.cb(v) : this.v2 = v;
+      this.propagate();
+    }
   }
 
   private update() {
     this.cycle = this.context.cycle;
     const old = this.v1;
     try {
-      runExp(this.scope.proxy, this.exp);
-    } catch (ignored: any) {}
+      // this.v1 = runExp(this.scope.proxy, this.exp);
+      this.v1 = this.exp();
+    } catch (error: any) {
+      console.error(error);
+    }
     if (old == null ? this.v1 != null : old !== this.v1) {
       this.cb ? this.v2 = this.cb(this.v1) : this.v2 = this.v1;
       this.dst && this.context.refreshLevel < 1 && this.propagate();
@@ -214,15 +230,15 @@ export class Value {
     }
     context.pushLevel++;
     try {
-      this.dst?.forEach(v => v.update());
+      this.dst?.forEach(v => v.get());
     } catch (ignored: any) {}
     context.pushLevel--;
   }
 }
 
-function runExp(obj: any, exp: () => any): any {
-  // @ts-ignore
-  with (obj) {
-    return exp();
-  }
-}
+// function runExp(obj: any, exp: () => any): any {
+//   // @ts-ignore
+//   with (obj) {
+//     return exp();
+//   }
+// }
