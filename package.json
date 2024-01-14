@@ -1,6 +1,6 @@
 {
   "name": "pagelogic",
-  "version": "1.1.1",
+  "version": "2.0.0",
   "description": "HTML-based isomorphic reactive web framework for Node.js and the browser",
   "keywords": [
     "reactive",
@@ -22,16 +22,11 @@
   "author": "Fabrizio Capolini",
   "license": "MIT",
   "scripts": {
-    "build": "rm -rf dist/* && tsc && npm run build-client && cp package.json dist && cp README.md dist && cp LICENSE dist && chmod a+x dist/index.js",
-    "build-client": "esbuild src/runtime/web/client.ts --bundle --outfile=dist/runtime.js",
-    "build-mini-client": "esbuild src/runtime/web/client.ts --bundle --minify --outfile=dist/runtime.js",
-    "test": "tsx --test test/**/*.test.ts",
-    "test-one": "tsx --test-name-pattern='testExtendedMacro1-in.html' test/code/loader.test.ts",
-    "pl-clean": "rm -rf www/*",
-    "pl-build": "node dist/index.js build -g page www-src www",
-    "pl-watch": "node dist/index.js build -g page -w www-src www",
-    "server": "node dist/index.js serve www-src",
-    "server-dev": "tsx src/index.ts serve www-src",
+    "build": "rm -rf dist/* && tsc && browserify dist/client/client.js -o dist/pagelogic-rt.js && cp package.json dist && cp README.md dist && cp LICENSE dist && chmod a+x dist/command.js",
+    "test": "npm run build && mocha --exit -r ts-node/register test/**/*.test.ts",
+    "test-only": "mocha --exit -r ts-node/register test/**/*.test.ts",
+    "coverage": "nyc --reporter=cobertura npm run coverage-test",
+    "coverage-test": "mocha --reporter mocha-junit-reporter --exit -r ts-node/register test/**/*.test.ts",
     "bump-minor": "npm version $(semver $npm_package_version -i minor)",
     "bump-patch": "npm version $(semver $npm_package_version -i patch)",
     "release": "npm run build && npm publish ./dist --tag latest"
@@ -43,27 +38,24 @@
   "engines": {
     "node": ">=16.0.0"
   },
-  "dependencies": {
-    "acorn": "^8.11.2",
-    "acorn-jsx": "^5.3.2",
-    "acorn-jsx-walk": "^2.0.0",
-    "acorn-walk": "^8.3.1",
-    "chokidar": "^3.5.3",
-    "commander": "^11.1.0",
-    "commander-version": "^3.0.0",
-    "debounce-promise": "^3.1.2",
-    "escodegen": "^2.1.0",
-    "express": "^4.18.2",
-    "express-rate-limit": "^7.1.5",
-    "happy-dom": "^12.10.3"
-  },
   "devDependencies": {
-    "@types/escodegen": "^0.0.10",
-    "@types/estraverse": "^5.1.7",
-    "@types/express": "^4.17.21",
-    "@types/node": "^20.10.5",
-    "esbuild": "^0.19.11",
-    "semver": "^7.5.4",
-    "tsx": "^4.7.0"
+    "@types/chai": "^4.3.4",
+    "@types/mocha": "^10.0.1",
+    "browserify": "^17.0.0",
+    "chai": "^4.3.7",
+    "coverage-badges-cli": "^1.0.11",
+    "mocha": "^10.1.0",
+    "mocha-junit-reporter": "^2.2.1",
+    "nyc": "^15.1.0",
+    "regenerator-runtime": "^0.13.11",
+    "semver": "^7.3.8",
+    "ts-node": "^10.9.1",
+    "tsify": "^5.0.4",
+    "typescript": "^4.9.3"
+  },
+  "dependencies": {
+    "chokidar": "^3.5.3",
+    "commander": "^11.0.0",
+    "happy-dom": "^12.10.3"
   }
 }

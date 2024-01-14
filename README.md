@@ -3,7 +3,7 @@
 [![CodeQL](https://github.com/fcapolini/pagelogic/actions/workflows/codeql.yml/badge.svg)](https://github.com/fcapolini/pagelogic/actions/workflows/codeql.yml)
 [![Node.js CI](https://github.com/fcapolini/pagelogic/actions/workflows/node.js.yml/badge.svg)](https://github.com/fcapolini/pagelogic/actions/workflows/node.js.yml)
 
-> An HTML-based, isomorphic, reactive web framework.
+> HTML-based, isomorphic, reactive web framework for Node.js and the browser
 
 Modern web development is mostly done using some reactive framework, like [React](https://react.dev/), [Vue](https://vuejs.org/) or [Angular](https://angular.io/). This has many advantages, but they all add plenty of complexity and make the experience closer to desktop development.
 
