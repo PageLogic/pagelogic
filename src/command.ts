@@ -3,7 +3,7 @@
 import { createCommand, program } from 'commander-version';
 import path from "path";
 import { CompilerOptions, compiler } from './code/compiler';
-import { Server } from './server/server';
+import { Server } from './server';
 const debounce = require('debounce-promise')
 const chokidar = require('chokidar');
 

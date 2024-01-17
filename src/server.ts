@@ -1,8 +1,8 @@
 import express, { Application } from "express";
 import rateLimit from "express-rate-limit";
 import * as http from 'http';
-import { PageLogicConfig, pageLogic } from "./middleware";
-import exitHook from "./exit-hook";
+import { PageLogicConfig, pageLogic } from "./server/middleware";
+import exitHook from "./server/exit-hook";
 
 interface ServerConfig extends PageLogicConfig {
   port?: number;

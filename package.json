@@ -36,9 +36,9 @@
     "bump-patch": "npm version $(semver $npm_package_version -i patch)",
     "release": "npm run build && npm publish ./dist --tag latest"
   },
-  "main": "index.js",
+  "main": "server.js",
   "bin": {
-    "pagelogic": "./index.js"
+    "pagelogic": "./command.js"
   },
   "engines": {
     "node": ">=16.0.0"
