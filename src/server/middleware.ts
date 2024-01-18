@@ -119,6 +119,7 @@ export function pageLogic(config: PageLogicConfig) {
             res.send(`<!DOCTYPE html>\n${out}`);
             return;
           } catch (error: any) {
+            //TODO: error status
             res.header('Content-Type', 'text/plain;charset=UTF-8');
             res.send(`${error}`);
             return;

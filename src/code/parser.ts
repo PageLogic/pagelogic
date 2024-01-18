@@ -27,6 +27,7 @@ export class CodeParser {
   }
 
   parse(text: string, fname: string): Program {
+    //TODO: totally remove comments outside root tag
     text = text.replace(/<!--/g, '{/* ');
     text = text.replace(/-->/g, '*/}');
     const res = /^(\s*(<!.*?>)?(\s*))/.exec(text);
