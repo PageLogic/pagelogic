@@ -1,5 +1,5 @@
 ---
-description: An HTML-based reactive web framework, for Node.js and the browser
+description: An HTML-based reactive web framework, for Node.js and the browser.
 ---
 
 # PageLogic

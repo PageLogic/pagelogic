@@ -1,5 +1,13 @@
 # HTML Extensions
 
+PageLogic supports an extended version of HTML where:
+
+* any element can be assigned a [logic value](html-extensions.md#logic-values), using `:`-prefixed attributes
+* [reactive expressions](html-extensions.md#reactive-expressions) can be used in attributes and text, wrapped in `{...}` clauses
+* [directives](html-extensions.md#directives), in the form of `<:...>` tags, can be used to modularize code.
+
+Pages using these extensions can be compiled or served using PageLogic [CLI](../reference/cli.md) or the provided [Express middleware](../reference/server.md), producing standard HTML plus page-specific JavaScript code which implements their behaviour.
+
 ### Logic Values
 
 Any element can be assigned logic values using `:`-prefixed attributes:

@@ -1,7 +1,6 @@
 # Table of contents
 
 * [PageLogic](README.md)
-* [Overview](overview.md)
 
 ## Concepts
 
@@ -15,4 +14,5 @@
 
 * [CLI](reference/cli.md)
 * [Runtime](reference/runtime.md)
+* [Standard Library](reference/standard-library.md)
 * [Server](reference/server.md)
