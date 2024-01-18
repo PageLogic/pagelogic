@@ -1,8 +1,5 @@
 ---
 description: An HTML-based reactive web framework, for Node.js and the browser
-cover: >-
-  https://images.unsplash.com/photo-1632882765546-1ee75f53becb?crop=entropy&cs=srgb&fm=jpg&ixid=M3wxOTcwMjR8MHwxfHNlYXJjaHwzfHxodG1sfGVufDB8fHx8MTcwNTU3NjIxOHww&ixlib=rb-4.0.3&q=85
-coverY: 0
 ---
 
 # PageLogic
