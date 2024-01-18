@@ -42,15 +42,15 @@ pagelogic serve ./www
 * This happens when users click the button, thanks to the `on-click` event listener.
 * The page is served complete with its initial content "Clicks: 0": page logic [starts in the server and continues in the client](concepts/isomorphism-and-ssr.md) by default.
 
-When served through PageLogic server, pages are compiled on the fly. In development mode, pages are recompiled automatically and the browser is refreshed when they change.
+When served through a PageLogic server, pages are compiled on the fly. In development mode, pages are recompiled automatically and the browser is refreshed when they change.
 
 {% hint style="success" %}
 This is a complete working example: all the boilerplate required by traditional frameworks is removed, and only what's relevant for the actual page logic remains.
 {% endhint %}
 
-#### Pre compilation
+#### Precompilation
 
-If you don't want to use the included server (and don't need SSR), you can pre compile PageLogic pages:
+If you don't want to use the included server (and don't need [SSR](concepts/isomorphism-and-ssr.md)), you can precompile PageLogic pages:
 
 ```bash
 pagelogic build ./www ./dist
@@ -67,4 +67,4 @@ The compiler includes a copy of PageLogic runtime, and for each page generates s
 * **Isomorphic by design** — with other frameworks, delivering content-ready pages for search engine indexing can be complex: PageLogic server does it by default.
 * **Advanced routing** — the same set of pages can work as a classic website and as a modern [SPA](https://en.wikipedia.org/wiki/Single-page\_application) at the same time.
 * **Simple components** — going from a simple block of code to a reusable component is trivial and promotes building your own reusable libraries.
-* **Flexible deployment** — PageLogic pages can be served using its own [Node.js](https://nodejs.org/) server or its [Express](https://expressjs.com/) middleware in your own projects, or can be used as pre compiled HTML.
+* **Flexible deployment** — PageLogic pages can be served using its own [Node.js](https://nodejs.org/) server or its [Express](https://expressjs.com/) middleware in your own projects, or can be used as precompiled HTML.
