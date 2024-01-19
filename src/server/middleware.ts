@@ -25,14 +25,16 @@ try {
     { encoding: 'utf8' }
   );
 } catch (error: any) {
-  console.log('runtimeJs', error);
+  // console.log('runtimeJs', error);
   // tempdebug
   try {
     runtimeJs = fs.readFileSync(
       path.join(__dirname, `../../dist/${SRC_CLIENT_CODE}`),
       { encoding: 'utf8' }
     );
-  } catch (ignored: any) {}
+  } catch (ignored: any) {
+    console.log('runtimeJs', error);
+  }
 }
 // add initial pseudo-page for runtime js delivery
 pages.set('/pagelogic-rt', {
@@ -84,37 +86,11 @@ export function pageLogic(config: PageLogicConfig) {
                 enableFileSystemHttpRequests: false
               }
             });
-            // const name = path.basename(pathname);
-            // const html = page.markup!.replace(
-            //     '<script src="/pagelogic-rt.js"></script>',
-            //     `<script id="pl-ssr-script-1">${runtimeJs}</script>`
-            //   ).replace(
-            //     `<script src="${name}.js"></script>`,
-            //     `<script id="pl-ssr-script-2">${page.code!}</script>`
-            //   );
             const doc = window.document;
             doc.write(page.markup!);
-            const out = doc.documentElement.outerHTML;
-            // const i1 = out.indexOf('<script id="pl-ssr-script-1">');
-            // const i2 = out.indexOf('</script>', i1);
-            // const i3 = out.indexOf('<script id="pl-ssr-script-2">', i2);
-            // const i4 = out.indexOf('</script>', i3);
-            // const i5 = i4 + '</script>'.length;
-            // const p = [];
-            // p.push(out.substring(0, i1));
-            // p.push('<script src="/pagelogic-rt.js"></script>\n');
-            // p.push(`<script src="${name}.js"></script>`);
-            // p.push(out.substring(i5));
-
-            // window.happyDOM.settings.disableJavaScriptEvaluation = false;
-            (window as any)['pagelogic'] = {
-              init: (props: ScopeProps) => {
-                const context = new WebContext(window as any, window.document as any, {});
-                context.load(props);
-              }
-            }
+            window.eval(runtimeJs);
             window.eval(page.code!);
-
+            const out = doc.documentElement.outerHTML;
             res.header('Content-Type', 'text/html;charset=UTF-8');
             res.send(`<!DOCTYPE html>\n${out}`);
             return;

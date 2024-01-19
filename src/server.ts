@@ -25,6 +25,7 @@ export type ServerLogger = (type: 'error' | 'warn' | 'info' | 'debug', msg: any)
 export class Server {
   config: ServerConfig;
   server?: http.Server;
+  port?: number;
 
   constructor(config?: ServerConfig) {
     this.config = config || {};
@@ -49,9 +50,9 @@ export class Server {
     cb && cb(this, app, config);
     app.use(express.static(config.rootPath));
     this.server = app.listen(config.port);
-    const port = (this.server?.address() as any).port;
+    this.port = (this.server?.address() as any).port;
     this.log('info', `docroot ${config.rootPath}`);
-    this.log('info', `address http://127.0.0.1:${port}/`);
+    this.log('info', `address http://127.0.0.1:${this.port}/`);
     exitHook(() => this.log('info', 'will exit'));
     process.on('uncaughtException', (err) => {
       this.log('error', err.stack ? err.stack : `${err}`);
@@ -62,6 +63,7 @@ export class Server {
   stop(): this {
     this.server?.close();
     delete this.server;
+    delete this.port;
     return this;
   }
 
