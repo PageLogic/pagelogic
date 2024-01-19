@@ -3,14 +3,15 @@ import fs from "fs";
 import path from "path";
 import { CodeParser } from "./parser";
 import { CodeError, CodeErrorType, CodeSource } from "./types";
-import { getJSXAttribute, getJSXAttributeKeys, getJSXAttributeNode, removeJSXAttribute } from "./utils";
-import { JSXElement, JSXText, walker } from "./walker";
+import { getJSXAttribute, getJSXAttributeKeys, getJSXAttributeNode, removeJSXAttribute, position } from "./utils";
+import { JSXElement, JSXIdentifier, JSXText, walker } from "./walker";
 
 const MAX_NESTING = 100;
 const TAGS_PREFIX = ':';
 const INCLUDE_TAG = ':include';
 const IMPORT_TAG = ':import';
 const INCLUDE_SRC_ATTR = 'src';
+const INCLUDE_AS_ATTR = 'as';
 const DEFINE_TAG = ':define';
 const DEFINE_TAG_ATTR = 'tag';
 const SLOT_TAG = ':slot';
@@ -69,6 +70,35 @@ export class CodeLoader {
       this.addError('error', `too many nested inclusions`, source, from);
       return;
     }
+    const loaded = await this.loadText(fname, currDir, source, once, from);
+    if (!loaded) {
+      return;
+    }
+    try {
+      program = this.parser.parse(loaded.text, loaded.relPath);
+    } catch (error: any) {
+      this.addError('error', `${error} in "${loaded.relPath}"`, source, from);
+      return;
+    }
+    const body = program.body;
+    //TODO: we should remove possible leading JSXText nodes
+    if (
+      body.length < 1 ||
+      body[0].type !== 'ExpressionStatement' ||
+      // @ts-ignore
+      body[0].expression.type !== 'JSXElement'
+    ) {
+      this.addError('error', `HTML tag expected "${loaded.relPath}"`, source, source.ast);
+      return;
+    }
+    await this.processDirectives(program, path.dirname(loaded.relPath), source, nesting);
+    return program;
+  }
+
+  async loadText(
+    fname: string, currDir: string, source: CodeLoaderSource,
+    once = false, from?: any
+  ): Promise<{ text: string, relPath: string } | undefined> {
     if (fname.startsWith('/')) {
       currDir = '';
     }
@@ -91,25 +121,7 @@ export class CodeLoader {
       this.addError('error', `failed to read "${relPath}"`, source, from);
       return;
     }
-    try {
-      program = this.parser.parse(text, relPath);
-    } catch (error: any) {
-      this.addError('error', `${error} in "${relPath}"`, source, from);
-      return;
-    }
-    const body = program.body;
-    //TODO: we should remove possible leading JSXText nodes
-    if (
-      body.length < 1 ||
-      body[0].type !== 'ExpressionStatement' ||
-      // @ts-ignore
-      body[0].expression.type !== 'JSXElement'
-    ) {
-      this.addError('error', `HTML tag expected "${relPath}"`, source, source.ast);
-      return;
-    }
-    await this.processDirectives(program, path.dirname(relPath), source, nesting);
-    return program;
+    return { text, relPath };
   }
 
   async processDirectives(
@@ -165,6 +177,63 @@ export class CodeLoader {
       ));
       return;
     }
+    const as = getJSXAttribute(d.node.openingElement, INCLUDE_AS_ATTR)
+      ?.trim().toLocaleLowerCase();
+    if (as) {
+      if (!/^\w+$/.test(as)) {
+        source.errors.push(new CodeError(
+          'error', `invalid ${INCLUDE_AS_ATTR} attribute`, d.node
+        ));
+        return;
+      }
+      return this.processLiteralInclude(d, src, as, i, currDir, source, nesting);
+    }
+    return this.processCodeInclude(d, src, i, currDir, source, nesting);
+  }
+
+  async processLiteralInclude(
+    d: Directive, fname: string, as: string, i: number, currDir: string,
+    source: CodeLoaderSource, nesting: number
+  ) {
+    const loaded = await this.loadText(fname, currDir, source, false, d.node);
+    if (!loaded) {
+      return;
+    }
+    const text: JSXText = {
+      type: 'JSXText',
+      value: loaded.text,
+      start: 0,
+      end: loaded.text.length,
+    };
+    const name: JSXIdentifier = {
+      type: 'JSXIdentifier',
+      name: as,
+      ...position(d.node.openingElement.name),
+    };
+    const e: JSXElement = {
+      type: 'JSXElement',
+      ...position(d.node),
+      openingElement: {
+        type: 'JSXOpeningElement',
+        name: name,
+        attributes: [],
+        selfClosing: false,
+        ...position(d.node.openingElement),
+      },
+      closingElement: {
+        type: 'JSXClosingElement',
+        name: name,
+        ...position(d.node.openingElement),
+      },
+      children: [ text ]
+    };
+    d.parent.children.splice(i, 0, e);
+  }
+
+  async processCodeInclude(
+    d: Directive, src: string, i: number, currDir: string,
+    source: CodeLoaderSource, nesting: number
+  ) {
     const program = await this.parse(
       src, currDir, source, nesting + 1, (d.name === IMPORT_TAG), d.node
     );

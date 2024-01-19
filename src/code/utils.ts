@@ -1,5 +1,5 @@
-import { Program, Node, ObjectExpression, Expression, Property, Identifier, ArrayExpression, Literal, FunctionExpression } from "acorn";
-import { JSXAttribute, JSXClosingElement, JSXElement, JSXOpeningElement } from "./walker";
+import { ArrayExpression, Expression, FunctionExpression, Identifier, Literal, Node, ObjectExpression, Property, SourceLocation } from "acorn";
+import { JSXAttribute, JSXClosingElement, JSXOpeningElement } from "./walker";
 
 // http://xahlee.info/js/html5_non-closing_tag.html
 export const VOID_ELEMENTS = new Set([
@@ -121,6 +121,12 @@ export function normalizeSpace(s?: string): string | undefined {
 //         : undefined;
 //   }
 // }
+
+export function position(
+  ref: Node
+): { start: number, end: number, loc?: SourceLocation | null } {
+  return { start: ref.start, end: ref.end, loc: ref.loc };
+}
 
 export function object(ref: Node): ObjectExpression {
   return {
