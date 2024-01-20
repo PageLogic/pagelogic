@@ -177,12 +177,13 @@ export class CodeLoader {
       ));
       return;
     }
-    const as = getJSXAttribute(d.node.openingElement, INCLUDE_AS_ATTR)
-      ?.trim().toLocaleLowerCase();
-    if (as) {
-      if (!/^\w+$/.test(as)) {
+    const asAttr = getJSXAttributeNode(d.node.openingElement, INCLUDE_AS_ATTR);
+    if (asAttr) {
+      const as = getJSXAttribute(d.node.openingElement, INCLUDE_AS_ATTR)
+        ?.trim().toLocaleLowerCase();
+      if (!as || !/^\w+$/.test(as)) {
         source.errors.push(new CodeError(
-          'error', `invalid ${INCLUDE_AS_ATTR} attribute`, d.node
+          'error', `invalid "${INCLUDE_AS_ATTR}" attribute`, d.node
         ));
         return;
       }

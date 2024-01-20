@@ -48,6 +48,13 @@ describe('server: server', () => {
     assert.equal(win.document.body.innerText.trim(), 'hello');
   });
 
+  it("should overcome PL-10 bug", async () => {
+    const win = getWindow();
+    const res = await win.fetch(`http://localhost:${server.port}/pl-10.html`);
+    const txt = await res.text();
+    assert(txt.toLowerCase().indexOf('invalid "as" attribute') >= 0);
+  });
+
 });
 
 function getWindow() {
