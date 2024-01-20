@@ -181,7 +181,7 @@ export class CodeLoader {
     if (asAttr) {
       const as = getJSXAttribute(d.node.openingElement, INCLUDE_AS_ATTR)
         ?.trim().toLocaleLowerCase();
-      if (!as || !/^\w+$/.test(as)) {
+      if (!as || !/^[\w\-]+$/.test(as)) {
         source.errors.push(new CodeError(
           'error', `invalid "${INCLUDE_AS_ATTR}" attribute`, d.node
         ));
