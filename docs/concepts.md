@@ -80,7 +80,7 @@ The `<:import>` and `<:include>` directives supports physical modularization of 
 </lib>
 ```
 
-By convention source files intended for inclusion use the `.htm` extension. This ensures they won’t be considered deliverable pages by the server.
+> Source files intended for inclusion should use the `.htm` extension. This ensures they won’t be considered deliverable pages by the server or the compiler.
 
 Both these directives include the specified source, but `<:import>` will only include it once, whereas `<:include>` will include it at every occurrence.
 
@@ -129,4 +129,4 @@ The `<:define>` directive supports logical modularization through definition of 
 </lib>
 ```
 
-By convention components which provide their own baseline styling base their styles on a class with the same name as the component.
+> Components which provide their own baseline styling should base their styling on a class with the same name as the component.

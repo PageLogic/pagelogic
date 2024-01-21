@@ -38,7 +38,7 @@ pagelogic serve ./www
 # http://127.0.0.1:3000
 ```
 
-TBD: iframe
+{% embed url="https://pagelogic.dev/samples/quick-start" %}
 
 > This is a complete working example: all the boilerplate required by traditional frameworks is removed, and only what's relevant for the actual page logic remains.
 
