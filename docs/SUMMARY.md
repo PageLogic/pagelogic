@@ -1,18 +1,18 @@
 # Table of contents
 
 * [PageLogic](README.md)
-
-## Concepts
-
-* [HTML Extensions](concepts/html-extensions.md)
-* [Components](concepts/components.md)
-* [Data Binding](concepts/data-binding.md)
-* [Routing](concepts/routing.md)
-* [Isomorphism and SSR](concepts/isomorphism-and-ssr.md)
-
-## Reference
-
-* [CLI](reference/cli.md)
-* [Runtime](reference/runtime.md)
-* [Standard Library](reference/standard-library.md)
-* [Server](reference/server.md)
+* [Concepts](concepts.md)
+* [Examples](examples.md)
+* [Features](features/README.md)
+  * [Reactivity](features/reactivity.md)
+  * [Components](features/components.md)
+  * [Data binding](features/data-binding.md)
+  * [Server](features/server.md)
+  * [Isomorphism & SSR](features/isomorphism-and-ssr.md)
+  * [Routing](features/routing.md)
+  * [Compiler](features/compiler.md)
+* [Reference](reference/README.md)
+  * [CLI](reference/cli.md)
+  * [Runtime](reference/runtime.md)
+  * [Standard Library](reference/standard-library.md)
+  * [Server](reference/server.md)
