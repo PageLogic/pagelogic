@@ -6,9 +6,7 @@ description: An isomorphic HTML-based reactive web framework
 
 ## What it does
 
-PageLogic brings reactive web development, as popularized by [React](https://react.dev/), [Vue](https://vuejs.org/), and [Angular](https://angular.io/), to HTML itself.
-
-It aims to remove the complexity and boilerplate of reactive frameworks, while retaining the advantages of reactivity and componentization.
+PageLogic brings reactive web development, as popularized by [React](https://react.dev/), [Vue](https://vuejs.org/), and [Angular](https://angular.io/), to HTML itself. It aims to remove the complexity and boilerplate of reactive frameworks, while retaining the advantages of reactivity and componentization.
 
 It augments HTML with:
 
@@ -17,9 +15,7 @@ It augments HTML with:
 * [visibility scopes](broken-reference), associated to elements with logic values
 * [directives](broken-reference), declared as `<:...>` tags and used to modularize code.
 
-PageLogic includes a [Node.js](https://nodejs.org/) server and an [Express](https://expressjs.com/) middleware that handle these HTML extensions and deliver standard HTML plus page-specific code to implement page behavior.
-
-By default, page logic starts in the server — to deliver content-ready pages for search engines indexing — and continues in the client — to provide a modern user experience.
+PageLogic includes a [Node.js](https://nodejs.org/) server and an [Express](https://expressjs.com/) middleware that handle these HTML extensions and deliver standard HTML plus page-specific code to implement page behavior. By default, page logic starts in the server — to deliver content-ready pages for search engines indexing — and continues in the client — to provide a modern user experience.
 
 Alternatively, pages can be precompiled using PageLogic CLI and delivered as static HTML, or embedded in web-based apps, with no external dependencies.
 
