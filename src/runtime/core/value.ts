@@ -9,11 +9,13 @@ export interface ValueProps {
 export type ValueExp = () => any;
 export type ValueRef = () => Value;
 
+const uninitialized = Symbol('uninitialized');
+
 export class Value {
   key: string;
   props: ValueProps;
   cb?: (v: any) => any;
-  protected static uninitialized = Symbol('uninitialized');
+  // protected static uninitialized = Symbol('uninitialized');
   protected scope: Scope;
   protected cycle: number;
   protected v1: any;
@@ -26,7 +28,7 @@ export class Value {
     this.key = key;
     this.props = props;
     this.cycle = 0;
-    this.v1 = Value.uninitialized;
+    this.v1 = uninitialized;
     this.v2 = undefined;
     this.cb = cb;
     if (key === DATA_KEY) {
