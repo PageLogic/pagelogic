@@ -89,7 +89,7 @@ export class WebScope extends Scope {
     const root = (this.webParent ? this.webParent.dom : this.webCtx.doc);
     const ret = root.querySelector(`[${ID_DATA_ATTR}='${this.id}']`);
     const collect = (e: Element) => {
-      for (let n of e.childNodes) {
+      e.childNodes.forEach((n) => {
         if (n.nodeType === COMMENT_NODE && n.nodeValue?.startsWith(TEXT_MARKER1_PREFIX)) {
           const key = n.nodeValue.substring(TEXT_MARKER1_PREFIX.length);
           let val = n.nextSibling;
@@ -102,15 +102,15 @@ export class WebScope extends Scope {
         } else if (n.nodeType === ELEMENT_NODE && !(n as Element).hasAttribute(ID_DATA_ATTR)) {
           collect(n as Element);
         }
-      }
+      });
     };
     collect(ret!);
-    for (let key of this.values.keys()) {
+    this.values.forEach((_, key) => {
       if (key.startsWith(EVENT_VALUE_PREFIX)) {
         const id = key.substring(EVENT_VALUE_PREFIX.length);
         ret!.addEventListener(id, (ev) => this.proxy[key]());
       }
-    }
+    });
     return ret!;
   }
 

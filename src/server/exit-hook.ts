@@ -14,9 +14,9 @@ function exit(shouldManuallyExit:boolean, signal:number) {
 
 	isCalled = true;
 
-	for (const callback of callbacks) {
-		callback();
-	}
+  callbacks.forEach((callback) => {
+    callback();
+  });
 
 	if (shouldManuallyExit === true) {
 		process.exit(128 + signal); // eslint-disable-line unicorn/no-process-exit

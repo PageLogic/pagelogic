@@ -9,7 +9,7 @@ const LITERAL_TAGS: any = { PRE: true, SCRIPT: true };
 export function normalizeDom(doc: Document) {
   doc.documentElement.normalize();
   function f(e: Element) {
-    for (let n of e.childNodes) {
+    e.childNodes.forEach((n) => {
       if (n.nodeType === TEXT_NODE) {
         n.nodeValue = (n.nodeValue || '').replace(/\n\s+/g, '\n');
         n.nodeValue = n.nodeValue.replace(/[ ]{2,}/g, ' ');
@@ -18,7 +18,7 @@ export function normalizeDom(doc: Document) {
           f(n as Element);
         }
       }
-    }
+    });
   }
   f(doc.documentElement);
 }

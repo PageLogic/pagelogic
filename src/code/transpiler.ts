@@ -239,7 +239,7 @@ export class CodeTranspiler {
     if (refs.size) {
       const seenPaths = new Set<string>();
       const aa = array(value.node);
-      for (let ref of refs) {
+      refs.forEach((ref) => {
         const parts = ref.split('.');
         const res = validateValueRef(page.errors, scope, parts, value);
         if (res === 'ref') {
@@ -249,7 +249,7 @@ export class CodeTranspiler {
             aa.elements.push(compileValueRef(parts, value) as any);
           }
         }
-      }
+      });
       returnRefs && ret.properties.push(property('refs', aa, value.node));
     }
     return ret;
