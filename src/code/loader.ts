@@ -17,6 +17,7 @@ const DEFINE_TAG_ATTR = 'tag';
 const SLOT_TAG = ':slot';
 const SLOT_NAME_ATTR = 'name';
 const SLOT_DEFAULT_NAME = 'default';
+const SLOT_ATTR = ':slot';
 
 type Directive = {
   name: string,
@@ -438,7 +439,11 @@ export class CodeLoader {
       let slotName = SLOT_DEFAULT_NAME;
       if (node.type === 'JSXElement') {
         const e = node as JSXElement;
-        slotName = getJSXAttribute(e.openingElement, SLOT_NAME_ATTR) || SLOT_DEFAULT_NAME;
+        slotName = getJSXAttribute(e.openingElement, SLOT_ATTR) || SLOT_DEFAULT_NAME;
+        if (slotName === 'brand2') {
+          debugger;
+        }
+        removeJSXAttribute(e.openingElement, SLOT_ATTR);
       }
       const slot = slots[slotName];
       if (!slot) {
