@@ -1,6 +1,7 @@
 import { Value, ValueProps } from "../core/value";
 import { ATTR_VALUE_PREFIX, CLASS_VALUE_PREFIX, EVENT_VALUE_PREFIX, STYLE_VALUE_PREFIX, TEXT_VALUE_PREFIX } from "./context";
 import { WebScope } from "./scope";
+import { camelToHyphen } from "./util/util";
 
 export interface WebValueProps extends ValueProps {
 }
@@ -24,10 +25,12 @@ export class WebValue extends Value {
       }
     } else if (key.startsWith(CLASS_VALUE_PREFIX)) {
       const name = key.substring(CLASS_VALUE_PREFIX.length);
-      this.cb = (v) => this.classCB(name, v);
+      const k = camelToHyphen(name);
+      this.cb = (v) => this.classCB(k, v);
     } else if (key.startsWith(STYLE_VALUE_PREFIX)) {
       const name = key.substring(STYLE_VALUE_PREFIX.length);
-      this.cb = (v) => this.styleCB(name, v);
+      const k = camelToHyphen(name);
+      this.cb = (v) => this.styleCB(k, v);
     } else if (key.startsWith(TEXT_VALUE_PREFIX)) {
       const id = key.substring(TEXT_VALUE_PREFIX.length);
       this.cb = (v) => this.textCB(id, v);
