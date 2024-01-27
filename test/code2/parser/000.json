@@ -1,0 +1,32 @@
+{
+  "type": "document",
+  "errors": [],
+  "children": [
+    {
+      "type": "element",
+      "name": "HTML",
+      "attributes": [],
+      "children": [],
+      "loc": {
+        "end": {
+          "column": 13,
+          "line": 1
+        },
+        "start": {
+          "column": 0,
+          "line": 1
+        }
+      }
+    }
+  ],
+  "loc": {
+    "end": {
+      "column": 13,
+      "line": 1
+    },
+    "start": {
+      "column": 0,
+      "line": 1
+    }
+  }
+}

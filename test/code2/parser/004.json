@@ -1,0 +1,111 @@
+{
+  "type": "document",
+  "errors": [],
+  "children": [
+    {
+      "type": "element",
+      "name": "HTML",
+      "attributes": [],
+      "children": [
+        {
+          "type": "element",
+          "name": "BODY",
+          "attributes": [],
+          "children": [
+            {
+              "type": "text",
+              "value": "\n  ",
+              "loc": {
+                "start": {
+                  "line": 1,
+                  "column": 12
+                },
+                "end": {
+                  "line": 2,
+                  "column": 2
+                }
+              }
+            },
+            {
+              "type": "element",
+              "name": "IMG",
+              "attributes": [
+                {
+                  "type": "attribute",
+                  "name": "src",
+                  "value": "dummy.png",
+                  "quote": "\"",
+                  "loc": {
+                    "start": {
+                      "line": 2,
+                      "column": 7
+                    },
+                    "end": {
+                      "line": 2,
+                      "column": 22
+                    }
+                  }
+                }
+              ],
+              "children": [],
+              "loc": {
+                "start": {
+                  "line": 2,
+                  "column": 2
+                },
+                "end": {
+                  "line": 2,
+                  "column": 24
+                }
+              }
+            },
+            {
+              "type": "text",
+              "value": "\n",
+              "loc": {
+                "start": {
+                  "line": 2,
+                  "column": 24
+                },
+                "end": {
+                  "line": 3,
+                  "column": 0
+                }
+              }
+            }
+          ],
+          "loc": {
+            "start": {
+              "line": 1,
+              "column": 6
+            },
+            "end": {
+              "line": 3,
+              "column": 7
+            }
+          }
+        }
+      ],
+      "loc": {
+        "start": {
+          "line": 1,
+          "column": 0
+        },
+        "end": {
+          "line": 3,
+          "column": 14
+        }
+      }
+    }
+  ],
+  "loc": {
+    "start": {
+      "line": 1,
+      "column": 0
+    },
+    "end": {
+      "line": 3,
+      "column": 14
+    }
+  }
+}
