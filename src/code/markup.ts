@@ -1,6 +1,13 @@
 import { Node } from "acorn";
 import { JSXOpeningElement, walker } from "./walker";
 
+const VOID_ELEMENTS = new Set([
+  'AREA', 'BASE', 'BR', 'COL', 'EMBED', 'HR', 'IMG', 'INPUT',
+  'LINK', 'META', 'PARAM', 'SOURCE', 'TRACK', 'WBR',
+  // obsolete
+  'COMMAND', 'KEYGEN', 'MENUITEM'
+]);
+
 export interface GetMarkupProps {
   addDocType?: boolean;
   bodyEndScriptURLs?: string[];
@@ -16,13 +23,18 @@ export function getMarkup(root: Node, props?: GetMarkupProps): string {
       if (node.name.type === 'JSXIdentifier' ||
           node.name.type === 'JSXNamespacedName') {
         sb.push('<');
+        let tagName;
         if (node.name.type === 'JSXIdentifier') {
-          sb.push(node.name.name.toString());
+          // sb.push(node.name.name.toString());
+          tagName = node.name.name.toString();
         } else {
-          sb.push(node.name.namespace.name);
-          sb.push(':');
-          sb.push(node.name.name.name);
+          // sb.push(node.name.namespace.name);
+          // sb.push(':');
+          // sb.push(node.name.name.name);
+          tagName = node.name.namespace.name +
+              ':' + node.name.name.name;
         }
+        sb.push(tagName);
         for (let attr of node.attributes) {
           if (attr.type === 'JSXAttribute' &&
               attr.value?.type === 'Literal') {
@@ -34,7 +46,18 @@ export function getMarkup(root: Node, props?: GetMarkupProps): string {
             sb.push('"');
           }
         }
-        sb.push(node.selfClosing ? '/>' : '>');
+        // sb.push(node.selfClosing ? '/>' : '>');
+        if (node.selfClosing) {
+          if (VOID_ELEMENTS.has(tagName.toUpperCase())) {
+            sb.push('>');
+          } else {
+            sb.push('></');
+            sb.push(tagName);
+            sb.push('>');
+          }
+        } else {
+          sb.push('>');
+        }
       }
     },
     // @ts-ignore

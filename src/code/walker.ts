@@ -7,7 +7,7 @@ export const walker = walk;
 export interface JSXElement extends Node {
   type: 'JSXElement';
   openingElement: JSXOpeningElement;
-  closingElement: JSXClosingElement;
+  closingElement: JSXClosingElement | null;
   children: Node[];
 }
 

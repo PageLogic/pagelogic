@@ -26,7 +26,7 @@
     "build-client": "esbuild src/runtime/web/client.ts --bundle --outfile=dist/runtime.js",
     "build-mini-client": "esbuild src/runtime/web/client.ts --bundle --minify --outfile=dist/runtime.min.js",
     "test": "tsx --test test/**/*.test.ts",
-    "test-one": "tsx --test-name-pattern='should overcome PL-10 bug' test/server/server.test.ts",
+    "test-one": "tsx --test-name-pattern='000-in.html' test/code/macros.test.ts",
     "pl-clean": "rm -rf www/*",
     "pl-build": "node dist/command.js build -g page www-src www",
     "pl-watch": "node dist/command.js build -g page -w www-src www",
