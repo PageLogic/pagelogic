@@ -37,7 +37,9 @@ describe('runtime: pages', function () {
 
 async function loadPage(fname: string): Promise<string> {
   const page = await transpiler.compile(fname);
-  assert.equal(page.errors.length, 0);
+  if (page.errors.length) {
+    assert.fail(page.errors[0].msg);
+  }
   const window = new happy.Window();
   window.document.write(page.markup!);
   const context = new WebContext(window as any, window.document as any, {});

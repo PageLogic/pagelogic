@@ -96,31 +96,31 @@ export function normalizeSpace(s?: string): string | undefined {
   return s?.split(/\s+/).join(' ');
 }
 
-// export class Stack<T> {
-//   stack: T[];
+export class Stack<T> {
+  stack: T[];
 
-//   constructor() {
-//     this.stack = [];
-//   }
+  constructor() {
+    this.stack = [];
+  }
 
-//   get length(): number {
-//     return this.stack.length;
-//   }
+  get length(): number {
+    return this.stack.length;
+  }
 
-//   push(item: T): number {
-//     return this.stack.push(item);
-//   }
+  push(item: T): number {
+    return this.stack.push(item);
+  }
 
-//   pop(): T | undefined {
-//     return this.stack.pop();
-//   }
+  pop(): T | undefined {
+    return this.stack.pop();
+  }
 
-//   peek(): T | undefined {
-//     return this.stack.length > 0
-//         ? this.stack[this.stack.length - 1]
-//         : undefined;
-//   }
-// }
+  peek(): T | undefined {
+    return this.stack.length > 0
+        ? this.stack[this.stack.length - 1]
+        : undefined;
+  }
+}
 
 export function position(
   ref: Node

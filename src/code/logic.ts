@@ -9,10 +9,11 @@ import {
   WILL_VALUE_PREFIX
 } from "../runtime/web/context";
 import { CodeError, CodeSource } from "./types";
-import { addJSXAttribute, getJSXElementName } from "./utils";
+import { Stack, addJSXAttribute, getJSXElementName } from "./utils";
 import {
   JSXAttribute,
   JSXClosingElement,
+  JSXElement,
   JSXExpressionContainer,
   JSXOpeningElement,
   walker,
@@ -27,16 +28,19 @@ export class CodeLogic {
     this.source = source;
     this.errors = [];
     let count = 0;
-    let currScope: CodeScope | null = null;
+    let stack = new Stack<CodeScope>();
     const that = this;
     walker.ancestor(this.source.ast!, {
       // @ts-ignore
       JSXOpeningElement(node: JSXOpeningElement, _, ancestors) {
+        const parent = ancestors.length > 1
+            ? ancestors[ancestors.length - 2]
+            : null;
         if (CodeLogic.needsScope(node)) {
-          currScope = new CodeScope(currScope, node, count++);
-          currScope.parent || (that.root = currScope);
-          addJSXAttribute(node, ID_DATA_ATTR, `${currScope.id}`);
-          node.selfClosing && (currScope = currScope.parent);
+          const scope = new CodeScope(stack.peek() || null, node, parent, count++);
+          scope.parent || (that.root = scope);
+          addJSXAttribute(node, ID_DATA_ATTR, `${scope.id}`);
+          node.selfClosing || stack.push(scope);
         }
       },
       // @ts-ignore
@@ -44,7 +48,8 @@ export class CodeLogic {
         if (ancestors.length > 1) {
           const parent = ancestors[ancestors.length - 2];
           if (parent.type === 'JSXElement') {
-            const id = currScope?.addTextValue(node);
+            const scope = stack.peek();
+            const id = scope?.addTextValue(node);
             node.type = 'JSXText';
             node.value = `<!--${TEXT_MARKER1_PREFIX}${id}-->`
                        + `<!--${TEXT_MARKER2_PREFIX}${id}-->`;
@@ -53,10 +58,12 @@ export class CodeLogic {
       },
       // @ts-ignore
       JSXClosingElement(node: JSXClosingElement, _, ancestors) {
-        const name1 = currScope ? getJSXElementName(currScope.node) : null;
-        const name2 = getJSXElementName(node);
-        if (name1?.toLowerCase() === name2?.toLowerCase()) {
-          currScope = currScope!.parent;
+        const parent = ancestors.length > 1
+            ? ancestors[ancestors.length - 2]
+            : null;
+        const scope = stack.peek();
+        if (scope && scope.nodeParent === parent) {
+          stack.pop();
         }
       }
     });
@@ -97,15 +104,21 @@ export class CodeScope {
   parent: CodeScope | null;
   children: CodeScope[];
   node: JSXOpeningElement;
+  nodeParent: JSXElement;
   id: number;
   name?: string;
   values: { [key: string]: CodeValue };
   textCount: number;
 
-  constructor(parent: CodeScope | null, node: JSXOpeningElement, id: number) {
+  constructor(
+    parent: CodeScope | null,
+    node: JSXOpeningElement, nodeParent: JSXElement,
+    id: number
+  ) {
     this.parent = parent;
     this.children = [];
     this.node = node;
+    this.nodeParent = nodeParent;
     this.id = id;
     this.values = {};
     this.textCount = 0;
