@@ -78,7 +78,9 @@ export class Value {
       const old = this.v1;
       try {
         this.v1 = this.props.exp.apply(this.scope.proxy);
-      } catch (ignored: any) {}
+      } catch (err: any) {
+        // console.error(err);//tempdebug
+      }
       if (old == null ? this.v1 != null : old !== this.v1) {
         this.cb ? this.v2 = this.cb(this.v1) : this.v2 = this.v1;
         this.dst && this.scope.ctx.refreshLevel < 1 && this.propagate();

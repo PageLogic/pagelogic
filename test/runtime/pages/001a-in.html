@@ -1,0 +1,20 @@
+<html>
+  <body>
+    <div :data={{
+      title: 'A List',
+      items: [
+        {
+          title: 'Item 1',
+          value: 1
+        },
+        {
+          title: 'Item 2',
+          value: 2
+        },
+      ]
+    }}>
+      <h1>{data.title}</h1>
+      <div :data={data.items}>{data.title}</div>
+    </div>
+  </body>
+</html>

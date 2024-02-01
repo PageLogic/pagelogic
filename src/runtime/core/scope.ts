@@ -41,7 +41,7 @@ export class Scope {
     }
     this.object[SCOPE_KEY] = this;
     this.object[NAME_KEY] = props.name;
-    this.object[OUTER_KEY] = () => parent?.proxy;
+    this.object[OUTER_KEY] = (() => parent?.proxy)();
     this.object[PRINT_KEY] = (v: any) => v != null ? `${v}` : '';
     this.object[VALUE_KEY] = (key: string) => {
       let scope: Scope | null = this;
