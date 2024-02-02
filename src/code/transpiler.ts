@@ -246,7 +246,7 @@ export class CodeTranspiler {
           const path = parts.join('.');
           if (!seenPaths.has(path)) {
             seenPaths.add(path);
-            aa.elements.push(compileValueRef(parts, value) as any);
+            aa.elements.push(compileValueRef(parts, value, name) as any);
           }
         }
       });

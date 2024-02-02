@@ -26,7 +26,7 @@
     "build-client": "esbuild src/runtime/web/client.ts --bundle --outfile=dist/runtime.js",
     "build-mini-client": "esbuild src/runtime/web/client.ts --bundle --minify --outfile=dist/runtime.min.js",
     "test": "tsx --test test/**/*.test.ts",
-    "test-one": "tsx --test-name-pattern='002a-in.html' test/runtime/pages.test.ts",
+    "test-one": "tsx --test-name-pattern='pl-19-in.html' test/code/transpiler.test.ts",
     "pl-clean": "rm -rf www/*",
     "pl-build": "node dist/command.js build -g page www-src www",
     "pl-watch": "node dist/command.js build -g page -w www-src www",

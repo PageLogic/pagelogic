@@ -238,10 +238,13 @@ function getScopeValue(scope: CodeScope, key: string): CodeValue | null {
 }
 
 export function compileValueRef(
-  refParts: string[], v: CodeValue
+  refParts: string[], v: CodeValue, name: string
 ): es.FunctionExpression {
   const parts = refParts.slice();
   const argument = parts.pop()!;
+  if (argument === name) {
+    parts.push(OUTER_KEY);
+  }
   parts.push(VALUE_KEY);
 
   function chain(i: number, rootObj: es.Expression): es.MemberExpression {
