@@ -2,7 +2,6 @@ import { ExpressionStatement, Node, Program } from "acorn";
 import fs from "fs";
 import path from "path";
 import { DEFINE_TAG, SLOT_TAG, processMacros } from "./macros";
-import { CodeParser } from "./parser1";
 import { CodeError, CodeErrorType, CodeSource } from "./types";
 import { getJSXAttribute, getJSXAttributeKeys, getJSXAttributeNode, position } from "./utils";
 import { JSXElement, JSXIdentifier, JSXText, walker } from "./walker";
