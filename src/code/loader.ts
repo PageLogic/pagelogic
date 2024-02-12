@@ -2,10 +2,11 @@ import { ExpressionStatement, Node, Program } from "acorn";
 import fs from "fs";
 import path from "path";
 import { DEFINE_TAG, SLOT_TAG, processMacros } from "./macros";
-import { CodeParser } from "./parser";
+import { CodeParser } from "./parser1";
 import { CodeError, CodeErrorType, CodeSource } from "./types";
 import { getJSXAttribute, getJSXAttributeKeys, getJSXAttributeNode, position } from "./utils";
 import { JSXElement, JSXIdentifier, JSXText, walker } from "./walker";
+import { parseSource } from "./src-parser";
 
 export const MAX_NESTING = 100;
 export const TAGS_PREFIX = ':';
@@ -28,17 +29,19 @@ type Directive = {
  */
 export class CodeLoader {
   rootPath: string;
-  parser: CodeParser;
+  // parser: CodeParser;
 
   constructor(rootPath: string) {
     this.rootPath = rootPath;
-    this.parser = new CodeParser();
+    // this.parser = new CodeParser();
   }
 
   async load(fname: string): Promise<CodeSource> {
     const ret: CodeSource = { files: [], errors: [] };
     ret.ast = await this.parse(fname, '.', ret, 0);
-    processMacros(ret);
+    if (!ret.errors.length) {
+      processMacros(ret);
+    }
     return ret;
   }
 
@@ -55,12 +58,20 @@ export class CodeLoader {
     if (!loaded) {
       return;
     }
-    try {
-      program = this.parser.parse(loaded.text, loaded.relPath);
-    } catch (error: any) {
-      this.addError('error', `${error} in "${loaded.relPath}"`, source, from);
+
+    // try {
+    //   program = this.parser.parse(loaded.text, loaded.relPath);
+    // } catch (error: any) {
+    //   this.addError('error', `${error} in "${loaded.relPath}"`, source, from);
+    //   return;
+    // }
+    const src = parseSource(loaded.text, loaded.relPath);
+    if (src.errors.length > 0) {
+      source.errors.push(...src.errors);
       return;
     }
+    program = src.program;
+
     const body = program.body;
     //TODO: we should remove possible leading JSXText nodes
     if (
@@ -135,7 +146,7 @@ export class CodeLoader {
       } else {
         i >= 0 && d.parent.children.splice(i, 1);
         source.errors.push(new CodeError(
-          'warning', `unknown directive ${d.name}`, d.node
+          'warning', `unknown directive ${d.name}`, d.node.loc
         ));
       }
     }
@@ -151,7 +162,7 @@ export class CodeLoader {
     const src = getJSXAttribute(d.node.openingElement, INCLUDE_SRC_ATTR);
     if (!src?.trim()) {
       source.errors.push(new CodeError(
-        'error', `missing ${INCLUDE_SRC_ATTR} attribute`, d.node
+        'error', `missing ${INCLUDE_SRC_ATTR} attribute`, d.node.loc
       ));
       return;
     }
@@ -161,7 +172,7 @@ export class CodeLoader {
         ?.trim().toLocaleLowerCase();
       if (!as || !/^[\w\-]+$/.test(as)) {
         source.errors.push(new CodeError(
-          'error', `invalid "${INCLUDE_AS_ATTR}" attribute`, d.node
+          'error', `invalid "${INCLUDE_AS_ATTR}" attribute`, d.node.loc
         ));
         return;
       }
@@ -241,7 +252,7 @@ export class CodeLoader {
   }
 
   addError(type: CodeErrorType, msg: string, ret: CodeSource, from?: Node) {
-    ret.errors.push(new CodeError(type, msg, from));
+    ret.errors.push(new CodeError(type, msg, from?.loc));
   }
 
   applyIncludedAttributes(directive: Directive, rootElement: JSXElement) {

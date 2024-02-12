@@ -203,7 +203,7 @@ export function validateValueRef(
   errors.push({
     type: 'error',
     msg: `invalid reference "${refParts.join('.')}"`,
-    from: v.node
+    loc: v.node.loc || undefined
   });
   return 'invalid';
 }

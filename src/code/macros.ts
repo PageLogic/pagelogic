@@ -85,7 +85,7 @@ function collectMacro(
   const tag = getJSXAttribute(node.openingElement, DEFINE_TAG_ATTR);
   if (!tag) {
     source.codeSource.errors.push(new CodeError(
-      'warning', `bad or missing "${DEFINE_TAG_ATTR}" attribute`, node
+      'warning', `bad or missing "${DEFINE_TAG_ATTR}" attribute`, node.loc
     ));
     return null;
   }
@@ -95,7 +95,7 @@ function collectMacro(
     source.codeSource.errors.push(new CodeError(
       'warning',
       `invalid tag name "${tag} (does it include a dash?)"`,
-      node
+      node.loc
     ));
     return null;
   }
@@ -194,7 +194,7 @@ function expandMacro(
 ): JSXElement | null {
   if (nesting >= MAX_NESTING) {
     source.codeSource.errors.push(new CodeError(
-      'error', `too many nested macros "${def.name}"`, use
+      'error', `too many nested macros "${def.name}"`, use.loc
     ));
     return null;
   }
@@ -246,7 +246,7 @@ function populateMacro(
     const slot = slots.get(slotName);
     if (!slot) {
       source.codeSource.errors.push(new CodeError(
-        'error', `unknown slot "${slotName}"`, n
+        'error', `unknown slot "${slotName}"`, n.loc
       ));
       return;
     }

@@ -128,8 +128,8 @@ function generateErrors(
   page: Page, srcDir: string, fname: string, errors: string[]
 ) {
   for (let e of page.errors) {
-    if (e.from?.loc?.source) {
-      const loc = e.from.loc;
+    if (e.loc?.source) {
+      const loc = e.loc;
       errors.push(
         `${path.join(srcDir, loc.source!)}` +
         `[${loc.start.line},${loc.start.column + 1}] ` +

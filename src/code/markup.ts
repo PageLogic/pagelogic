@@ -1,12 +1,6 @@
 import { Node } from "acorn";
 import { JSXOpeningElement, walker } from "./walker";
-
-const VOID_ELEMENTS = new Set([
-  'AREA', 'BASE', 'BR', 'COL', 'EMBED', 'HR', 'IMG', 'INPUT',
-  'LINK', 'META', 'PARAM', 'SOURCE', 'TRACK', 'WBR',
-  // obsolete
-  'COMMAND', 'KEYGEN', 'MENUITEM'
-]);
+import { VOID_ELEMENTS } from "./html-parser";
 
 export interface GetMarkupProps {
   addDocType?: boolean;

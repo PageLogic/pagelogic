@@ -1,14 +1,6 @@
 import { ArrayExpression, Expression, FunctionExpression, Identifier, Literal, Node, ObjectExpression, Property, SourceLocation } from "acorn";
 import { JSXAttribute, JSXClosingElement, JSXOpeningElement } from "./walker";
 
-// http://xahlee.info/js/html5_non-closing_tag.html
-export const VOID_ELEMENTS = new Set([
-  'AREA', 'BASE', 'BR', 'COL', 'EMBED', 'HR', 'IMG', 'INPUT',
-  'LINK', 'META', 'PARAM', 'SOURCE', 'TRACK', 'WBR',
-  // obsolete
-  'COMMAND', 'KEYGEN', 'MENUITEM'
-]);
-
 export function getJSXAttributeKeys(node: JSXOpeningElement): string[] {
   const ret = new Array<string>();
   for (let attr of node.attributes) {
