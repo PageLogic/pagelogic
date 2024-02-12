@@ -1,6 +1,6 @@
 <html>
   <body>
-    <div :data={{
+    <div :data=${{
       title: 'A List',
       items: [
         {
@@ -14,7 +14,7 @@
       ]
     }}>
       <h1>${data.title}</h1>
-      <div :data={data.items}>${data.title}</div>
+      <div :data=${data.items}>${data.title}</div>
     </div>
   </body>
 </html>

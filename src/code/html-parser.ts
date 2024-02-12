@@ -11,6 +11,15 @@ export const VOID_ELEMENTS = new Set([
 ]);
 export const SKIP_CONTENT_TAGS = new Set(['SCRIPT', 'STYLE']);
 export const NON_NORMALIZED_TAGS = { PRE: true, SCRIPT: true };
+const SLASH = '/'.charCodeAt(0);
+const DASH = '-'.charCodeAt(0);
+const GT = '>'.charCodeAt(0);
+const EQ = '='.charCodeAt(0);
+const QUOT = '"'.charCodeAt(0);
+const APOS = "'".charCodeAt(0);
+const DOLLAR = '$'.charCodeAt(0);
+const LEXP = '${';
+const REXP = '}'.charCodeAt(0);
 
 export function parseHTML(s: string, fname?: string): HtmlDocument {
   const ret = new HtmlDocument(loc(s, 0, s.length, {
@@ -29,7 +38,7 @@ function parseNodes(p: HtmlElement, s: string, i: number) {
   while ((i2 = s.indexOf('<', i1)) >= 0) {
     i4 = i2;
     i1 = i2 + 1;
-    (closure = s.charCodeAt(i1) === '/'.charCodeAt(0)) ? i1++ : null;
+    (closure = s.charCodeAt(i1) === SLASH) ? i1++ : null;
     if ((i2 = skipName(s, i1)) > i1) {
       if (i4 > i3) {
         // new HtmlText(p.doc, p, s.substring(i3, i4), loc(s, i3, i4, p.loc, i));
@@ -38,7 +47,7 @@ function parseNodes(p: HtmlElement, s: string, i: number) {
       if (closure) {
         var name = s.substring(i1, i2).toUpperCase();
         i2 = skipBlanks(s, i2);
-        if (s.charCodeAt(i2) === '>'.charCodeAt(0)) {
+        if (s.charCodeAt(i2) === GT) {
           if (name === p.name) {
             i1 = i2 + 1;
             closetag = name;
@@ -69,7 +78,7 @@ function parseNodes(p: HtmlElement, s: string, i: number) {
         // new HtmlText(p.doc, p, s.substring(i3, i4), loc(s, i3, i4, p.loc, i));
         parseText(p, s, i, i3, i4);
       }
-      if (s.charCodeAt(i1 + 3) != '-'.charCodeAt(0)) {
+      if (s.charCodeAt(i1 + 3) != DASH) {
         // if it doesn't start with `<!---`, store the comment
         const a = i1 + 3, b = i2 - 3;
         new HtmlComment(p.doc, p, s.substring(a, b), loc(s, a, b, p.loc, i));
@@ -93,10 +102,10 @@ function parseElement(p: HtmlElement, s: string, i: number, i1: number, i2: numb
   i1 = parseAttributes(e, s, i, i2);
   i1 = skipBlanks(s, i1);
   var selfclose = false;
-  if ((selfclose = (s.charCodeAt(i1) === '/'.charCodeAt(0)))) {
+  if ((selfclose = (s.charCodeAt(i1) === SLASH))) {
     i1++;
   }
-  if (s.charCodeAt(i1) != '>'.charCodeAt(0)) {
+  if (s.charCodeAt(i1) != GT) {
     p.doc?.errors.push(new CodeError(
       'error',
       `Unterminated tag ${e.name}`,
@@ -144,16 +153,16 @@ function parseAttributes(e: HtmlElement, s: string, i: number, i2: number) {
     }
     let a = new HtmlAttribute(e.doc, e, name, '', loc(s, i1, i2, e.loc, i));
     i1 = skipBlanks(s, i2);
-    if (s.charCodeAt(i1) === '='.charCodeAt(0)) {
+    if (s.charCodeAt(i1) === EQ) {
       i1 = skipBlanks(s, i1 + 1);
       var quote = s.charCodeAt(i1);
-      if (a && (quote === '"'.charCodeAt(0) || quote === "'".charCodeAt(0))) {
+      if (a && (quote === QUOT || quote === APOS)) {
         i1 = parseValue(e, i, a, s, i1 + 1, quote, String.fromCharCode(quote));
       } else if (
         a
-        && (quote === '{'.charCodeAt(0))
+        && s.startsWith(LEXP, i1)
       ) {
-        i1 = parseValue(e, i, a, s, i1 + 1, quote, '}');
+        i1 = parseValue(e, i, a, s, i1 + LEXP.length, quote, '}');
       } else {
         // we don't support unquoted attribute values
         e.doc?.errors.push(new CodeError(
@@ -174,7 +183,7 @@ function parseValue(
   a: HtmlAttribute, s: string, i1: number,
   quote: number, term: string
 ) {
-  if (quote !== '{'.charCodeAt(0)) {
+  if (quote !== DOLLAR) {
     return parseLiteralValue(p, i, a, s, i1, quote, term);
   } else {
     return parseExpressionValue(p, i, a, s, i1);
@@ -217,10 +226,8 @@ function parseExpressionValue(
   // console.log(JSON.stringify(exp));
   // console.log('');
   let i2 = exp.end;
-  while (s.charCodeAt(i2) !== '}'.charCodeAt(0) && i2 < s.length) {
-    i2++;
-  }
-  if (i2 >= s.length || s.charCodeAt(i2) !== '}'.charCodeAt(0)) {
+  i2 = skipBlanks(s, i2);
+  if (i2 >= s.length || s.charCodeAt(i2) !== REXP) {
     p.doc?.errors.push(new CodeError(
       'error',
       `unterminated attribute expression`,
@@ -235,7 +242,7 @@ function parseExpressionValue(
 
 function parseText(p: HtmlElement, s: string, i: number, i1: number, i2: number) {
   for (let j1 = i1; j1 < i2;) {
-    let j2 = s.indexOf('${', j1);
+    let j2 = s.indexOf(LEXP, j1);
     if (j2 < 0 || j2 >= i2) {
       new HtmlText(p.doc, p, s.substring(j1, i2), p.loc);
       break;
@@ -244,9 +251,9 @@ function parseText(p: HtmlElement, s: string, i: number, i1: number, i2: number)
       new HtmlText(p.doc, p, s.substring(j1, j2), p.loc);
       j1 = j2;
     }
-    j2 += '${'.length;
+    j2 += LEXP.length;
     j1 = skipBlanks(s, j2);
-    if (j1 >= i2 || s.charCodeAt(j1) === '}'.charCodeAt(0)) {
+    if (j1 >= i2 || s.charCodeAt(j1) === REXP) {
       p.doc?.errors.push(new CodeError(
         'error',
         `invalid expression`,
@@ -258,7 +265,7 @@ function parseText(p: HtmlElement, s: string, i: number, i1: number, i2: number)
     const exp = parseExpression(p, s, i, j1);
     j1 = exp.end;
     j1 = skipBlanks(s, j1);
-    if (s.charCodeAt(j1) === '}'.charCodeAt(0)) {
+    if (s.charCodeAt(j1) === REXP) {
       j1++;
     }
     new HtmlText(p.doc, p, exp, p.loc);
@@ -313,7 +320,7 @@ function skipContent(p: HtmlElement, i: number, tag: string, s: string, i1: numb
     if (i2 > i1) {
       if (s.substring(i1, i2).toUpperCase() === tag) {
         i2 = skipBlanks(s, i2);
-        if (s.charCodeAt(i2) != '>'.charCodeAt(0)) {
+        if (s.charCodeAt(i2) != GT) {
           p.doc?.errors.push(new CodeError(
             'error',
             'Unterminated close tag',
@@ -337,7 +344,7 @@ function skipName(s: string, i: number, acceptsDots = false) {
     if ((code < 'a'.charCodeAt(0) || code > 'z'.charCodeAt(0)) &&
       (code < 'A'.charCodeAt(0) || code > 'Z'.charCodeAt(0)) &&
       (code < '0'.charCodeAt(0) || code > '9'.charCodeAt(0)) &&
-      code != '-'.charCodeAt(0) && code != '_'.charCodeAt(0) &&
+      code != DASH && code != '_'.charCodeAt(0) &&
     // #if HTML_EXTENSIONS
       (!acceptsDots || code != '.'.charCodeAt(0)) &&
     // #end
@@ -351,8 +358,8 @@ function skipName(s: string, i: number, acceptsDots = false) {
 
 function skipComment(p: HtmlElement, i: number, s: string, i1: number) {
   if (s.charCodeAt(i1) === '!'.charCodeAt(0)
-    && s.charCodeAt(i1 + 1) === '-'.charCodeAt(0)
-    && s.charCodeAt(i1 + 2) === '-'.charCodeAt(0)) {
+    && s.charCodeAt(i1 + 1) === DASH
+    && s.charCodeAt(i1 + 2) === DASH) {
     if ((i1 = s.indexOf('-->', i1 + 3)) < 0) {
       p.doc?.errors.push(new CodeError(
         'error',
