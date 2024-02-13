@@ -9,8 +9,8 @@ export const VOID_ELEMENTS = new Set([
   // obsolete
   'COMMAND', 'KEYGEN', 'MENUITEM'
 ]);
-export const SKIP_CONTENT_TAGS = new Set(['SCRIPT', 'STYLE']);
-export const NON_NORMALIZED_TAGS = { PRE: true, SCRIPT: true };
+export const SKIP_CONTENT_TAGS = new Set(['SCRIPT', 'CODE']);
+// export const NON_NORMALIZED_TAGS = { PRE: true, SCRIPT: true };
 const SLASH = '/'.charCodeAt(0);
 const DASH = '-'.charCodeAt(0);
 const GT = '>'.charCodeAt(0);
@@ -126,8 +126,7 @@ function parseElement(p: HtmlElement, s: string, i: number, i1: number, i2: numb
         throw new Error();
       }
       if (res.i0 > i1) {
-        // new HtmlText(e.doc, e, s.substring(i1, res.i0), loc(s, i1, res.i0, p.loc, i));
-        parseText(e, s, i, i1, res.i0);
+        new HtmlText(e.doc, e, s.substring(i1, res.i0), loc(s, i1, res.i0, p.loc, i));
       }
       i1 = res.i2;
     } else {
@@ -139,9 +138,8 @@ function parseElement(p: HtmlElement, s: string, i: number, i1: number, i2: numb
 }
 
 function parseAttributes(e: HtmlElement, s: string, i: number, i2: number) {
-  var i1 = skipBlanks(s, i2);
+  var i1 = skipBlanksAndComments(s, i2);
   while ((i2 = skipName(s, i1, true)) > i1) {
-    //TODO: add JSX-like comments in element
     var name = s.substring(i1, i2);
     if (hasAttribute(e, name)) {
       e.doc?.errors.push(new CodeError(
@@ -152,9 +150,9 @@ function parseAttributes(e: HtmlElement, s: string, i: number, i2: number) {
       throw Error();
     }
     let a = new HtmlAttribute(e.doc, e, name, '', loc(s, i1, i2, e.loc, i));
-    i1 = skipBlanks(s, i2);
+    i1 = skipBlanksAndComments(s, i2);
     if (s.charCodeAt(i1) === EQ) {
-      i1 = skipBlanks(s, i1 + 1);
+      i1 = skipBlanksAndComments(s, i1 + 1);
       var quote = s.charCodeAt(i1);
       if (a && (quote === QUOT || quote === APOS)) {
         i1 = parseValue(e, i, a, s, i1 + 1, quote, String.fromCharCode(quote));
@@ -173,7 +171,7 @@ function parseAttributes(e: HtmlElement, s: string, i: number, i2: number) {
         throw new Error();
       }
     }
-    i1 = skipBlanks(s, i1);
+    i1 = skipBlanksAndComments(s, i1);
   };
   return i1;
 }
@@ -307,6 +305,29 @@ function skipBlanks(s: string, i: number) {
       break;
     }
     i++;
+  }
+  return i;
+}
+
+function skipBlanksAndComments(s: string, i: number) {
+  i = skipBlanks(s, i);
+  while (i < s.length) {
+    if (s.startsWith('//', i)) {
+      const i2 = s.indexOf('\n', i + 2);
+      if (i2 < 0) {
+        return s.length;
+      }
+      i = i2 + 1;
+    } else if (s.startsWith('/*', i)) {
+      const i2 = s.indexOf('*/', i + 2);
+      if (i2 < 0) {
+        return s.length;
+      }
+      i = i2 + 2;
+    } else {
+      return i;
+    }
+    i = skipBlanks(s, i);
   }
   return i;
 }
