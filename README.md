@@ -7,7 +7,7 @@
 
 Modern web development is mostly done using some reactive framework, like [React](https://react.dev/), [Vue](https://vuejs.org/) or [Angular](https://angular.io/). This has many advantages, but they all add plenty of complexity and make the experience closer to desktop development.
 
-PageLogic aims to restore simplicity while preserving the benefits of modern frameworks. It extends HTML with `<:...>` [directive tags](), `:...` [logic attributes](), and `{...}` [reactive expressions]() to let you write modular, reactive logic directly in HTML.
+PageLogic aims to restore simplicity while preserving the benefits of modern frameworks. It extends HTML with `<:...>` [directive tags](), `:...` [logic attributes](), and `${...}` [reactive expressions]() to let you write modular, reactive logic directly in HTML.
 
 ## Hello world
 
@@ -16,9 +16,9 @@ This is a minimal but complete PageLogic page:
 ```jsx
 <html>
 <body>
-  <button :count={0}
-          :on-click={() => count++}>
-    Clicks: {count}
+  <button :count=${0}
+          :on-click=${() => count++}>
+    Clicks: ${count}
   </button>
 </body>
 </html>
