@@ -18,6 +18,7 @@ import {
   JSXOpeningElement,
   walker,
 } from "./walker";
+import { ATOMIC_TEXT_TAGS } from "./html-parser";
 
 export class CodeLogic {
   source: CodeSource;
@@ -36,7 +37,8 @@ export class CodeLogic {
         const parent = ancestors.length > 1
             ? ancestors[ancestors.length - 2]
             : null;
-        if (CodeLogic.needsScope(node)) {
+        const tagName = getJSXElementName(node).toUpperCase();
+        if (ATOMIC_TEXT_TAGS.has(tagName) || CodeLogic.needsScope(node)) {
           const scope = new CodeScope(stack.peek() || null, node, parent, count++);
           scope.parent || (that.root = scope);
           addJSXAttribute(node, ID_DATA_ATTR, `${scope.id}`);
@@ -48,11 +50,14 @@ export class CodeLogic {
         if (ancestors.length > 1) {
           const parent = ancestors[ancestors.length - 2];
           if (parent.type === 'JSXElement') {
+            const tagName = getJSXElementName(parent.openingElement).toUpperCase();
             const scope = stack.peek();
             const id = scope?.addTextValue(node);
-            node.type = 'JSXText';
-            node.value = `<!--${TEXT_MARKER1_PREFIX}${id}-->`
-                       + `<!--${TEXT_MARKER2_PREFIX}${id}-->`;
+            if (!ATOMIC_TEXT_TAGS.has(tagName)) {
+              node.type = 'JSXText';
+              node.value = `<!--${TEXT_MARKER1_PREFIX}${id}-->`
+                         + `<!--${TEXT_MARKER2_PREFIX}${id}-->`;
+            }
           }
         }
       },

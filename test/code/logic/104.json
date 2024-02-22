@@ -1,0 +1,29 @@
+{
+  "id": 0,
+  "values": {},
+  "children": [
+    {
+      "id": 1,
+      "values": {},
+      "children": [
+        {
+          "id": 2,
+          "values": {
+            "text$0": {
+              "code": "'\\n      body {\\n        color: ' + x + ';\\n      }\\n    '"
+            }
+          },
+          "children": []
+        }
+      ],
+      "name": "head"
+    },
+    {
+      "id": 3,
+      "values": {},
+      "children": [],
+      "name": "body"
+    }
+  ],
+  "name": "page"
+}

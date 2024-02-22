@@ -26,6 +26,7 @@ describe('code: logic', function () {
         const source = await loader.load(file);
         const logic = new CodeLogic(source);
 
+        // console.log(JSON.stringify(logic.root));
         let json2: any;
         try {
           json2 = JSON.parse((await fs.promises.readFile(

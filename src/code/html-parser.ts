@@ -1,4 +1,4 @@
-import { Position, SourceLocation, parseExpressionAt } from "acorn";
+import { BinaryExpression, Expression, Position, SourceLocation, parseExpressionAt } from "acorn";
 import { CodeError } from "./types";
 import { HtmlAttribute, HtmlComment, HtmlDocument, HtmlElement, HtmlLocation, HtmlText } from "./html";
 
@@ -10,6 +10,7 @@ export const VOID_ELEMENTS = new Set([
   'COMMAND', 'KEYGEN', 'MENUITEM'
 ]);
 export const SKIP_CONTENT_TAGS = new Set(['SCRIPT', 'CODE']);
+export const ATOMIC_TEXT_TAGS = new Set(['STYLE', 'TITLE']);
 // export const NON_NORMALIZED_TAGS = { PRE: true, SCRIPT: true };
 const SLASH = '/'.charCodeAt(0);
 const DASH = '-'.charCodeAt(0);
@@ -239,6 +240,89 @@ function parseExpressionValue(
 }
 
 function parseText(p: HtmlElement, s: string, i: number, i1: number, i2: number) {
+  if (ATOMIC_TEXT_TAGS.has(p.name)) {
+    parseAtomicText(p, s, i, i1, i2);
+  } else {
+    parseNormalText(p, s, i, i1, i2);
+  }
+}
+
+function parseAtomicText(p: HtmlElement, s: string, i: number, i1: number, i2: number) {
+  let k = s.indexOf(LEXP, i1);
+  if (k < 0 || k >= i2) {
+    // static text
+    new HtmlText(p.doc, p, s.substring(i1, i2), p.loc);
+    return;
+  }
+  const exps = new Array<Expression>();
+  for (let j1 = i1; j1 < i2;) {
+    let j2 = s.indexOf(LEXP, j1);
+    if (j2 < 0 || j2 >= i2) {
+      // new HtmlText(p.doc, p, s.substring(j1, i2), p.loc);
+      exps.push({
+        type: 'Literal',
+        value: s.substring(j1, i2),
+        start: j1, end: i2, loc: loc(s, j1, i2, p.loc, i)
+      });
+      break;
+    }
+    if (j2 > j1) {
+      // new HtmlText(p.doc, p, s.substring(j1, j2), p.loc);
+      exps.push({
+        type: 'Literal',
+        value: s.substring(j1, j2),
+        start: j1, end: j2, loc: loc(s, j1, j2, p.loc, i)
+      });
+      j1 = j2;
+    }
+    j2 += LEXP.length;
+    j1 = skipBlanks(s, j2);
+    if (j1 >= i2 || s.charCodeAt(j1) === REXP) {
+      p.doc?.errors.push(new CodeError(
+        'error',
+        `invalid expression`,
+        loc(s, j2, j2, p.loc, i)
+      ));
+      break;
+    }
+    // const exp = parseExpressionAt(s, j1, { ecmaVersion: 'latest', sourceType: 'script' });
+    const exp = parseExpression(p, s, i, j1);
+    j1 = exp.end;
+    j1 = skipBlanks(s, j1);
+    if (s.charCodeAt(j1) === REXP) {
+      j1++;
+    }
+    // new HtmlText(p.doc, p, exp, p.loc);
+    exps.push(exp);
+  }
+  // ensure first expression is a string literal so '+' will mean concatenation
+  if (exps[0].type !== 'Literal' || typeof exps[0].value !== 'string') {
+    exps.unshift({
+      type: 'Literal',
+      value: '',
+      start: i1, end: i1, loc: loc(s, i1, i1, p.loc, i)
+    });
+  }
+  if (exps.length === 1) {
+    new HtmlText(p.doc, p, exps[0], p.loc);
+    return;
+  }
+  function f(n: number): BinaryExpression {
+    const start = (n > 1 ? exps[n - 1].start : exps[0].start);
+    const end = exps[n].end;
+    return {
+      type: 'BinaryExpression',
+      operator: '+',
+      left: (n > 1 ? f(n - 1) : exps[0]),
+      right: exps[n],
+      start, end, loc: loc(s, start, end, p.loc, i)
+    };
+  }
+  const exp = f(exps.length - 1);
+  new HtmlText(p.doc, p, exp, p.loc);
+}
+
+function parseNormalText(p: HtmlElement, s: string, i: number, i1: number, i2: number) {
   for (let j1 = i1; j1 < i2;) {
     let j2 = s.indexOf(LEXP, j1);
     if (j2 < 0 || j2 >= i2) {

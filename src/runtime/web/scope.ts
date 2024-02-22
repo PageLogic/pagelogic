@@ -1,6 +1,6 @@
 import { Scope, ScopeProps } from "../core/scope";
 import { Value } from "../core/value";
-import { EVENT_VALUE_PREFIX, ID_DATA_ATTR, TEXT_MARKER1_PREFIX, WebContext } from "./context";
+import { EVENT_VALUE_PREFIX, ID_DATA_ATTR, TEXT_MARKER1_PREFIX, TEXT_VALUE_PREFIX, WebContext } from "./context";
 import { COMMENT_NODE, ELEMENT_NODE, TEXT_NODE } from "./util/dom-util";
 import { WebValue } from "./value";
 
@@ -109,6 +109,9 @@ export class WebScope extends Scope {
       if (key.startsWith(EVENT_VALUE_PREFIX)) {
         const id = key.substring(EVENT_VALUE_PREFIX.length);
         ret!.addEventListener(id, (ev) => this.proxy[key]());
+      } else if (key.startsWith(TEXT_VALUE_PREFIX) && this.texts.size === 0) {
+        // whole-text element w/ dynamic content
+        this.texts.set('0', ret!.firstChild!);
       }
     });
     return ret!;
