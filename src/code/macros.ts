@@ -48,7 +48,7 @@ export function processMacros(codeSource: CodeSource): MacroDefinitions {
 function collectMacros(root: Node, source: MacrosSource, nesting: number) {
   // collect macro definitions
   walker.ancestor(root, {
-    // @ts-ignore
+    // @ts-expect-error JSXOpeningElement unknown to Acorn core
     JSXOpeningElement(opening, _, ancestors) {
       const parent = ancestors.length > 2
           ? ancestors[ancestors.length - 3]
@@ -90,7 +90,7 @@ function collectMacro(
     return null;
   }
   removeJSXAttribute(node.openingElement, DEFINE_TAG_ATTR);
-  const res = /^([\-\w]+)(\:[\-\w]+)?$/.exec(tag);
+  const res = /^([\w-]+)(:[\w-]+)?$/.exec(tag);
   if (!res) {
     source.codeSource.errors.push(new CodeError(
       'warning',
@@ -111,7 +111,7 @@ function collectSlots(
 ): Map<string, SlotDefinition> {
   const ret = new Map<string, SlotDefinition>();
   walker.ancestor(node, {
-    // @ts-ignore
+    // @ts-expect-error JSXOpeningElement unknown to Acorn core
     JSXOpeningElement(opening, _, ancestors) {
       const parent = ancestors.length > 2
           ? ancestors[ancestors.length - 3]
@@ -131,7 +131,7 @@ function collectSlots(
         ));
         return;
       }
-      if (!/^[\-\w]+?$/.test(name)) {
+      if (!/^[\w-]+?$/.test(name)) {
         source.codeSource.errors.push(new CodeError(
           'warning', `bad slot name`, element
         ));
@@ -152,7 +152,7 @@ function expandMacros(root: Node, source: MacrosSource, nesting: number) {
     parent: JSXElement, replacer: JSXElement, replaced: JSXElement
   }>();
   walker.ancestor(root, {
-    // @ts-ignore
+    // @ts-expect-error JSXOpeningElement unknown to Acorn core
     JSXOpeningElement(opening, _, ancestors) {
       const parent = ancestors.length > 2
           ? ancestors[ancestors.length - 3]

@@ -32,7 +32,7 @@ export class CodeLogic {
     const stack = new Stack<CodeScope>();
     const that = this;
     walker.ancestor(this.source.ast!, {
-      // @ts-ignore
+      // @ts-expect-error JSXOpeningElement unknown to Acorn core
       JSXOpeningElement(node: JSXOpeningElement, _, ancestors) {
         const parent = ancestors.length > 1
             ? ancestors[ancestors.length - 2]
@@ -45,7 +45,7 @@ export class CodeLogic {
           node.selfClosing || stack.push(scope);
         }
       },
-      // @ts-ignore
+      // @ts-expect-error JSXExpressionContainer unknown to Acorn core
       JSXExpressionContainer(node, _, ancestors) {
         if (ancestors.length > 1) {
           const parent = ancestors[ancestors.length - 2];
@@ -61,7 +61,7 @@ export class CodeLogic {
           }
         }
       },
-      // @ts-ignore
+      // @ts-expect-error JSXClosingElement unknown to Acorn core
       JSXClosingElement(node: JSXClosingElement, _, ancestors) {
         const parent = ancestors.length > 1
             ? ancestors[ancestors.length - 2]
@@ -169,11 +169,12 @@ export class CodeScope {
   }
 
   toJSON() {
-    const ret: any = {
+    const ret = {
       id: this.id,
       values: this.values,
       children: this.children,
     }
+    // @ts-expect-error we only add field if needed
     this.name && (ret.name = this.name);
     return ret;
   }
@@ -184,15 +185,15 @@ export class CodeScope {
 // =============================================================================
 const LOGIC_ATTR_PREFIX = ':';
 const VALUE_PREFIXES = [
-  { in: /^(\:aka)$/, out: null },
-  { in: /^(\:class\-)[\w\-]+$/, out: CLASS_VALUE_PREFIX },
-  { in: /^(\:style\-)[\w\-]+$/, out: STYLE_VALUE_PREFIX },
-  { in: /^(\:on\-)[\w\-]+$/, out: EVENT_VALUE_PREFIX },
-  { in: /^(\:handle\-)[\w\-]+$/, out: HANDLE_VALUE_PREFIX },
-  { in: /^(\:did\-)[\w\-]+$/, out: DID_VALUE_PREFIX },
-  { in: /^(\:will\-)[\w\-]+$/, out: WILL_VALUE_PREFIX },
-  { in: /^(\:)[\w\-]+$/, out: LOGIC_VALUE_PREFIX },
-  { in: /^()[\w\-]+$/, out: ATTR_VALUE_PREFIX },
+  { in: /^(:aka)$/, out: null },
+  { in: /^(:class-)[\w-]+$/, out: CLASS_VALUE_PREFIX },
+  { in: /^(:style-)[\w-]+$/, out: STYLE_VALUE_PREFIX },
+  { in: /^(:on-)[\w-]+$/, out: EVENT_VALUE_PREFIX },
+  { in: /^(:handle-)[\w-]+$/, out: HANDLE_VALUE_PREFIX },
+  { in: /^(:did-)[\w-]+$/, out: DID_VALUE_PREFIX },
+  { in: /^(:will-)[\w-]+$/, out: WILL_VALUE_PREFIX },
+  { in: /^(:)[\w-]+$/, out: LOGIC_VALUE_PREFIX },
+  { in: /^()[\w-]+$/, out: ATTR_VALUE_PREFIX },
 ]
 
 export class CodeValue {
@@ -205,11 +206,13 @@ export class CodeValue {
   }
 
   toJSON() {
-    const ret: any = {
+    const ret = {
     };
     if (this.node.type === 'Literal') {
+      // @ts-expect-error we only add field if needed
       ret.value = this.node.value as string;
     } else {
+      // @ts-expect-error we only add field if needed
       ret.code = generate(this.node.expression);
     }
     return ret;

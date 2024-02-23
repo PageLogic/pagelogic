@@ -12,7 +12,7 @@ export function getMarkup(root: Node, props?: GetMarkupProps): string {
   props ||= {};
   props.addDocType && sb.push('<!DOCTYPE html>\n');
   walker.simple(root, {
-    // @ts-ignore
+    // @ts-expect-error JSXOpeningElement unknown to Acorn core
     JSXOpeningElement(node: JSXOpeningElement, _) {
       if (node.name.type === 'JSXIdentifier' ||
           node.name.type === 'JSXNamespacedName') {
@@ -54,11 +54,11 @@ export function getMarkup(root: Node, props?: GetMarkupProps): string {
         }
       }
     },
-    // @ts-ignore
+    // @ts-expect-error JSXText unknown to Acorn core
     JSXText(node, _) {
       sb.push(unescape(node.value));
     },
-    // @ts-ignore
+    // @ts-expect-error JSXClosingElement unknown to Acorn core
     JSXClosingElement(node, _) {
       if (node.name.type === 'JSXIdentifier' ||
           node.name.type === 'JSXNamespacedName') {

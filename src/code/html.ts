@@ -1,4 +1,4 @@
-import { Expression, Node, Position, SourceLocation } from "acorn";
+import { Expression, SourceLocation } from "acorn";
 import { CodeError } from "./types";
 import { htmlUnescape } from "./html-parser";
 
@@ -42,7 +42,7 @@ export abstract class HtmlNode {
     }
   }
 
-  toJSON() {
+  toJSON(): object {
     return {
       type: this.type,
       loc: this.doc?.jsonLoc ? this.loc : null,
@@ -65,7 +65,7 @@ export class HtmlText extends HtmlNode {
         : value;
   }
 
-  toJSON() {
+  toJSON(): object {
     return {
       type: this.type,
       value: this.value,
@@ -87,7 +87,7 @@ export class HtmlComment extends HtmlNode {
     this.value = value;
   }
 
-  toJSON() {
+  toJSON(): object {
     return {
       type: this.type,
       value: this.value,
@@ -115,7 +115,7 @@ export class HtmlAttribute extends HtmlNode {
     parent && parent.attributes.push(this);
   }
 
-  toJSON() {
+  toJSON(): object {
     return {
       type: this.type,
       name: this.name,
@@ -143,7 +143,7 @@ export class HtmlElement extends HtmlNode {
     this.attributes = [];
   }
 
-  toJSON() {
+  toJSON(): object {
     return {
       type: this.type,
       name: this.name,
@@ -174,7 +174,7 @@ export class HtmlDocument extends HtmlElement {
     return null;
   }
 
-  toJSON(): any {
+  toJSON(): object {
     return {
       type: this.type,
       errors: this.errors,

@@ -106,7 +106,7 @@ async function compilePages(
       // console.log('');
       continue;
     }
-    const srcFilePath = path.join(srcPath, fname);
+    // const srcFilePath = path.join(srcPath, fname);
     const dstFilePath = path.join(dstPath, fname);
     // if (dstFilePath === srcFilePath) {
     //   errors.push(`cannot overwrite ${path.join(srcDir, fname)}\n`);

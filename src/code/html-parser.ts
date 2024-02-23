@@ -39,7 +39,7 @@ function parseNodes(p: HtmlElement, s: string, i: number) {
   while ((i2 = s.indexOf('<', i1)) >= 0) {
     i4 = i2;
     i1 = i2 + 1;
-    (closure = s.charCodeAt(i1) === SLASH) ? i1++ : null;
+    (closure = s.charCodeAt(i1) === SLASH) && i1++;
     if ((i2 = skipName(s, i1)) > i1) {
       if (i4 > i3) {
         // new HtmlText(p.doc, p, s.substring(i3, i4), loc(s, i3, i4, p.loc, i));

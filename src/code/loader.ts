@@ -46,9 +46,8 @@ export class CodeLoader {
 
   async parse(
     fname: string, currDir: string, source: CodeSource,
-    nesting: number, once = false, from?: any
+    nesting: number, once = false, from?: Node
   ): Promise<Program | undefined> {
-    let program: Program | undefined;
     if (nesting >= MAX_NESTING) {
       this.addError('error', `too many nested inclusions`, source, from);
       return;
@@ -69,14 +68,14 @@ export class CodeLoader {
       source.errors.push(...src.errors);
       return;
     }
-    program = src.program;
+    const program = src.program;
 
     const body = program.body;
     //TODO: we should remove possible leading JSXText nodes
     if (
       body.length < 1 ||
       body[0].type !== 'ExpressionStatement' ||
-      // @ts-ignore
+      // @ts-expect-error JSXElement isn't known to Acorn core
       body[0].expression.type !== 'JSXElement'
     ) {
       this.addError('error', `HTML tag expected "${loaded.relPath}"`, source, source.ast);
@@ -88,7 +87,7 @@ export class CodeLoader {
 
   async loadText(
     fname: string, currDir: string, source: CodeSource,
-    once = false, from?: any
+    once = false, from?: Node
   ): Promise<{ text: string, relPath: string } | undefined> {
     if (fname.startsWith('/')) {
       currDir = '';
@@ -108,7 +107,7 @@ export class CodeLoader {
     let text = '';
     try {
       text = await fs.promises.readFile(pname, { encoding: 'utf8' });
-    } catch (error: any) {
+    } catch (error) {
       this.addError('error', `failed to read "${relPath}"`, source, from);
       return;
     }
@@ -121,7 +120,7 @@ export class CodeLoader {
     const directives = new Array<Directive>();
     // https://github.com/acornjs/acorn/blob/master/acorn-walk/README.md
     walker.ancestor(program, {
-      // @ts-ignore
+      // @ts-expect-error JSXElement is unknown to Acorn core
       JSXElement(node, _, ancestors) {
         const parent = (ancestors.length > 1 ? ancestors[ancestors.length - 2] : null);
         if (
@@ -169,7 +168,7 @@ export class CodeLoader {
     if (asAttr) {
       const as = getJSXAttribute(d.node.openingElement, INCLUDE_AS_ATTR)
         ?.trim().toLocaleLowerCase();
-      if (!as || !/^[\w\-]+$/.test(as)) {
+      if (!as || !/^[\w-]+$/.test(as)) {
         source.errors.push(new CodeError(
           'error', `invalid "${INCLUDE_AS_ATTR}" attribute`, d.node.loc
         ));
