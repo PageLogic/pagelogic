@@ -157,7 +157,7 @@ export function array(ref: Node): ArrayExpression {
   }
 }
 
-export function literal(value: any, ref: Node): Literal {
+export function literal(value: string | number, ref: Node): Literal {
   return {
     type: 'Literal',
     value,

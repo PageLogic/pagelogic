@@ -19,7 +19,8 @@ export function regexMap(
   re: RegExp, s: string, cb: (match: RegExpExecArray) => string
 ): string {
   const _re = re.flags.indexOf('g') >= 0 ? re : new RegExp(re, 'g' + re.flags);
-  let sb = new StringBuf(), i = 0;
+  const sb = new StringBuf()
+  let i = 0;
   for (let match; match = _re.exec(s); i = match.index + match[0].length) {
     match.index > i && sb.add(s.substring(i, match.index));
     sb.add(cb(match));

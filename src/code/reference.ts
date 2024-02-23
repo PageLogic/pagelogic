@@ -269,7 +269,7 @@ export function compileValueRef(
           type: "CallExpression",
           optional: false,
           callee: chain(parts.length - 1, { type: "ThisExpression" }),
-          arguments: [literal(argument, v.node) as any]
+          arguments: [literal(argument, v.node) as es.Expression]
         }
       }]
     }

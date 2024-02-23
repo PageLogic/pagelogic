@@ -58,6 +58,7 @@
     "happy-dom": "^12.10.3"
   },
   "devDependencies": {
+    "@types/debounce-promise": "^3.1.9",
     "@types/escodegen": "^0.0.10",
     "@types/estraverse": "^5.1.7",
     "@types/express": "^4.17.21",

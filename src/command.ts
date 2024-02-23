@@ -4,8 +4,8 @@ import { createCommand, program } from 'commander-version';
 import path from "path";
 import { CompilerOptions, compiler } from './code/compiler';
 import { Server } from './server';
-const debounce = require('debounce-promise')
-const chokidar = require('chokidar');
+import debounce from 'debounce-promise';
+import chokidar from 'chokidar';
 
 const build = createCommand('build')
   .description('builds a PageLogic project')
@@ -21,11 +21,11 @@ const build = createCommand('build')
     if (options.watch) {
       const deboucedCompile = debounce(compile, 500);
       chokidar.watch(srcPath, {
-        ignored: /([\/\\]\.)/,
+        ignored: /([/\\]\.)/,
         ignorePermissionErrors: true,
         depth: 20,
         ignoreInitial: true,
-      }).on('all', (event: string, filename?: string) => {
+      }).on('all', () => {
         deboucedCompile(srcDir, dstDir, options);
       });
     }

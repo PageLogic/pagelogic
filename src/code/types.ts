@@ -1,4 +1,4 @@
-import { Node, Program, SourceLocation } from "acorn";
+import { Program, SourceLocation } from "acorn";
 
 export interface CodeSource {
   ast?: Program;

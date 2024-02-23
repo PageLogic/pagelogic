@@ -40,7 +40,7 @@ export class Context {
       scope?.unlinkValues();
       scope?.linkValues();
       scope?.updateValues();
-    } catch (err: any) {
+    } catch (err) {
       console.error('Context.refresh()', err);
     }
     this.refreshLevel--;

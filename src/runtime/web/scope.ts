@@ -108,7 +108,7 @@ export class WebScope extends Scope {
     this.values.forEach((_, key) => {
       if (key.startsWith(EVENT_VALUE_PREFIX)) {
         const id = key.substring(EVENT_VALUE_PREFIX.length);
-        ret!.addEventListener(id, (ev) => this.proxy[key]());
+        ret!.addEventListener(id, (ev) => (this.proxy[key] as (ev: unknown) => void)(ev));
       } else if (key.startsWith(TEXT_VALUE_PREFIX) && this.texts.size === 0) {
         // whole-text element w/ dynamic content
         this.texts.set('0', ret!.firstChild!);

@@ -1,5 +1,5 @@
 import { Value, ValueProps } from "../core/value";
-import { ATTR_VALUE_PREFIX, CLASS_VALUE_PREFIX, EVENT_VALUE_PREFIX, STYLE_VALUE_PREFIX, TEXT_VALUE_PREFIX } from "./context";
+import { ATTR_VALUE_PREFIX, CLASS_VALUE_PREFIX, STYLE_VALUE_PREFIX, TEXT_VALUE_PREFIX } from "./context";
 import { WebScope } from "./scope";
 import { camelToHyphen } from "./util/util";
 
@@ -41,17 +41,17 @@ export class WebValue extends Value {
     return this.scope as WebScope;
   }
 
-  attrCB(k: string, v: any) {
+  attrCB(k: string, v: unknown) {
     const e = this.webScope.dom;
     if (v != null) {
-      e.setAttribute(k, `${v.trim()}`);
+      e.setAttribute(k, `${v}`.trim());
     } else {
       e.removeAttribute(k);
     }
     return v;
   }
 
-  attrClassCB(k: string, v: any) {
+  attrClassCB(k: string, v: unknown) {
     const e = this.webScope.dom;
     const p1 = this.classParts!;
     const p2 = new Set(`${v || ''}`.trim().split(/\s+/));
@@ -61,17 +61,17 @@ export class WebValue extends Value {
     return v;
   }
 
-  classCB(k: string, v: any) {
+  classCB(k: string, v: unknown) {
     const e = this.webScope.dom;
     v ? e.classList.add(k) : e.classList.remove(k);
     return v;
   }
 
-  attrStyleCB(k: string, v: any) {
+  attrStyleCB(k: string, v: unknown) {
     const e = this.webScope.dom as any;
     const p1 = this.styleParts!;
     const p2 = new Map<string, string>();
-    ((v || "").trim().split(/\s*;\s*/) as string[]).forEach(s => {
+    (`${(v || "")}`.trim().split(/\s*;\s*/) as string[]).forEach(s => {
       const p = s.split(/\s*:\s*/);
       (p.length > 1 && p[0] && p[1]) && p2.set(p[0], p[1]);
     });

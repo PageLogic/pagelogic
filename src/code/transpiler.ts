@@ -1,7 +1,8 @@
-import { Expression, Node, ObjectExpression, Program, ReturnStatement } from "acorn";
+import { Node, ObjectExpression, Program, ReturnStatement } from "acorn";
 import { generate } from "escodegen";
 import fs from "fs";
 import path from "path";
+import { SRC_CLIENT_CODE } from "../consts";
 import { GLOBAL_NAME } from "../runtime/web/context";
 import { WebScopeProps } from "../runtime/web/scope";
 import { WebValueProps } from "../runtime/web/value";
@@ -12,7 +13,6 @@ import { compileValueRef, qualifyIdentifiers, validateValueRef } from "./referen
 import { CodeError } from "./types";
 import { array, fnExpression, literal, object, property } from "./utils";
 import { JSXElement, walker } from "./walker";
-import { SRC_CLIENT_CODE } from "../consts";
 
 export interface Page {
   fname: string;
@@ -113,7 +113,7 @@ export class CodeTranspiler {
   cleanupPage(ast: Program) {
     const toRemove = new Array<{n: Node, p: JSXElement}>();
     walker.ancestor(ast, {
-      // @ts-ignore
+      // @ts-expect-error JSXEmptyExpression is unknown to Acorn core
       JSXEmptyExpression(node, _, ancestors) {
         if (ancestors.length > 2) {
           const p1 = ancestors[ancestors.length - 2];
@@ -224,7 +224,8 @@ export class CodeTranspiler {
     if (fn.body.body.length < 1) {
       return ret;
     }
-    qualifyIdentifiers(name, fn.body as any, refs);
+    // @ts-expect-error mismatch between acorn and estree types
+    qualifyIdentifiers(name, fn.body, refs);
     if (fn.body.body[0].type === 'ReturnStatement') {
       const s: ReturnStatement = fn.body.body[0];
       if (
@@ -246,7 +247,8 @@ export class CodeTranspiler {
           const path = parts.join('.');
           if (!seenPaths.has(path)) {
             seenPaths.add(path);
-            aa.elements.push(compileValueRef(parts, value, name) as any);
+            // @ts-expect-error mismatch between acorn and estree types
+            aa.elements.push(compileValueRef(parts, value, name));
           }
         }
       });

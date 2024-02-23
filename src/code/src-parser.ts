@@ -1,4 +1,4 @@
-import { Expression, ExpressionStatement, Literal, Node, Program, SourceLocation } from "acorn";
+import { Expression, ExpressionStatement, Literal, Program, SourceLocation } from "acorn";
 import { CodeError } from "./types";
 import { parseHTML } from "./html-parser";
 import { HtmlElement, HtmlLocation, HtmlText } from "./html";
@@ -32,7 +32,7 @@ export function parseSource(s: string, fname?: string): Source {
   }
   const statement: ExpressionStatement = {
     type: 'ExpressionStatement',
-    expression: makeElement(documentElement, errors) as any as Expression,
+    expression: makeElement(documentElement, errors) as unknown as Expression,
     ...loc(documentElement.loc),
   };
   program.body.push(statement);
@@ -70,8 +70,6 @@ function makeElement(e: HtmlElement, errors: CodeError[]): JSXElement {
         break;
       case 'text':
         ret.children.push(makeText(n as HtmlText, errors));
-    }
-    if (n.type === 'element') {
     }
   }
   return ret;

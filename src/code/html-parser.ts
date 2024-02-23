@@ -30,7 +30,7 @@ export function parseHTML(s: string, fname?: string): HtmlDocument {
   }, 0));
   try {
     parseNodes(ret, s, 0);
-  } catch (ignored) {}
+  } catch (ignored) {/*nop*/}
   return ret;
 }
 

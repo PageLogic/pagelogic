@@ -17,8 +17,8 @@ export class Scope {
   id: string;
   isClone: boolean;
   children: Scope[];
-  object: any;
-  proxy: any;
+  object: { [key: string]: unknown };
+  proxy: { [key: string]: unknown };
   values: Map<string, Value>;
   replicator?: Replicator;
   inited = false;
@@ -42,7 +42,7 @@ export class Scope {
     this.object[SCOPE_KEY] = this;
     this.object[NAME_KEY] = props.name;
     this.object[OUTER_KEY] = (() => parent?.proxy)();
-    this.object[PRINT_KEY] = (v: any) => v != null ? `${v}` : '';
+    this.object[PRINT_KEY] = (v: unknown) => v != null ? `${v}` : '';
     this.object[VALUE_KEY] = (key: string) => {
       let scope: Scope | null = this;
       let value = undefined;
@@ -114,7 +114,7 @@ export class Scope {
 
   protected callDelegate(name: string) {
     const d = this.proxy[name];
-    d && d();
+    d && (d as () => void)();
   }
 
   protected lookup(target: any, prop: string) {
