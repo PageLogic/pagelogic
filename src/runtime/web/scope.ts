@@ -74,7 +74,7 @@ export class WebScope extends Scope {
     // default members
     // scope values
     if (this.props.values) {
-      for (let key of Reflect.ownKeys(this.props.values)) {
+      for (const key of Reflect.ownKeys(this.props.values)) {
         if (typeof key === 'string') {
           const value = new WebValue(this, key, this.props.values[key]);
           this.object[key] = value;
@@ -197,7 +197,7 @@ export class WebScope extends Scope {
 
   disposeListeners() {
     while (this.listeners?.length) {
-      let l = this.listeners.pop() as EventListener;
+      const l = this.listeners.pop() as EventListener;
       l.target.removeEventListener(l.type, l.callback, l.options);
     }
   }

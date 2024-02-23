@@ -101,7 +101,7 @@ export class Server {
       standardHeaders: true,
       legacyHeaders: false,
     });
-    for (var path of paths) {
+    for (const path of paths) {
       app.use(path, limiter);
     }
   }

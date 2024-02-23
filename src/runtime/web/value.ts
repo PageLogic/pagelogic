@@ -63,7 +63,7 @@ export class WebValue extends Value {
 
   classCB(k: string, v: any) {
     const e = this.webScope.dom;
-    !!v ? e.classList.add(k) : e.classList.remove(k);
+    v ? e.classList.add(k) : e.classList.remove(k);
     return v;
   }
 

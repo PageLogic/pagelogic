@@ -35,7 +35,7 @@ export function parseHTML(s: string, fname?: string): HtmlDocument {
 }
 
 function parseNodes(p: HtmlElement, s: string, i: number) {
-  var i1 = i, i2, closure, i3 = i, i4, closetag = null;
+  let i1 = i, i2, closure, i3 = i, i4, closetag = null;
   while ((i2 = s.indexOf('<', i1)) >= 0) {
     i4 = i2;
     i1 = i2 + 1;
@@ -46,7 +46,7 @@ function parseNodes(p: HtmlElement, s: string, i: number) {
         parseText(p, s, i, i3, i4);
       }
       if (closure) {
-        var name = s.substring(i1, i2).toUpperCase();
+        const name = s.substring(i1, i2).toUpperCase();
         i2 = skipBlanks(s, i2);
         if (s.charCodeAt(i2) === GT) {
           if (name === p.name) {
@@ -99,10 +99,10 @@ function parseNodes(p: HtmlElement, s: string, i: number) {
 }
 
 function parseElement(p: HtmlElement, s: string, i: number, i1: number, i2: number): number {
-  var e = new HtmlElement(p.doc, p, s.substring(i1, i2), loc(s, i1 - 1, i2, p.loc, i));
+  const e = new HtmlElement(p.doc, p, s.substring(i1, i2), loc(s, i1 - 1, i2, p.loc, i));
   i1 = parseAttributes(e, s, i, i2);
   i1 = skipBlanks(s, i1);
-  var selfclose = false;
+  let selfclose = false;
   if ((selfclose = (s.charCodeAt(i1) === SLASH))) {
     i1++;
   }
@@ -117,7 +117,7 @@ function parseElement(p: HtmlElement, s: string, i: number, i1: number, i2: numb
   i1++;
   if (!selfclose && !VOID_ELEMENTS.has(e.name)) {
     if (SKIP_CONTENT_TAGS.has(e.name)) {
-      var res = skipContent(p, i, e.name, s, i1);
+      const res = skipContent(p, i, e.name, s, i1);
       if (!res) {
         p.doc?.errors.push(new CodeError(
           'error',
@@ -139,9 +139,9 @@ function parseElement(p: HtmlElement, s: string, i: number, i1: number, i2: numb
 }
 
 function parseAttributes(e: HtmlElement, s: string, i: number, i2: number) {
-  var i1 = skipBlanksAndComments(s, i2);
+  let i1 = skipBlanksAndComments(s, i2);
   while ((i2 = skipName(s, i1, true)) > i1) {
-    var name = s.substring(i1, i2);
+    const name = s.substring(i1, i2);
     if (hasAttribute(e, name)) {
       e.doc?.errors.push(new CodeError(
         'error',
@@ -150,11 +150,11 @@ function parseAttributes(e: HtmlElement, s: string, i: number, i2: number) {
       ));
       throw Error();
     }
-    let a = new HtmlAttribute(e.doc, e, name, '', loc(s, i1, i2, e.loc, i));
+    const a = new HtmlAttribute(e.doc, e, name, '', loc(s, i1, i2, e.loc, i));
     i1 = skipBlanksAndComments(s, i2);
     if (s.charCodeAt(i1) === EQ) {
       i1 = skipBlanksAndComments(s, i1 + 1);
-      var quote = s.charCodeAt(i1);
+      const quote = s.charCodeAt(i1);
       if (a && (quote === QUOT || quote === APOS)) {
         i1 = parseValue(e, i, a, s, i1 + 1, quote, String.fromCharCode(quote));
       } else if (
@@ -173,7 +173,7 @@ function parseAttributes(e: HtmlElement, s: string, i: number, i2: number) {
       }
     }
     i1 = skipBlanksAndComments(s, i1);
-  };
+  }
   return i1;
 }
 
@@ -194,7 +194,7 @@ function parseLiteralValue(
   a: HtmlAttribute, s: string, i1: number,
   quote: number, term: string
 ) {
-  var i2 = s.indexOf(term, i1);
+  let i2 = s.indexOf(term, i1);
   if (i2 < 0) {
     p.doc?.errors.push(new CodeError(
       'error',
@@ -204,7 +204,7 @@ function parseLiteralValue(
     throw new Error();
   } else {
     a.quote = String.fromCharCode(quote);
-    var j = i2 + term.length;
+    let j = i2 + term.length;
     while (j < s.length && s.charCodeAt(j) === term.charCodeAt(0)) {
       i2++; j++;
     }
@@ -248,7 +248,7 @@ function parseText(p: HtmlElement, s: string, i: number, i1: number, i2: number)
 }
 
 function parseAtomicText(p: HtmlElement, s: string, i: number, i1: number, i2: number) {
-  let k = s.indexOf(LEXP, i1);
+  const k = s.indexOf(LEXP, i1);
   if (k < 0 || k >= i2) {
     // static text
     new HtmlText(p.doc, p, s.substring(i1, i2), p.loc);
@@ -417,9 +417,9 @@ function skipBlanksAndComments(s: string, i: number) {
 }
 
 function skipContent(p: HtmlElement, i: number, tag: string, s: string, i1: number) {
-  var i2;
+  let i2;
   while ((i2 = s.indexOf('</', i1)) >= 0) {
-    var i0 = i2;
+    const i0 = i2;
     i1 = i2 + 2;
     i2 = skipName(s, i1);
     if (i2 > i1) {
@@ -445,7 +445,7 @@ function skipContent(p: HtmlElement, i: number, tag: string, s: string, i1: numb
 
 function skipName(s: string, i: number, acceptsDots = false) {
   while (i < s.length) {
-    var code = s.charCodeAt(i);
+    const code = s.charCodeAt(i);
     if ((code < 'a'.charCodeAt(0) || code > 'z'.charCodeAt(0)) &&
       (code < 'A'.charCodeAt(0) || code > 'Z'.charCodeAt(0)) &&
       (code < '0'.charCodeAt(0) || code > '9'.charCodeAt(0)) &&
@@ -518,7 +518,7 @@ function pos(
 
   let line = 1;
   let column = 0;
-  var i1 = 0, i2;
+  let i1 = 0, i2;
   while ((i2 = s.indexOf('\n', i1)) >= 0 && (i2 < i)) {
     i1 = i2 + 1;
     line++;

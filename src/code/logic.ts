@@ -29,7 +29,7 @@ export class CodeLogic {
     this.source = source;
     this.errors = [];
     let count = 0;
-    let stack = new Stack<CodeScope>();
+    const stack = new Stack<CodeScope>();
     const that = this;
     walker.ancestor(this.source.ast!, {
       // @ts-ignore
@@ -81,7 +81,7 @@ export class CodeLogic {
     ) {
       return true;
     }
-    for (let attr of node.attributes) {
+    for (const attr of node.attributes) {
       if (CodeLogic.isValueAttribute(attr)) {
         return true;
       }
@@ -143,7 +143,7 @@ export class CodeScope {
           extracted.push(i);
           continue;
         }
-        for (let p of VALUE_PREFIXES) {
+        for (const p of VALUE_PREFIXES) {
           const res = new RegExp(p.in).exec(attrName);
           if (res) {
             if (p.out !== null) {

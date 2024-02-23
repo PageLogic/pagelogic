@@ -161,7 +161,7 @@ export class Scope {
   protected initValues(): Map<string, Value> {
     const ret = new Map();
     if (this.props.values) {
-      for (let key of Reflect.ownKeys(this.props.values)) {
+      for (const key of Reflect.ownKeys(this.props.values)) {
         if (typeof key === 'string') {
           const value = new Value(this, key, this.props.values[key]);
           this.object[key] = value;
@@ -203,7 +203,7 @@ class Replicator {
   replicate(vv: any[]): any {
     !this.clones && (this.clones = []);
     // data window (offset/length)
-    let offset = 0, length = vv.length;
+    const offset = 0, length = vv.length;
     // add/update clones
     let ci = 0, di = offset;
     for (; di < (offset + length - 1); ci++, di++) {

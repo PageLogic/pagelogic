@@ -193,7 +193,7 @@ export function validateValueRef(
   // if we exausted the chain, it leads to either a scope or a value
   if (i >= refParts.length) {
     // if it's a value, generate the reference
-    return !!value ? 'ref' : 'invalid';
+    return value ? 'ref' : 'invalid';
   }
   // if we stopped before the end, it's ok as long as we found a value
   if (value) {
@@ -223,7 +223,7 @@ function lookup(scope: CodeScope | null, key: string
     if (!scope.parent && ROOT_MEMBERS[key]) {
       return true;
     }
-    for (let child of scope?.children || []) {
+    for (const child of scope?.children || []) {
       if (child.name === key) {
         return { type: 'scope', target: child };
       }

@@ -135,7 +135,7 @@ export class CodeLoader {
         }
       }
     });
-    for (let d of directives) {
+    for (const d of directives) {
       const i = d.parent.children.indexOf(d.node);
       if (d.name === INCLUDE_TAG || d.name === IMPORT_TAG) {
         i >= 0 && d.parent.children.splice(i, 1);
@@ -259,7 +259,7 @@ export class CodeLoader {
     const r = rootElement.openingElement;
     const existing = getJSXAttributeKeys(p);
     const included = getJSXAttributeKeys(r)
-    for (let key of included) {
+    for (const key of included) {
       if (!existing.includes(key)) {
         const attr = getJSXAttributeNode(r, key);
         p.attributes.push(attr!);

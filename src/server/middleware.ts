@@ -50,7 +50,7 @@ export function pageLogic(config: PageLogicConfig) {
 
   return async function (req: Request, res: Response, next: NextFunction) {
     const i = req.path.indexOf('.');
-    let extname = i < 0 ? '.html' : req.path.substring(i).toLowerCase();
+    const extname = i < 0 ? '.html' : req.path.substring(i).toLowerCase();
     if (extname !== '.html' && extname !== '.js') {
       return next();
     }

@@ -65,7 +65,7 @@ program(__dirname)
 async function compile(srcDir: string, dstDir: string, options: CompilerOptions) {
   const errors = new Array<string>();
   if (!await compiler(srcDir, dstDir, options, errors)) {
-    for (let error of errors) {
+    for (const error of errors) {
       console.error(error);
     }
   }

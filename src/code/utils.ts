@@ -3,7 +3,7 @@ import { JSXAttribute, JSXClosingElement, JSXOpeningElement } from "./walker";
 
 export function getJSXAttributeKeys(node: JSXOpeningElement): string[] {
   const ret = new Array<string>();
-  for (let attr of node.attributes) {
+  for (const attr of node.attributes) {
     if (attr.type === 'JSXAttribute') {
       ret.push(attr.name.name);
     }
@@ -14,7 +14,7 @@ export function getJSXAttributeKeys(node: JSXOpeningElement): string[] {
 export function getJSXAttributeNode(
   node: JSXOpeningElement, name: string
 ): JSXAttribute | undefined {
-  for (let attr of node.attributes) {
+  for (const attr of node.attributes) {
     if (attr.type === 'JSXAttribute') {
       if (attr.name.name === name) {
         return attr;
@@ -38,7 +38,7 @@ export function removeJSXAttribute(
 export function getJSXAttribute(
   node: JSXOpeningElement, name: string
 ): string | undefined {
-  for (let attr of node.attributes) {
+  for (const attr of node.attributes) {
     if (
       attr.type === 'JSXAttribute' &&
       attr.value?.type === 'Literal'

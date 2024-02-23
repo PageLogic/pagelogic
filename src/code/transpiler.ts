@@ -51,7 +51,7 @@ export class CodeTranspiler {
         return;
       }
       const ff = await fs.promises.readdir(path.join(root, dir));
-      for (let f of ff) {
+      for (const f of ff) {
         if (f.startsWith('.')) {
           continue;
         }
@@ -59,7 +59,7 @@ export class CodeTranspiler {
           ret.push(path.join(dir, f));
         }
       }
-      for (let f of ff) {
+      for (const f of ff) {
         if (f.startsWith('.')) {
           continue;
         }
@@ -124,7 +124,7 @@ export class CodeTranspiler {
         }
       }
     });
-    for (let r of toRemove) {
+    for (const r of toRemove) {
       const i = r.p.children.indexOf(r.n);
       r.p.children.splice(i, 1);
     }
@@ -190,7 +190,7 @@ export class CodeTranspiler {
     const names = Reflect.ownKeys(s.values) as string[];
     if (names.length) {
       const valuesObject = object(s.node);
-      for (let name of names) {
+      for (const name of names) {
         const value = s.values[name]!;
         const valueObject = this.compileValue(name, value, s, page);
         const valueProperty = property(name, valueObject, value.node);

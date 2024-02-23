@@ -37,7 +37,7 @@ export async function compiler(
   const txt = await fs.promises.readFile(src, { encoding: 'utf8' });
   await fs.promises.writeFile(dst, txt, { encoding: 'utf8' });
   // compile pages
-  var { ok, generated } = await compilePages(
+  const { ok, generated } = await compilePages(
     srcPath, srcDir, dstPath, options, errors
   );
   // remove obsolete artifacts
@@ -98,7 +98,7 @@ async function compilePages(
   const files = await transpiler.list('.html');
   const generated = new Set<string>();
   let ok = true;
-  for (let fname of files) {
+  for (const fname of files) {
     const page = await transpiler.compile(fname);
     if (page.errors.length) {
       ok = false;
@@ -127,7 +127,7 @@ async function compilePages(
 function generateErrors(
   page: Page, srcDir: string, fname: string, errors: string[]
 ) {
-  for (let e of page.errors) {
+  for (const e of page.errors) {
     if (e.loc?.source) {
       const loc = e.loc;
       errors.push(
@@ -182,7 +182,7 @@ async function generatePage(
  */
 async function cleanup(dir: string, generated: Set<string>) {
   const ff = await fs.promises.readdir(dir);
-  for (let file of ff) {
+  for (const file of ff) {
     const fname = path.join(dir, file);
     if (fname.endsWith('.map')) {
       continue;

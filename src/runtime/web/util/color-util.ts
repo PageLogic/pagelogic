@@ -7,18 +7,18 @@ export interface Rgba {
 }
 
 export function mixColors(col1:string, col2:string, ratio:number): string {
-	var rgba1 = color2Components(col1);
-	var rgba2 = color2Components(col2);
+	const rgba1 = color2Components(col1);
+	const rgba2 = color2Components(col2);
 	ratio = Math.max(Math.min(ratio, 1), 0);
-	var r1 = rgba1 ? rgba1.r / 255.0 : 0;
-	var r2 = rgba2 ? rgba2.r / 255.0 : 0;
-	var g1 = rgba1 ? rgba1.g / 255.0 : 0;
-	var g2 = rgba2 ? rgba2.g / 255.0 : 0;
-	var b1 = rgba1 ? rgba1.b / 255.0 : 0;
-	var b2 = rgba2 ? rgba2.b / 255.0 : 0;
-  var a1 = rgba1 && rgba1.a != null ? rgba1.a : 1;
-  var a2 = rgba2 && rgba2.a != null ? rgba2.a : 1;
-	var ret = components2Color({
+	const r1 = rgba1 ? rgba1.r / 255.0 : 0;
+	const r2 = rgba2 ? rgba2.r / 255.0 : 0;
+	const g1 = rgba1 ? rgba1.g / 255.0 : 0;
+	const g2 = rgba2 ? rgba2.g / 255.0 : 0;
+	const b1 = rgba1 ? rgba1.b / 255.0 : 0;
+	const b2 = rgba2 ? rgba2.b / 255.0 : 0;
+  const a1 = rgba1 && rgba1.a != null ? rgba1.a : 1;
+  const a2 = rgba2 && rgba2.a != null ? rgba2.a : 1;
+	const ret = components2Color({
 		r: Math.round((r2 * ratio + r1 * (1.0 - ratio)) * 255),
 		g: Math.round((g2 * ratio + g1 * (1.0 - ratio)) * 255),
 		b: Math.round((b2 * ratio + b1 * (1.0 - ratio)) * 255),
@@ -31,10 +31,10 @@ export function mixColors(col1:string, col2:string, ratio:number): string {
 
 export function components2Color(rgba:Rgba): string {
 	function hexByte(n:number): string {
-		var ret = n.toString(16);
+		const ret = n.toString(16);
 		return (ret.length > 1 ? ret : '0' + ret);
 	}
-	var ret = '#000';
+	let ret = '#000';
 	if (rgba != null) {
 		if (rgba.a != null) {
 			ret = `rgba(${rgba.r},${rgba.g},${rgba.b},${rgba.a})`;
@@ -46,13 +46,13 @@ export function components2Color(rgba:Rgba): string {
 }
 
 export function color2Components(s:string): Rgba|null {
-	var ret:Rgba|null = null;
-	var re1 = /#([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})/;
-	var re2 = /rgb\s*[(]\s*([0-9]+)\s*,\s*([0-9]+)\s*,\s*([0-9]+)\s*[)]/;
-	var re3 = /rgb\s*[(]\s*([0-9]+)[%]\s*,\s*([0-9]+)[%]\s*,\s*([0-9]+)[%]\s*[)]/;
-	var re4 = /rgba\s*[(]\s*([0-9]+)\s*,\s*([0-9]+)\s*,\s*([0-9]+)\s*,\s*([.0-9]+)\s*[)]/;
-	var re5 = /rgba\s*[(]\s*([0-9]+)[%]\s*,\s*([0-9]+)[%]\s*,\s*([0-9]+)[%]\s*,\s*([.0-9]+)\s*[)]/;
-	var res;
+	let ret:Rgba|null = null;
+	const re1 = /#([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})/;
+	const re2 = /rgb\s*[(]\s*([0-9]+)\s*,\s*([0-9]+)\s*,\s*([0-9]+)\s*[)]/;
+	const re3 = /rgb\s*[(]\s*([0-9]+)[%]\s*,\s*([0-9]+)[%]\s*,\s*([0-9]+)[%]\s*[)]/;
+	const re4 = /rgba\s*[(]\s*([0-9]+)\s*,\s*([0-9]+)\s*,\s*([0-9]+)\s*,\s*([.0-9]+)\s*[)]/;
+	const re5 = /rgba\s*[(]\s*([0-9]+)[%]\s*,\s*([0-9]+)[%]\s*,\s*([0-9]+)[%]\s*,\s*([.0-9]+)\s*[)]/;
+	let res;
 	s = fullRgb(s);
 	if ((res = re1.exec(s))) {
 		ret = {
@@ -91,20 +91,20 @@ export function color2Components(s:string): Rgba|null {
 }
 
 export function fullRgb(s:string): string {
-	var ret = s;
-	var re = /^#([0-9a-fA-F])([0-9a-fA-F])([0-9a-fA-F])$/;
-	var res = re.exec(s);
+	let ret = s;
+	const re = /^#([0-9a-fA-F])([0-9a-fA-F])([0-9a-fA-F])$/;
+	const res = re.exec(s);
 	if (res) {
-		var r = res[1];
-		var g = res[2];
-		var b = res[3];
+		const r = res[1];
+		const g = res[2];
+		const b = res[3];
 		ret = `#${r}${r}${g}${g}${b}${b}`;
 	}
 	return ret;
 }
 
 export function opacity(s: string, a: number): string {
-  var rgba = color2Components(s) as Rgba;
+  const rgba = color2Components(s) as Rgba;
   rgba.a = a;
   return components2Color(rgba);
 }

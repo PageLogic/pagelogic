@@ -29,7 +29,7 @@ export function getMarkup(root: Node, props?: GetMarkupProps): string {
               ':' + node.name.name.name;
         }
         sb.push(tagName);
-        for (let attr of node.attributes) {
+        for (const attr of node.attributes) {
           if (attr.type === 'JSXAttribute' &&
               attr.value?.type === 'Literal') {
             sb.push(' ');
@@ -64,7 +64,7 @@ export function getMarkup(root: Node, props?: GetMarkupProps): string {
           node.name.type === 'JSXNamespacedName') {
         const tagName = node.name.name.toString();
         if (props?.bodyEndScriptURLs && tagName.toLowerCase() === 'body') {
-          for (let url of props.bodyEndScriptURLs) {
+          for (const url of props.bodyEndScriptURLs) {
             sb.push('<script src="');
             sb.push(url)
             sb.push('"></script>\n');
