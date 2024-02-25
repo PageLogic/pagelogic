@@ -6,6 +6,7 @@ import path from "path";
 import { DST_CLIENT_CODE, SRC_CLIENT_CODE } from '../consts';
 import { WebContext } from '../runtime/web/context';
 import { ScopeProps } from '../runtime/core/scope';
+import { PageMap } from './pagemap';
 
 // https://expressjs.com/en/guide/writing-middleware.html
 // https://typescript.tv/hands-on/how-to-type-express-js-middleware/
@@ -46,6 +47,7 @@ pages.set('/pagelogic-rt', {
 
 export function pageLogic(config: PageLogicConfig) {
   const rootPath = config.rootPath || process.cwd();
+  const pageMap = new PageMap(rootPath);
   const transpiler = new CodeTranspiler(rootPath, { clientFile: DST_CLIENT_CODE });
 
   return async function (req: Request, res: Response, next: NextFunction) {
@@ -57,9 +59,8 @@ export function pageLogic(config: PageLogicConfig) {
     let pathname = i < 0 ? req.path : req.path.substring(0, i).toLowerCase();
     if (i < 0) {
       try {
-        const fullPath = path.join(rootPath, pathname);
-        const stat = await fs.promises.stat(fullPath);
-        if (stat.isDirectory()) {
+        const item = await pageMap.getItem(pathname);
+        if (item && pageMap.isDirectory(item)) {
           // if has no suffix and it's a directory,
           // it means the index.html inside
           pathname = path.join(pathname, 'index');
@@ -76,7 +77,6 @@ export function pageLogic(config: PageLogicConfig) {
         pages.set(pathname, page);
         if (config.ssr) {
           try {
-            //TODO; optimize js code swapping
             // https://github.com/capricorn86/happy-dom/wiki/Settings#changing-settings
             const window = new Window({
               settings: {

@@ -15,38 +15,13 @@ describe('server: pagemap', () => {
   it('should provide page map', async () => {
     const actual = await pageMap.get();
     const expected = {
-      "name": ".",
-      "path": ".",
-      "children": [
-        {
-          "name": "assets",
-          "path": "assets",
-          "children": []
-        },
-        {
-          "name": "index.html",
-          "path": "index.html"
-        },
-        {
-          "name": "pages",
-          "path": "pages",
-          "children": [
-            {
-              "name": "about.html",
-              "path": "pages/about.html"
-            },
-            {
-              "name": "products.html",
-              "path": "pages/products.html"
-            }
-          ]
-        },
-        {
-          "name": "parts",
-          "path": "parts",
-          "children": []
-        }
-      ]
+      "":                     { "type": "dir",  "name": "" },
+      "assets":               { "type": "dir",  "name": "assets" },
+      "index.html":           { "type": "page", "name": "index.html" },
+      "pages":                { "type": "dir",  "name": "pages" },
+      "pages/about.html":     { "type": "page", "name": "about.html" },
+      "pages/products.html":  { "type": "page", "name": "products.html" },
+      "parts":                { "type": "dir",  "name": "parts" }
     };
     assert.deepEqual(actual, expected);
   });
@@ -57,6 +32,23 @@ describe('server: pagemap', () => {
     pageMap.get();
     // another listing without waiting
     const list = await pageMap.get();
-    assert.notEqual(list.children.length, 0);
-  })
+    assert.notEqual(Reflect.ownKeys(list).length, 1);
+  });
+
+  it('should get item for path "/"', async () => {
+    const item = await pageMap.getItem('/');
+    assert.deepEqual(item, { type: 'dir', name: '' });
+  });
+
+  it('should get item for path "/index.html"', async () => {
+    const item = await pageMap.getItem('/index.html');
+    assert.deepEqual(item, { type: 'page', name: 'index.html' });
+  });
+
+  it('should get item for path "/pages/"', async () => {
+    const item = await pageMap.getItem('/pages/');
+    assert.deepEqual(item, { type: 'dir', name: 'pages' });
+    const item2 = await pageMap.getItem('/pages');
+    assert.equal(item2, item);
+  });
 });

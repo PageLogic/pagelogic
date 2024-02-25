@@ -1,22 +1,30 @@
 {
-  "type": "BinaryExpression",
-  "operator": "+",
-  "left": {
-    "type": "BinaryExpression",
-    "operator": "+",
-    "left": {
-      "type": "Literal",
-      "value": "\n      body {\n        color: "
-    },
-    "right": {
-      "type": "Identifier",
-      "start": 58,
-      "end": 59,
-      "name": "x"
-    }
+  ".": {
+    "type": "dir",
+    "name": "."
   },
-  "right": {
-    "type": "Literal",
-    "value": ";\n      }\n    "
+  "assets": {
+    "type": "dir",
+    "name": "assets"
+  },
+  "index.html": {
+    "type": "page",
+    "name": "index.html"
+  },
+  "pages": {
+    "type": "dir",
+    "name": "pages"
+  },
+  "pages/about.html": {
+    "type": "page",
+    "name": "about.html"
+  },
+  "pages/products.html": {
+    "type": "page",
+    "name": "products.html"
+  },
+  "parts": {
+    "type": "dir",
+    "name": "parts"
   }
 }
