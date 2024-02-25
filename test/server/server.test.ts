@@ -1,5 +1,5 @@
 import assert from "node:assert";
-import { after, before, describe, it, test } from "node:test";
+import { after, before, describe, it } from "node:test";
 import path from "path";
 import { Server } from "../../src/server";
 import * as happy from 'happy-dom';
