@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import PQueue from 'p-queue';
 
 export interface PageMapFile {
   name: string,
@@ -13,26 +14,26 @@ export interface PageMapDir extends PageMapFile {
 export class PageMap {
   protected rootPath: string;
   protected root?: PageMapDir;
-  protected updating = false;
+  protected queue = new PQueue({concurrency: 1});
 
   constructor(rootPath: string) {
     this.rootPath = rootPath;
   }
 
   async get(): Promise<PageMapDir> {
-    if (!this.root) {
-      this.updating = true;
-      this.root = {
-        name: '.',
-        path: '.',
-        children: []
-      }
-      try {
+    const f = async () => {
+      if (!this.root) {
+        this.root = {
+          name: '.',
+          path: '.',
+          children: []
+        }
         await this.update();
-        this.updating = false;
-      } catch (ignored) {}
+      }
     }
-    return this.root;
+    // enqueue concurrent calls
+    await this.queue.add(f);
+    return this.root!;
   }
 
   clear(): this {

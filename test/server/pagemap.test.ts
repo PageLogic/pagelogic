@@ -5,7 +5,7 @@ import { PageMap } from "../../src/server/pagemap";
 
 const rootPath = path.join(__dirname, 'pagemap');
 
-describe.only('server: pagemap', () => {
+describe('server: pagemap', () => {
   let pageMap: PageMap;
 
   before(() => {
@@ -51,12 +51,12 @@ describe.only('server: pagemap', () => {
     assert.deepEqual(actual, expected);
   });
 
-  // it.only('should synchronize get() calls', async () => {
-  //   pageMap.clear();
-  //   // start async listing
-  //   pageMap.get();
-  //   // another listing without waiting
-  //   const list = await pageMap.get();
-  //   assert.notEqual(list.children.length, 0);
-  // })
+  it('should enqueue concurrent get() calls', async () => {
+    pageMap.clear();
+    // start async listing
+    pageMap.get();
+    // another listing without waiting
+    const list = await pageMap.get();
+    assert.notEqual(list.children.length, 0);
+  })
 });
