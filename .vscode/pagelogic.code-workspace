@@ -1,0 +1,26 @@
+{
+  "folders": [
+    {
+      "name": "ROOT",
+      "path": "../"
+    },
+    {
+      "name": "packages/docs",
+      "path": "../packages/docs"
+    },
+    {
+      "name": "packages/exp",
+      "path": "../packages/exp"
+    },
+    {
+      "name": "packages/pagelogic",
+      "path": "../packages/pagelogic"
+    },
+  ],
+  "settings": {
+    "files.exclude": {
+      "node_modules/": true,
+      "packages/": true
+    },
+  }
+}

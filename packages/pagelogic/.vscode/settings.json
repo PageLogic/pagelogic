@@ -1,0 +1,7 @@
+{
+  "npm.exclude": ["**/dist"],
+  "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": "always"
+  },
+  "eslint.validate": ["typescript"]
+}

@@ -1,4 +1,1 @@
-/dist
-/node_modules
-/www
-/www-src
+.DS_Store
