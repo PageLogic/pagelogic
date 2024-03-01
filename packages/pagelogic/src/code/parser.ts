@@ -1,4 +1,4 @@
-import { BinaryExpression, Expression, Position, SourceLocation, parseExpressionAt } from 'acorn';
+import { BinaryExpression, Expression, Position, parseExpressionAt } from 'acorn';
 import { HtmlAttribute, HtmlComment, HtmlDocument, HtmlElement, HtmlLocation, HtmlText, VOID_ELEMENTS, htmlUnescape } from './html';
 import { CodeError } from './types';
 
@@ -16,26 +16,24 @@ const LEXP = '${';
 const REXP = '}'.charCodeAt(0);
 
 export function parse(s: string, fname?: string): HtmlDocument {
-  const ret = new HtmlDocument(loc(s, 0, s.length, {
-    source: fname,
-    start: { line: 1, column: 0 },
-    end: { line: 1, column: 0 }
-  }, 0));
+  const src = new Source(s, fname);
+  const ret = new HtmlDocument(src.loc(0, s.length));
   try {
-    parseNodes(ret, s, 0);
+    parseNodes(ret, src, 0);
   } catch (ignored) { /* nop */ }
   return ret;
 }
 
-function parseNodes(p: HtmlElement, s: string, i: number) {
+function parseNodes(p: HtmlElement, src: Source, i: number) {
+  const s = src.s;
   let i1 = i; let i2; let closure; let i3 = i; let i4; let closetag = null;
   while ((i2 = s.indexOf('<', i1)) >= 0) {
     i4 = i2;
     i1 = i2 + 1;
     (closure = s.charCodeAt(i1) === SLASH) && i1++;
-    if ((i2 = skipName(s, i1)) > i1) {
+    if ((i2 = skipName(src, i1)) > i1) {
       if (i4 > i3) {
-        parseText(p, s, i, i3, i4);
+        parseText(p, src, i, i3, i4);
       }
       if (closure) {
         const name = s.substring(i1, i2).toUpperCase();
@@ -49,7 +47,8 @@ function parseNodes(p: HtmlElement, s: string, i: number) {
             p.doc?.errors.push(new CodeError(
               'error',
               `Found </${name}> instead of </${p.name}>`,
-              loc(s, i1, i1, p.loc, i)
+              // loc(s, i1, i1, p.loc, i)
+              src.loc(i1, i1)
             ));
             throw Error();
           }
@@ -57,23 +56,28 @@ function parseNodes(p: HtmlElement, s: string, i: number) {
           p.doc?.errors.push(new CodeError(
             'error',
             `Unterminated close tag ${name}`,
-            loc(s, i1, i1, p.loc, i)
+            // loc(s, i1, i1, p.loc, i)
+            src.loc(i1, i1)
           ));
           throw Error();
         }
         i1 = i2;
       } else {
-        i1 = parseElement(p, s, i, i1, i2);
+        i1 = parseElement(p, src, i, i1, i2);
       }
       i3 = i1;
-    } else if (!closure && (i2 = skipComment(p, i, s, i1)) > i1) {
+    } else if (!closure && (i2 = skipComment(p, i, src, i1)) > i1) {
       if (i4 > i3) {
-        parseText(p, s, i, i3, i4);
+        parseText(p, src, i, i3, i4);
       }
       if (s.charCodeAt(i1 + 3) != DASH) {
         // if it doesn't start with `<!---`, store the comment
         const a = i1 + 3; const b = i2 - 3;
-        new HtmlComment(p.doc, p, s.substring(a, b), loc(s, a, b, p.loc, i));
+        new HtmlComment(
+          p.doc, p, s.substring(a, b),
+          // loc(s, a, b, p.loc, i)
+          src.loc(a, b)
+        );
       }
       i3 = i1 = i2;
     }
@@ -82,16 +86,22 @@ function parseNodes(p: HtmlElement, s: string, i: number) {
     p.doc?.errors.push(new CodeError(
       'error',
       `expected </${p.name}>`,
-      loc(s, i1, i1, p.loc, i)
+      // loc(s, i1, i1, p.loc, i)
+      src.loc(i1, i1)
     ));
     throw new Error();
   }
   return i1;
 }
 
-function parseElement(p: HtmlElement, s: string, i: number, i1: number, i2: number): number {
-  const e = new HtmlElement(p.doc, p, s.substring(i1, i2), loc(s, i1 - 1, i2, p.loc, i));
-  i1 = parseAttributes(e, s, i, i2);
+function parseElement(p: HtmlElement, src: Source, i: number, i1: number, i2: number): number {
+  const s = src.s;
+  const e = new HtmlElement(
+    p.doc, p, s.substring(i1, i2),
+    // loc(s, i1 - 1, i2, p.loc, i)
+    src.loc(i1 - 1, i2)
+  );
+  i1 = parseAttributes(e, src, i, i2);
   i1 = skipBlanks(s, i1);
   let selfclose = false;
   if ((selfclose = (s.charCodeAt(i1) === SLASH))) {
@@ -101,64 +111,78 @@ function parseElement(p: HtmlElement, s: string, i: number, i1: number, i2: numb
     p.doc?.errors.push(new CodeError(
       'error',
       `Unterminated tag ${e.name}`,
-      loc(s, i1, i1, p.loc, i)
+      // loc(s, i1, i1, p.loc, i)
+      src.loc(i1, i1)
     ));
     throw new Error();
   }
   i1++;
   if (!selfclose && !VOID_ELEMENTS.has(e.name)) {
     if (SKIP_CONTENT_TAGS.has(e.name)) {
-      const res = skipContent(p, i, e.name, s, i1);
+      const res = skipContent(p, i, e.name, src, i1);
       if (!res) {
         p.doc?.errors.push(new CodeError(
           'error',
           `Unterminated tag ${e.name}`,
-          loc(s, i1, i1, p.loc, i)
+          // loc(s, i1, i1, p.loc, i)
+          src.loc(i1, i1)
         ));
         throw new Error();
       }
       if (res.i0 > i1) {
-        new HtmlText(e.doc, e, s.substring(i1, res.i0), loc(s, i1, res.i0, p.loc, i));
+        new HtmlText(
+          e.doc, e, s.substring(i1, res.i0),
+          // loc(s, i1, res.i0, p.loc, i)
+          src.loc(i1, res.i0)
+        );
       }
       i1 = res.i2;
     } else {
-      i1 = parseNodes(e, s, i1);
+      i1 = parseNodes(e, src, i1);
     }
   }
-  e.loc.end = pos(s, i1, p.loc, i);
+  // e.loc.end = pos(s, i1, p.loc, i);
+  e.loc.end = src.pos(i1);
   return i1;
 }
 
-function parseAttributes(e: HtmlElement, s: string, i: number, i2: number) {
+function parseAttributes(e: HtmlElement, src: Source, i: number, i2: number) {
+  const s = src.s;
   let i1 = skipBlanksAndComments(s, i2);
-  while ((i2 = skipName(s, i1, true)) > i1) {
+  while ((i2 = skipName(src, i1, true)) > i1) {
     const name = s.substring(i1, i2);
     if (hasAttribute(e, name)) {
       e.doc?.errors.push(new CodeError(
         'error',
         `duplicated attribute "${name}"`,
-        loc(s, i1, i1, e.loc, i)
+        // loc(s, i1, i1, e.loc, i)
+        src.loc(i1, i1)
       ));
       throw Error();
     }
-    const a = new HtmlAttribute(e.doc, e, name, '', loc(s, i1, i2, e.loc, i));
+    const a = new HtmlAttribute(
+      e.doc, e, name, '',
+      // loc(s, i1, i2, e.loc, i)
+      src.loc(i1, i2)
+    );
     i1 = skipBlanksAndComments(s, i2);
     if (s.charCodeAt(i1) === EQ) {
       i1 = skipBlanksAndComments(s, i1 + 1);
       const quote = s.charCodeAt(i1);
       if (a && (quote === QUOT || quote === APOS)) {
-        i1 = parseValue(e, i, a, s, i1 + 1, quote, String.fromCharCode(quote));
+        i1 = parseValue(e, i, a, src, i1 + 1, quote, String.fromCharCode(quote));
       } else if (
         a &&
         s.startsWith(LEXP, i1)
       ) {
-        i1 = parseValue(e, i, a, s, i1 + LEXP.length, quote, '}');
+        i1 = parseValue(e, i, a, src, i1 + LEXP.length, quote, '}');
       } else {
         // we don't support unquoted attribute values
         e.doc?.errors.push(new CodeError(
           'error',
           'Missing attribute value',
-          loc(s, i1, i1, e.loc, i)
+          // loc(s, i1, i1, e.loc, i)
+          src.loc(i1, i1)
         ));
         throw new Error();
       }
@@ -170,27 +194,29 @@ function parseAttributes(e: HtmlElement, s: string, i: number, i2: number) {
 
 function parseValue(
   p: HtmlElement, i: number,
-  a: HtmlAttribute, s: string, i1: number,
+  a: HtmlAttribute, src: Source, i1: number,
   quote: number, term: string
 ) {
   if (quote !== DOLLAR) {
-    return parseLiteralValue(p, i, a, s, i1, quote, term);
+    return parseLiteralValue(p, i, a, src, i1, quote, term);
   } else {
-    return parseExpressionValue(p, i, a, s, i1);
+    return parseExpressionValue(p, i, a, src, i1);
   }
 }
 
 function parseLiteralValue(
   p: HtmlElement, i: number,
-  a: HtmlAttribute, s: string, i1: number,
+  a: HtmlAttribute, src: Source, i1: number,
   quote: number, term: string
 ) {
+  const s = src.s;
   let i2 = s.indexOf(term, i1);
   if (i2 < 0) {
     p.doc?.errors.push(new CodeError(
       'error',
       'Unterminated attribute value',
-      loc(s, i1, i1, p.loc, i)
+      // loc(s, i1, i1, p.loc, i)
+      src.loc(i1, i1)
     ));
     throw new Error();
   } else {
@@ -201,23 +227,26 @@ function parseLiteralValue(
     }
     a.value = htmlUnescape(s.substring(i1, i2));
     i1 = i2 + term.length;
-    a.loc.end = pos(s, i1, p.loc, i);
+    // a.loc.end = pos(s, i1, p.loc, i);
+    a.loc.end = src.pos(i1);
   }
   return i1;
 }
 
 function parseExpressionValue(
   p: HtmlElement, i: number,
-  a: HtmlAttribute, s: string, i1: number
+  a: HtmlAttribute, src: Source, i1: number
 ) {
-  const exp = parseExpression(p, s, i, i1);
+  const s = src.s;
+  const exp = parseExpression(p, src, i, i1);
   let i2 = exp.end;
   i2 = skipBlanks(s, i2);
   if (i2 >= s.length || s.charCodeAt(i2) !== REXP) {
     p.doc?.errors.push(new CodeError(
       'error',
       'unterminated attribute expression',
-      loc(s, i1, i1, p.loc, i)
+      // loc(s, i1, i1, p.loc, i)
+      src.loc(i1, i1)
     ));
     // abort parsing
     throw new Error();
@@ -226,15 +255,16 @@ function parseExpressionValue(
   return i2 + 1;
 }
 
-function parseText(p: HtmlElement, s: string, i: number, i1: number, i2: number) {
+function parseText(p: HtmlElement, src: Source, i: number, i1: number, i2: number) {
   if (ATOMIC_TEXT_TAGS.has(p.name)) {
-    parseAtomicText(p, s, i, i1, i2);
+    parseAtomicText(p, src, i, i1, i2);
   } else {
-    parseNormalText(p, s, i, i1, i2);
+    parseNormalText(p, src, i, i1, i2);
   }
 }
 
-function parseAtomicText(p: HtmlElement, s: string, i: number, i1: number, i2: number) {
+function parseAtomicText(p: HtmlElement, src: Source, i: number, i1: number, i2: number) {
+  const s = src.s;
   const k = s.indexOf(LEXP, i1);
   if (k < 0 || k >= i2) {
     // static text
@@ -250,7 +280,8 @@ function parseAtomicText(p: HtmlElement, s: string, i: number, i1: number, i2: n
         value: s.substring(j1, i2),
         start: j1,
         end: i2,
-        loc: loc(s, j1, i2, p.loc, i)
+        // loc: loc(s, j1, i2, p.loc, i)
+        loc: src.loc(j1, i2)
       });
       break;
     }
@@ -260,7 +291,8 @@ function parseAtomicText(p: HtmlElement, s: string, i: number, i1: number, i2: n
         value: s.substring(j1, j2),
         start: j1,
         end: j2,
-        loc: loc(s, j1, j2, p.loc, i)
+        // loc: loc(s, j1, j2, p.loc, i)
+        loc: src.loc(j1, j2)
       });
       j1 = j2;
     }
@@ -270,11 +302,12 @@ function parseAtomicText(p: HtmlElement, s: string, i: number, i1: number, i2: n
       p.doc?.errors.push(new CodeError(
         'error',
         'invalid expression',
-        loc(s, j2, j2, p.loc, i)
+        // loc(s, j2, j2, p.loc, i)
+        src.loc(j2, j2)
       ));
       break;
     }
-    const exp = parseExpression(p, s, i, j1);
+    const exp = parseExpression(p, src, i, j1);
     j1 = exp.end;
     j1 = skipBlanks(s, j1);
     if (s.charCodeAt(j1) === REXP) {
@@ -289,7 +322,8 @@ function parseAtomicText(p: HtmlElement, s: string, i: number, i1: number, i2: n
       value: '',
       start: i1,
       end: i1,
-      loc: loc(s, i1, i1, p.loc, i)
+      // loc: loc(s, i1, i1, p.loc, i)
+      loc: src.loc(i1, i1)
     });
   }
   if (exps.length === 1) {
@@ -306,14 +340,16 @@ function parseAtomicText(p: HtmlElement, s: string, i: number, i1: number, i2: n
       right: exps[n],
       start,
       end,
-      loc: loc(s, start, end, p.loc, i)
+      // loc: loc(s, start, end, p.loc, i)
+      loc: src.loc(start, end)
     };
   }
   const exp = f(exps.length - 1);
   new HtmlText(p.doc, p, exp, p.loc);
 }
 
-function parseNormalText(p: HtmlElement, s: string, i: number, i1: number, i2: number) {
+function parseNormalText(p: HtmlElement, src: Source, i: number, i1: number, i2: number) {
+  const s = src.s;
   for (let j1 = i1; j1 < i2;) {
     let j2 = s.indexOf(LEXP, j1);
     if (j2 < 0 || j2 >= i2) {
@@ -330,11 +366,12 @@ function parseNormalText(p: HtmlElement, s: string, i: number, i1: number, i2: n
       p.doc?.errors.push(new CodeError(
         'error',
         'invalid expression',
-        loc(s, j2, j2, p.loc, i)
+        // loc(s, j2, j2, p.loc, i)
+        src.loc(j2, j2)
       ));
       break;
     }
-    const exp = parseExpression(p, s, i, j1);
+    const exp = parseExpression(p, src, i, j1);
     j1 = exp.end;
     j1 = skipBlanks(s, j1);
     if (s.charCodeAt(j1) === REXP) {
@@ -344,7 +381,8 @@ function parseNormalText(p: HtmlElement, s: string, i: number, i1: number, i2: n
   }
 }
 
-function parseExpression(p: HtmlElement, s: string, i: number, i1: number) {
+function parseExpression(p: HtmlElement, src: Source, i: number, i1: number) {
+  const s = src.s;
   try {
     const exp = parseExpressionAt(s, i1, { ecmaVersion: 'latest', sourceType: 'script' });
     // TODO: adapt ast nodes location
@@ -353,7 +391,8 @@ function parseExpression(p: HtmlElement, s: string, i: number, i1: number) {
     p.doc?.errors.push(new CodeError(
       'error',
       `${err}`,
-      loc(s, i1, i1, p.loc, i)
+      // loc(s, i1, i1, p.loc, i)
+      src.loc(i1, i1)
     ));
     // abort parsing
     throw new Error();
@@ -406,12 +445,13 @@ function skipBlanksAndComments(s: string, i: number) {
   return i;
 }
 
-function skipContent(p: HtmlElement, i: number, tag: string, s: string, i1: number) {
+function skipContent(p: HtmlElement, i: number, tag: string, src: Source, i1: number) {
+  const s = src.s;
   let i2;
   while ((i2 = s.indexOf('</', i1)) >= 0) {
     const i0 = i2;
     i1 = i2 + 2;
-    i2 = skipName(s, i1);
+    i2 = skipName(src, i1);
     if (i2 > i1) {
       if (s.substring(i1, i2).toUpperCase() === tag) {
         i2 = skipBlanks(s, i2);
@@ -419,7 +459,8 @@ function skipContent(p: HtmlElement, i: number, tag: string, s: string, i1: numb
           p.doc?.errors.push(new CodeError(
             'error',
             'Unterminated close tag',
-            loc(s, i1, i1, p.loc, i)
+            // loc(s, i1, i1, p.loc, i)
+            src.loc(i1, i1)
           ));
           throw new Error();
         }
@@ -433,7 +474,8 @@ function skipContent(p: HtmlElement, i: number, tag: string, s: string, i1: numb
   return null;
 }
 
-function skipName(s: string, i: number, acceptsDots = false) {
+function skipName(src: Source, i: number, acceptsDots = false) {
+  const s = src.s;
   while (i < s.length) {
     const code = s.charCodeAt(i);
     if ((code < 'a'.charCodeAt(0) || code > 'z'.charCodeAt(0)) &&
@@ -449,7 +491,8 @@ function skipName(s: string, i: number, acceptsDots = false) {
   return i;
 }
 
-function skipComment(p: HtmlElement, i: number, s: string, i1: number) {
+function skipComment(p: HtmlElement, i: number, src: Source, i1: number) {
+  const s = src.s;
   if (s.charCodeAt(i1) === '!'.charCodeAt(0) &&
     s.charCodeAt(i1 + 1) === DASH &&
     s.charCodeAt(i1 + 2) === DASH) {
@@ -457,7 +500,8 @@ function skipComment(p: HtmlElement, i: number, s: string, i1: number) {
       p.doc?.errors.push(new CodeError(
         'error',
         'Unterminated comment',
-        loc(s, i1, i1, p.loc, i)
+        // loc(s, i1, i1, p.loc, i)
+        src.loc(i1, i1)
       ));
       throw new Error();
     }
@@ -466,58 +510,54 @@ function skipComment(p: HtmlElement, i: number, s: string, i1: number) {
   return i1;
 }
 
-function loc(
-  s: string, i1: number, i2: number,
-  parentLoc: SourceLocation, parentIndex: number
-): HtmlLocation {
-  const start = pos(s, i1, parentLoc, parentIndex);
-  const end = pos(s, i2, parentLoc, parentIndex);
-  return {
-    source: parentLoc.source,
-    start,
-    end,
-    i1,
-    i2
-  };
-}
+export class Source {
+  s: string;
+  fname?: string;
+  linestarts: number[];
 
-// let lastIndex = 0;
-// let lastLine = 1;
-// let lastColumn = 0;
-
-function pos(
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  s: string, i: number, parentLoc: SourceLocation, parentIndex: number
-): Position {
-  // if (i === lastIndex) {
-  //   return { line: lastLine, column: lastColumn };
-  // } else if (i > lastIndex) {
-  //   let line = lastLine;
-  //   let column = lastColumn;
-  //   var i1 = lastIndex, i2;
-  //   while ((i2 = s.indexOf('\n', i1)) >= 0 && (i2 <= i)) {
-  //     i1 = i2 + 1;
-  //     line++;
-  //   }
-  //   column += Math.max(0, (i - Math.max(0, i1)));
-  //   lastIndex = i;
-  //   lastLine = line;
-  //   lastColumn = column;
-  //   return { line, column };
-  // }
-
-  let line = 1;
-  let column = 0;
-  let i1 = 0; let i2;
-  while ((i2 = s.indexOf('\n', i1)) >= 0 && (i2 < i)) {
-    i1 = i2 + 1;
-    line++;
+  constructor(s: string, fname?: string) {
+    this.s = s = s.trimEnd();
+    this.fname = fname;
+    this.linestarts = [0];
+    for (let i1 = 0, i2; (i2 = s.indexOf('\n', i1)) >= 0; i1 = i2 + 1) {
+      this.linestarts.push(i2 + 1);
+    }
   }
-  column += Math.max(0, (i - Math.max(0, i1)));
 
-  // lastIndex = i;
-  // lastLine = line;
-  // lastColumn = column;
+  pos(n: number): Position {
+    const max = this.linestarts.length - 1;
+    let i1 = 0, i2 = max;
+    while (i1 < i2) {
+      const j = i1 + Math.floor((i2 - i1) / 2);
+      const n1 = this.linestarts[j];
+      const n2 = j < max ? this.linestarts[j + 1] : n1;
+      if (n >= n1 && n < n2) {
+        i1 = i2 = j;
+      } else if (n >= n2) {
+        i1 = j + 1;
+      } else if (n < n1) {
+        i2 = j;
+      }
+    }
+    return {
+      // 1-based
+      line: i1 + 1,
+      // 0-based
+      column: n - this.linestarts[i1]
+    };
+  }
 
-  return { line, column };
+  loc(i1: number, i2: number): HtmlLocation {
+    return {
+      source: this.fname,
+      start: this.pos(i1),
+      end: this.pos(i2),
+      i1,
+      i2
+    };
+  }
+
+  get lineCount () {
+    return this.linestarts.length;
+  }
 }
