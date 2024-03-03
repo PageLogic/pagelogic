@@ -1,10 +1,11 @@
-import { Expression } from 'acorn';
+import * as acorn from 'acorn';
 import { assert } from 'chai';
 import fs from 'fs';
 import path from 'path';
 import * as html from '../../src/code/html';
 import * as parser from '../../src/code/parser';
-import * as util from '../../src/code/util';
+import * as util from '../../src/code/utils';
+import { CodeError } from '../../src/code/types';
 
 const rootPath = path.join(__dirname, 'parser');
 
@@ -18,11 +19,12 @@ describe('code: parser', () => {
 
       it(file, async () => {
         const text = await fs.promises.readFile(filePath);
-        const source = parser.parse(text.toString(), file);
-        if (source.errors.length) {
+        const errors = new Array<CodeError>();
+        const source = parser.parse(text.toString(), file, errors);
+        if (errors.length) {
           const fname = file.replace('-in.html', '-err.json');
           const pname = path.join(rootPath, fname);
-          const aerrs = source.errors.map(e => e.msg);
+          const aerrs = errors.map(e => e.msg);
           let eerrs = [];
           try {
             const etext = (await fs.promises.readFile(pname)).toString();
@@ -130,7 +132,8 @@ describe('code: parser', () => {
       /* 12 */ '</html>\n',
       'inline'
     );
-    const doc = parser.parse(s.s, 'inline');
+    const errors = new Array<CodeError>();
+    const doc = parser.parse(s.s, 'inline', errors);
 
     const root = doc.documentElement!;
     assert.equal(root.name, 'HTML');
@@ -153,7 +156,7 @@ describe('code: parser', () => {
         start: { line: 1, column: 13 },
         end: { line: 1, column: 24 },
       });
-      const exp1 = a1.value as Expression;
+      const exp1 = a1.value as acorn.Expression;
       assert.deepEqual(JSON.parse(JSON.stringify(exp1.loc)), {
         source: 'inline',
         start: { line: 1, column: 15 },

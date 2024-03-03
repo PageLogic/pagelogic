@@ -1,5 +1,4 @@
 import * as acorn from 'acorn';
-import { type CodeError } from './types';
 
 export const VOID_ELEMENTS = new Set([
   'AREA', 'BASE', 'BR', 'COL', 'EMBED', 'HR', 'IMG', 'INPUT',
@@ -177,6 +176,34 @@ export class Element extends Node {
     this.attributes = [];
   }
 
+  getAttributeNames(): Set<string> {
+    const ret = new Set<string>();
+    this.attributes.forEach(a => ret.add(a.name));
+    return ret;
+  }
+
+  getAttribute(name: string): string | null {
+    let ret = null;
+    for (const a of this.attributes) {
+      if (a.name === name) {
+        if (typeof a.value === 'string') {
+          ret = a.value;
+        }
+        break;
+      }
+    }
+    return ret;
+  }
+
+  getAttributeNode(name: string): Attribute | null {
+    for (const a of this.attributes) {
+      if (a.name === name) {
+        return a;
+      }
+    }
+    return null;
+  }
+
   toJSON(): object {
     return {
       type: this.type,
@@ -203,14 +230,18 @@ export class Element extends Node {
 }
 
 export class Document extends Element {
-  errors: CodeError[];
+  // errors: CodeError[];
   jsonLoc = true;
 
-  constructor(loc: acorn.SourceLocation) {
-    super(null, null, '#document', loc);
+  constructor(loc: string | acorn.SourceLocation) {
+    super(null, null, '#document',
+      typeof loc === 'string'
+        ? { source: loc, start: { line: 1, column: 0 }, end: { line: 1, column: 0 }}
+        : loc
+    );
     this.doc = this;
     this.type = 'document';
-    this.errors = [];
+    // this.errors = [];
   }
 
   get documentElement(): Element | null {
@@ -225,7 +256,7 @@ export class Document extends Element {
   toJSON(): object {
     return {
       type: this.type,
-      errors: this.errors,
+      // errors: this.errors,
       children: this.children,
       loc: this.jsonLoc ? this.loc : null
     };

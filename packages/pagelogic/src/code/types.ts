@@ -1,10 +1,11 @@
 import * as acorn from 'acorn';
+import * as html from './html';
 
-// export interface CodeSource {
-//   ast?: Program
-//   files: string[]
-//   errors: CodeError[]
-// }
+export interface CodeSource {
+  doc?: html.Document
+  files: string[]
+  errors: CodeError[]
+}
 
 export type CodeErrorType = 'error' | 'warning';
 

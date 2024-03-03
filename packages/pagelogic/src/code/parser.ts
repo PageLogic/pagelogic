@@ -15,11 +15,11 @@ const DOLLAR = '$'.charCodeAt(0);
 const LEXP = '${';
 const REXP = '}'.charCodeAt(0);
 
-export function parse(s: string, fname?: string): html.Document {
+export function parse(s: string, fname: string, errors: CodeError[]): html.Document {
   const src = new Source(s, fname);
   const ret = new html.Document(src.loc(0, s.length));
   try {
-    parseNodes(ret, src, 0);
+    parseNodes(ret, src, 0, errors);
   } catch (ignored) {
     // nop: errors are added to returned doc, throws are used
     // to abort parsing when an irrecoverable error is found
@@ -27,7 +27,7 @@ export function parse(s: string, fname?: string): html.Document {
   return ret;
 }
 
-function parseNodes(p: html.Element, src: Source, i: number) {
+function parseNodes(p: html.Element, src: Source, i: number, errors: CodeError[]) {
   const s = src.s;
   let i1 = i; let i2; let closure; let i3 = i; let i4; let closetag = null;
   while ((i2 = s.indexOf('<', i1)) >= 0) {
@@ -36,7 +36,7 @@ function parseNodes(p: html.Element, src: Source, i: number) {
     (closure = s.charCodeAt(i1) === SLASH) && i1++;
     if ((i2 = skipName(src, i1)) > i1) {
       if (i4 > i3) {
-        parseText(p, src, i3, i4);
+        parseText(p, src, i3, i4, errors);
       }
       if (closure) {
         const name = s.substring(i1, i2).toUpperCase();
@@ -47,7 +47,7 @@ function parseNodes(p: html.Element, src: Source, i: number) {
             closetag = name;
             break;
           } else {
-            p.doc?.errors.push(new CodeError(
+            errors.push(new CodeError(
               'error',
               `Found </${name}> instead of </${p.name}>`,
               src.loc(i1, i1)
@@ -55,7 +55,7 @@ function parseNodes(p: html.Element, src: Source, i: number) {
             throw Error();
           }
         } else {
-          p.doc?.errors.push(new CodeError(
+          errors.push(new CodeError(
             'error',
             `Unterminated close tag ${name}`,
             src.loc(i1, i1)
@@ -64,12 +64,12 @@ function parseNodes(p: html.Element, src: Source, i: number) {
         }
         i1 = i2;
       } else {
-        i1 = parseElement(p, src, i1, i2);
+        i1 = parseElement(p, src, i1, i2, errors);
       }
       i3 = i1;
-    } else if (!closure && (i2 = skipComment(p, src, i1)) > i1) {
+    } else if (!closure && (i2 = skipComment(p, src, i1, errors)) > i1) {
       if (i4 > i3) {
-        parseText(p, src, i3, i4);
+        parseText(p, src, i3, i4, errors);
       }
       if (s.charCodeAt(i1 + 3) != DASH) {
         // if it doesn't start with `<!---`, store the comment
@@ -83,7 +83,7 @@ function parseNodes(p: html.Element, src: Source, i: number) {
     }
   }
   if (!p.name.startsWith('#') && closetag !== p.name) {
-    p.doc?.errors.push(new CodeError(
+    errors.push(new CodeError(
       'error',
       `expected </${p.name}>`,
       src.loc(i1, i1)
@@ -93,20 +93,20 @@ function parseNodes(p: html.Element, src: Source, i: number) {
   return i1;
 }
 
-function parseElement(p: html.Element, src: Source, i1: number, i2: number): number {
+function parseElement(p: html.Element, src: Source, i1: number, i2: number, errors: CodeError[]): number {
   const s = src.s;
   const e = new html.Element(
     p.doc, p, s.substring(i1, i2),
     src.loc(i1 - 1, i2)
   );
-  i1 = parseAttributes(e, src, i2);
+  i1 = parseAttributes(e, src, i2, errors);
   i1 = skipBlanks(s, i1);
   let selfclose = false;
   if ((selfclose = (s.charCodeAt(i1) === SLASH))) {
     i1++;
   }
   if (s.charCodeAt(i1) != GT) {
-    p.doc?.errors.push(new CodeError(
+    errors.push(new CodeError(
       'error',
       `Unterminated tag ${e.name}`,
       src.loc(i1, i1)
@@ -116,9 +116,9 @@ function parseElement(p: html.Element, src: Source, i1: number, i2: number): num
   i1++;
   if (!selfclose && !html.VOID_ELEMENTS.has(e.name)) {
     if (SKIP_CONTENT_TAGS.has(e.name)) {
-      const res = skipContent(p, e.name, src, i1);
+      const res = skipContent(p, e.name, src, i1, errors);
       if (!res) {
-        p.doc?.errors.push(new CodeError(
+        errors.push(new CodeError(
           'error',
           `Unterminated tag ${e.name}`,
           src.loc(i1, i1)
@@ -133,20 +133,20 @@ function parseElement(p: html.Element, src: Source, i1: number, i2: number): num
       }
       i1 = res.i2;
     } else {
-      i1 = parseNodes(e, src, i1);
+      i1 = parseNodes(e, src, i1, errors);
     }
   }
   e.loc.end = src.pos(i1);
   return i1;
 }
 
-function parseAttributes(e: html.Element, src: Source, i2: number) {
+function parseAttributes(e: html.Element, src: Source, i2: number, errors: CodeError[]) {
   const s = src.s;
   let i1 = skipBlanksAndComments(s, i2);
   while ((i2 = skipName(src, i1, true)) > i1) {
     const name = s.substring(i1, i2);
     if (hasAttribute(e, name)) {
-      e.doc?.errors.push(new CodeError(
+      errors.push(new CodeError(
         'error',
         `duplicated attribute "${name}"`,
         src.loc(i1, i1)
@@ -163,15 +163,15 @@ function parseAttributes(e: html.Element, src: Source, i2: number) {
       const quote = s.charCodeAt(i1);
       a.valueLoc = src.loc(i1, i1);
       if (a && (quote === QUOT || quote === APOS)) {
-        i1 = parseValue(e, a, src, i1 + 1, quote, String.fromCharCode(quote));
+        i1 = parseValue(e, a, src, i1 + 1, quote, String.fromCharCode(quote), errors);
       } else if (
         a &&
         s.startsWith(LEXP, i1)
       ) {
-        i1 = parseValue(e, a, src, i1 + LEXP.length, quote, '}');
+        i1 = parseValue(e, a, src, i1 + LEXP.length, quote, '}', errors);
       } else {
         // we don't support unquoted attribute values
-        e.doc?.errors.push(new CodeError(
+        errors.push(new CodeError(
           'error',
           'Missing attribute value',
           src.loc(i1, i1)
@@ -186,23 +186,23 @@ function parseAttributes(e: html.Element, src: Source, i2: number) {
 
 function parseValue(
   p: html.Element, a: html.Attribute, src: Source, i1: number,
-  quote: number, term: string
+  quote: number, term: string, errors: CodeError[]
 ) {
   if (quote !== DOLLAR) {
-    return parseLiteralValue(p, a, src, i1, quote, term);
+    return parseLiteralValue(p, a, src, i1, quote, term, errors);
   } else {
-    return parseExpressionValue(p, a, src, i1);
+    return parseExpressionValue(p, a, src, i1, errors);
   }
 }
 
 function parseLiteralValue(
   p: html.Element, a: html.Attribute, src: Source, i1: number,
-  quote: number, term: string
+  quote: number, term: string, errors: CodeError[]
 ) {
   const s = src.s;
   let i2 = s.indexOf(term, i1);
   if (i2 < 0) {
-    p.doc?.errors.push(new CodeError(
+    errors.push(new CodeError(
       'error',
       'Unterminated attribute value',
       src.loc(i1, i1)
@@ -223,14 +223,14 @@ function parseLiteralValue(
 }
 
 function parseExpressionValue(
-  p: html.Element, a: html.Attribute, src: Source, i1: number
+  p: html.Element, a: html.Attribute, src: Source, i1: number, errors: CodeError[]
 ) {
   const s = src.s;
-  const exp = parseExpression(p, src, i1);
+  const exp = parseExpression(p, src, i1, errors);
   let i2 = exp.end;
   i2 = skipBlanks(s, i2);
   if (i2 >= s.length || s.charCodeAt(i2) !== REXP) {
-    p.doc?.errors.push(new CodeError(
+    errors.push(new CodeError(
       'error',
       'unterminated attribute expression',
       src.loc(i1, i1)
@@ -245,15 +245,15 @@ function parseExpressionValue(
   return i2;
 }
 
-function parseText(p: html.Element, src: Source, i1: number, i2: number) {
+function parseText(p: html.Element, src: Source, i1: number, i2: number, errors: CodeError[]) {
   if (ATOMIC_TEXT_TAGS.has(p.name)) {
-    parseAtomicText(p, src, i1, i2);
+    parseAtomicText(p, src, i1, i2, errors);
   } else {
-    parseSplittableText(p, src, i1, i2);
+    parseSplittableText(p, src, i1, i2, errors);
   }
 }
 
-function parseAtomicText(p: html.Element, src: Source, i1: number, i2: number) {
+function parseAtomicText(p: html.Element, src: Source, i1: number, i2: number, errors: CodeError[]) {
   const s = src.s;
   const k = s.indexOf(LEXP, i1);
   if (k < 0 || k >= i2) {
@@ -287,14 +287,14 @@ function parseAtomicText(p: html.Element, src: Source, i1: number, i2: number) {
     j2 += LEXP.length;
     j1 = skipBlanks(s, j2);
     if (j1 >= i2 || s.charCodeAt(j1) === REXP) {
-      p.doc?.errors.push(new CodeError(
+      errors.push(new CodeError(
         'error',
         'invalid expression',
         src.loc(j2, j2)
       ));
       break;
     }
-    const exp = parseExpression(p, src, j1);
+    const exp = parseExpression(p, src, j1, errors);
     j1 = exp.end;
     j1 = skipBlanks(s, j1);
     if (s.charCodeAt(j1) === REXP) {
@@ -333,7 +333,7 @@ function parseAtomicText(p: html.Element, src: Source, i1: number, i2: number) {
   new html.Text(p.doc, p, exp, src.loc(i1, i2));
 }
 
-function parseSplittableText(p: html.Element, src: Source, i1: number, i2: number) {
+function parseSplittableText(p: html.Element, src: Source, i1: number, i2: number, errors: CodeError[]) {
   const s = src.s;
   for (let j1 = i1; j1 < i2;) {
     let j2 = s.indexOf(LEXP, j1);
@@ -349,14 +349,14 @@ function parseSplittableText(p: html.Element, src: Source, i1: number, i2: numbe
     j2 += LEXP.length;
     j1 = skipBlanks(s, j2);
     if (j1 >= i2 || s.charCodeAt(j1) === REXP) {
-      p.doc?.errors.push(new CodeError(
+      errors.push(new CodeError(
         'error',
         'invalid expression',
         src.loc(j2, j2)
       ));
       break;
     }
-    const exp = parseExpression(p, src, j1);
+    const exp = parseExpression(p, src, j1, errors);
     j1 = exp.end;
     j1 = skipBlanks(s, j1);
     if (s.charCodeAt(j1) === REXP) {
@@ -366,7 +366,7 @@ function parseSplittableText(p: html.Element, src: Source, i1: number, i2: numbe
   }
 }
 
-function parseExpression(p: html.Element, src: Source, i1: number) {
+function parseExpression(p: html.Element, src: Source, i1: number, errors: CodeError[]) {
   const s = src.s;
   try {
     const exp = acorn.parseExpressionAt(s, i1, {
@@ -377,7 +377,7 @@ function parseExpression(p: html.Element, src: Source, i1: number) {
     });
     return exp;
   } catch (err) {
-    p.doc?.errors.push(new CodeError(
+    errors.push(new CodeError(
       'error',
       `${err}`,
       src.loc(i1, i1)
@@ -433,7 +433,7 @@ function skipBlanksAndComments(s: string, i: number) {
   return i;
 }
 
-function skipContent(p: html.Element, tag: string, src: Source, i1: number) {
+function skipContent(p: html.Element, tag: string, src: Source, i1: number, errors: CodeError[]) {
   const s = src.s;
   let i2;
   while ((i2 = s.indexOf('</', i1)) >= 0) {
@@ -444,7 +444,7 @@ function skipContent(p: html.Element, tag: string, src: Source, i1: number) {
       if (s.substring(i1, i2).toUpperCase() === tag) {
         i2 = skipBlanks(s, i2);
         if (s.charCodeAt(i2) != GT) {
-          p.doc?.errors.push(new CodeError(
+          errors.push(new CodeError(
             'error',
             'Unterminated close tag',
             src.loc(i1, i1)
@@ -478,13 +478,13 @@ function skipName(src: Source, i: number, acceptsDots = false) {
   return i;
 }
 
-function skipComment(p: html.Element, src: Source, i1: number) {
+function skipComment(p: html.Element, src: Source, i1: number, errors: CodeError[]) {
   const s = src.s;
   if (s.charCodeAt(i1) === '!'.charCodeAt(0) &&
     s.charCodeAt(i1 + 1) === DASH &&
     s.charCodeAt(i1 + 2) === DASH) {
     if ((i1 = s.indexOf('-->', i1 + 3)) < 0) {
-      p.doc?.errors.push(new CodeError(
+      errors.push(new CodeError(
         'error',
         'Unterminated comment',
         src.loc(i1, i1)
