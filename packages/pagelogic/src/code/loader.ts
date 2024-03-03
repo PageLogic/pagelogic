@@ -7,19 +7,15 @@ import { Config } from './config';
 
 export const MAX_NESTING = 100;
 export const TAGS_PREFIX = ':';
-// export const INCLUDE_TAG = ':INCLUDE';
-// export const IMPORT_TAG = ':IMPORT';
-// export const INCLUDE_SRC_ATTR = 'src';
-// export const INCLUDE_AS_ATTR = 'as';
+export const INCLUDE_TAG = ':INCLUDE';
+export const IMPORT_TAG = ':IMPORT';
+export const INCLUDE_SRC_ATTR = 'src';
+export const INCLUDE_AS_ATTR = 'as';
 
-export type Directive = {
+export type Include = {
   name: string,
   node: html.Element,
   parent: html.Element,
-  currDir: string,
-  source: types.Source,
-  nesting: number,
-  loader: Loader,
 };
 
 /**
@@ -37,14 +33,14 @@ export class Loader {
 
   async load(fname: string): Promise<types.Source> {
     const ret: types.Source = { files: [], errors: [] };
-    ret.doc = await this.loadHTML(fname, '.', ret, 0);
+    ret.doc = await this.loadSource(fname, '.', ret, 0);
     if (!ret.errors.length) {
       // processMacros(ret);
     }
     return ret;
   }
 
-  async loadHTML(
+  async loadSource(
     fname: string, currDir: string, source: types.Source,
     nesting: number, once = false, from?: html.Element
   ): Promise<html.Document | undefined> {
@@ -63,7 +59,7 @@ export class Loader {
       source.errors.push(...errors);
       return;
     }
-    await this.processDirectives(doc, path.dirname(loaded.relPath), source, nesting);
+    await this.processIncludes(doc, path.dirname(loaded.relPath), source, nesting);
     return doc;
   }
 
@@ -96,46 +92,111 @@ export class Loader {
     return { text, relPath };
   }
 
-  async processDirectives(
+  addError(type: types.ErrorType, msg: string, ret: types.Source, from?: html.Node) {
+    ret.errors.push(new types.Error(type, msg, from?.loc));
+  }
+
+  // ===========================================================================
+  // inclusion
+  // ===========================================================================
+
+  protected async processIncludes(
     doc: html.Document, currDir: string, source: types.Source, nesting: number
   ) {
-    const directives = new Array<Directive>();
-    const collectDirectives = (p: html.Element) => {
+    const directives = new Array<Include>();
+    const collectIncludes = (p: html.Element) => {
       for (const n of p.children) {
         if (n.type === 'element') {
           const e = n as html.Element;
           if (e.name.startsWith(TAGS_PREFIX)) {
-            directives.push({
-              name: e.name, parent: p, node: e,
-              currDir, source, nesting,
-              loader: this
-            });
+            directives.push({ name: e.name, parent: p, node: e });
           } else {
-            collectDirectives(e);
+            collectIncludes(e);
           }
         }
       }
     };
-    collectDirectives(doc);
+    collectIncludes(doc);
     for (const d of directives) {
       const i = d.parent.children.indexOf(d.node);
       d.parent.children.splice(i, 1);
-      if (!await this.processDirective(d, i)) {
-        this.addError('warning', `unknown directive ${d.name}`, source, d.node);
-      }
+      await this.processInclude(d, i, currDir, source, nesting);
     }
   }
 
-  async processDirective(d: Directive, i: number): Promise<boolean> {
-    for (const p of this.config.plugins) {
-      if (await p.handleDirective(d, i)) {
-        return true;
-      }
+  protected async processInclude(
+    d: Include, i: number,
+    currDir: string, source: types.Source, nesting: number
+  ) {
+    const src = d.node.getAttribute(INCLUDE_SRC_ATTR);
+    if (!src?.trim()) {
+      source.errors.push(new types.Error(
+        'error', `missing ${INCLUDE_SRC_ATTR} attribute`, d.node.loc
+      ));
+      return;
     }
-    return false;
+    const as = d.node.getAttribute(INCLUDE_AS_ATTR)?.trim()?.toLocaleLowerCase();
+    if (as) {
+      if (!/^[\w-]+$/.test(as)) {
+        source.errors.push(new types.Error(
+          'error', `invalid "${INCLUDE_AS_ATTR}" attribute`, d.node.loc
+        ));
+        return;
+      }
+      return this.processLiteralInclude(d, i, src, as, currDir, source);
+    }
+    return this.processCodeInclude(d, i, src, currDir, source, nesting);
   }
 
-  addError(type: types.ErrorType, msg: string, ret: types.Source, from?: html.Node) {
-    ret.errors.push(new types.Error(type, msg, from?.loc));
+  protected async processLiteralInclude(
+    d: Include, i: number, fname: string, as: string,
+    currDir: string, source: types.Source
+  ) {
+    const loaded = await this.loadText(fname, currDir, source, false, d.node);
+    if (!loaded) {
+      return;
+    }
+    const e = new html.Element(d.node.doc, null, as, d.node.loc);
+    new html.Text(e.doc, e, loaded.text, d.node.loc, false);
+    d.parent.children.splice(i, 0, e);
+  }
+
+  protected async processCodeInclude(
+    d: Include, i: number, src: string,
+    currDir: string, source: types.Source, nesting: number
+  ) {
+    const doc = await this.loadSource(
+      src, currDir, source, nesting + 1, (d.name === IMPORT_TAG), d.node
+    );
+    const rootElement = doc?.documentElement;
+    if (!rootElement) {
+      return;
+    }
+    // apply root attributes
+    this.applyIncludedAttributes(d, rootElement);
+    // include contents
+    const nn = [...rootElement.children];
+    if (nn.length > 0) {
+      const n = nn[0] as html.Text;
+      if (n.type === 'text' && typeof n.value === 'string' && /^\s*$/.test(n.value)) {
+        nn.shift();
+      }
+    }
+    if (nn.length > 0) {
+      const n = nn[nn.length - 1] as html.Text;
+      if (n.type === 'text' && typeof n.value === 'string' && /^\s*$/.test(n.value)) {
+        nn.pop();
+      }
+    }
+    d.parent.children.splice(i, 0, ...nn);
+  }
+
+  protected applyIncludedAttributes(directive: Include, rootElement: html.Element) {
+    const existing = directive.parent.getAttributeNames();
+    for (const name of rootElement.getAttributeNames()) {
+      if (!existing.has(name)) {
+        directive.parent.attributes.push(rootElement.getAttributeNode(name)!);
+      }
+    }
   }
 }

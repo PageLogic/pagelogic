@@ -1,5 +1,4 @@
 import { Plugin } from './plugin';
-import { IncludesPlugin } from './plugins/includes';
 
 export interface ConfigProps {
   rootPath: string;
@@ -13,6 +12,5 @@ export class Config {
   constructor(props: ConfigProps) {
     this.rootPath = props.rootPath;
     this.plugins = props.plugins ?? [];
-    this.plugins.push(new IncludesPlugin());
   }
 }
