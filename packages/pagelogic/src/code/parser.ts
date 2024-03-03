@@ -1,5 +1,5 @@
-import { BinaryExpression, Expression, Position, SourceLocation, parseExpressionAt } from 'acorn';
-import { HtmlAttribute, HtmlComment, HtmlDocument, HtmlElement, HtmlText, VOID_ELEMENTS, htmlUnescape } from './html';
+import * as acorn from 'acorn';
+import * as html from './html';
 import { CodeError } from './types';
 
 const SKIP_CONTENT_TAGS = new Set(['SCRIPT', 'CODE']);
@@ -15,9 +15,9 @@ const DOLLAR = '$'.charCodeAt(0);
 const LEXP = '${';
 const REXP = '}'.charCodeAt(0);
 
-export function parse(s: string, fname?: string): HtmlDocument {
+export function parse(s: string, fname?: string): html.Document {
   const src = new Source(s, fname);
-  const ret = new HtmlDocument(src.loc(0, s.length));
+  const ret = new html.Document(src.loc(0, s.length));
   try {
     parseNodes(ret, src, 0);
   } catch (ignored) {
@@ -27,7 +27,7 @@ export function parse(s: string, fname?: string): HtmlDocument {
   return ret;
 }
 
-function parseNodes(p: HtmlElement, src: Source, i: number) {
+function parseNodes(p: html.Element, src: Source, i: number) {
   const s = src.s;
   let i1 = i; let i2; let closure; let i3 = i; let i4; let closetag = null;
   while ((i2 = s.indexOf('<', i1)) >= 0) {
@@ -74,7 +74,7 @@ function parseNodes(p: HtmlElement, src: Source, i: number) {
       if (s.charCodeAt(i1 + 3) != DASH) {
         // if it doesn't start with `<!---`, store the comment
         const a = i1 + 3; const b = i2 - 3;
-        new HtmlComment(
+        new html.Comment(
           p.doc, p, s.substring(a, b),
           src.loc(a, b)
         );
@@ -93,9 +93,9 @@ function parseNodes(p: HtmlElement, src: Source, i: number) {
   return i1;
 }
 
-function parseElement(p: HtmlElement, src: Source, i1: number, i2: number): number {
+function parseElement(p: html.Element, src: Source, i1: number, i2: number): number {
   const s = src.s;
-  const e = new HtmlElement(
+  const e = new html.Element(
     p.doc, p, s.substring(i1, i2),
     src.loc(i1 - 1, i2)
   );
@@ -114,7 +114,7 @@ function parseElement(p: HtmlElement, src: Source, i1: number, i2: number): numb
     throw new Error();
   }
   i1++;
-  if (!selfclose && !VOID_ELEMENTS.has(e.name)) {
+  if (!selfclose && !html.VOID_ELEMENTS.has(e.name)) {
     if (SKIP_CONTENT_TAGS.has(e.name)) {
       const res = skipContent(p, e.name, src, i1);
       if (!res) {
@@ -126,7 +126,7 @@ function parseElement(p: HtmlElement, src: Source, i1: number, i2: number): numb
         throw new Error();
       }
       if (res.i0 > i1) {
-        new HtmlText(
+        new html.Text(
           e.doc, e, s.substring(i1, res.i0),
           src.loc(i1, res.i0)
         );
@@ -140,7 +140,7 @@ function parseElement(p: HtmlElement, src: Source, i1: number, i2: number): numb
   return i1;
 }
 
-function parseAttributes(e: HtmlElement, src: Source, i2: number) {
+function parseAttributes(e: html.Element, src: Source, i2: number) {
   const s = src.s;
   let i1 = skipBlanksAndComments(s, i2);
   while ((i2 = skipName(src, i1, true)) > i1) {
@@ -153,7 +153,7 @@ function parseAttributes(e: HtmlElement, src: Source, i2: number) {
       ));
       throw Error();
     }
-    const a = new HtmlAttribute(
+    const a = new html.Attribute(
       e.doc, e, name, '',
       src.loc(i1, i2)
     );
@@ -185,7 +185,7 @@ function parseAttributes(e: HtmlElement, src: Source, i2: number) {
 }
 
 function parseValue(
-  p: HtmlElement, a: HtmlAttribute, src: Source, i1: number,
+  p: html.Element, a: html.Attribute, src: Source, i1: number,
   quote: number, term: string
 ) {
   if (quote !== DOLLAR) {
@@ -196,7 +196,7 @@ function parseValue(
 }
 
 function parseLiteralValue(
-  p: HtmlElement, a: HtmlAttribute, src: Source, i1: number,
+  p: html.Element, a: html.Attribute, src: Source, i1: number,
   quote: number, term: string
 ) {
   const s = src.s;
@@ -214,7 +214,7 @@ function parseLiteralValue(
     while (j < s.length && s.charCodeAt(j) === term.charCodeAt(0)) {
       i2++; j++;
     }
-    a.value = htmlUnescape(s.substring(i1, i2));
+    a.value = html.unescape(s.substring(i1, i2));
     i1 = i2 + term.length;
     a.loc.end = src.pos(i1);
     a.valueLoc!.end = src.pos(i1);
@@ -223,7 +223,7 @@ function parseLiteralValue(
 }
 
 function parseExpressionValue(
-  p: HtmlElement, a: HtmlAttribute, src: Source, i1: number
+  p: html.Element, a: html.Attribute, src: Source, i1: number
 ) {
   const s = src.s;
   const exp = parseExpression(p, src, i1);
@@ -245,7 +245,7 @@ function parseExpressionValue(
   return i2;
 }
 
-function parseText(p: HtmlElement, src: Source, i1: number, i2: number) {
+function parseText(p: html.Element, src: Source, i1: number, i2: number) {
   if (ATOMIC_TEXT_TAGS.has(p.name)) {
     parseAtomicText(p, src, i1, i2);
   } else {
@@ -253,15 +253,15 @@ function parseText(p: HtmlElement, src: Source, i1: number, i2: number) {
   }
 }
 
-function parseAtomicText(p: HtmlElement, src: Source, i1: number, i2: number) {
+function parseAtomicText(p: html.Element, src: Source, i1: number, i2: number) {
   const s = src.s;
   const k = s.indexOf(LEXP, i1);
   if (k < 0 || k >= i2) {
     // static text
-    new HtmlText(p.doc, p, s.substring(i1, i2), src.loc(i1, i2));
+    new html.Text(p.doc, p, s.substring(i1, i2), src.loc(i1, i2));
     return;
   }
-  const exps = new Array<Expression>();
+  const exps = new Array<acorn.Expression>();
   for (let j1 = i1; j1 < i2;) {
     let j2 = s.indexOf(LEXP, j1);
     if (j2 < 0 || j2 >= i2) {
@@ -313,10 +313,10 @@ function parseAtomicText(p: HtmlElement, src: Source, i1: number, i2: number) {
     });
   }
   if (exps.length === 1) {
-    new HtmlText(p.doc, p, exps[0], src.loc(i1, i2));
+    new html.Text(p.doc, p, exps[0], src.loc(i1, i2));
     return;
   }
-  function concat(n: number): BinaryExpression {
+  function concat(n: number): acorn.BinaryExpression {
     const start = (n > 1 ? exps[n - 1].start : exps[0].start);
     const end = exps[n].end;
     return {
@@ -330,19 +330,19 @@ function parseAtomicText(p: HtmlElement, src: Source, i1: number, i2: number) {
     };
   }
   const exp = concat(exps.length - 1);
-  new HtmlText(p.doc, p, exp, src.loc(i1, i2));
+  new html.Text(p.doc, p, exp, src.loc(i1, i2));
 }
 
-function parseSplittableText(p: HtmlElement, src: Source, i1: number, i2: number) {
+function parseSplittableText(p: html.Element, src: Source, i1: number, i2: number) {
   const s = src.s;
   for (let j1 = i1; j1 < i2;) {
     let j2 = s.indexOf(LEXP, j1);
     if (j2 < 0 || j2 >= i2) {
-      new HtmlText(p.doc, p, s.substring(j1, i2), src.loc(j1, i2));
+      new html.Text(p.doc, p, s.substring(j1, i2), src.loc(j1, i2));
       break;
     }
     if (j2 > j1) {
-      new HtmlText(p.doc, p, s.substring(j1, j2), src.loc(j1, j2));
+      new html.Text(p.doc, p, s.substring(j1, j2), src.loc(j1, j2));
       j1 = j2;
     }
     const j0 = j2;
@@ -362,14 +362,14 @@ function parseSplittableText(p: HtmlElement, src: Source, i1: number, i2: number
     if (s.charCodeAt(j1) === REXP) {
       j1++;
     }
-    new HtmlText(p.doc, p, exp, src.loc(j0, j1));
+    new html.Text(p.doc, p, exp, src.loc(j0, j1));
   }
 }
 
-function parseExpression(p: HtmlElement, src: Source, i1: number) {
+function parseExpression(p: html.Element, src: Source, i1: number) {
   const s = src.s;
   try {
-    const exp = parseExpressionAt(s, i1, {
+    const exp = acorn.parseExpressionAt(s, i1, {
       ecmaVersion: 'latest',
       sourceType: 'script',
       locations: true,
@@ -391,7 +391,7 @@ function parseExpression(p: HtmlElement, src: Source, i1: number) {
 // utils
 // =============================================================================
 
-function hasAttribute(e: HtmlElement, name: string): boolean {
+function hasAttribute(e: html.Element, name: string): boolean {
   for (const a of e.attributes) {
     if (a.name === name) {
       return true;
@@ -433,7 +433,7 @@ function skipBlanksAndComments(s: string, i: number) {
   return i;
 }
 
-function skipContent(p: HtmlElement, tag: string, src: Source, i1: number) {
+function skipContent(p: html.Element, tag: string, src: Source, i1: number) {
   const s = src.s;
   let i2;
   while ((i2 = s.indexOf('</', i1)) >= 0) {
@@ -478,7 +478,7 @@ function skipName(src: Source, i: number, acceptsDots = false) {
   return i;
 }
 
-function skipComment(p: HtmlElement, src: Source, i1: number) {
+function skipComment(p: html.Element, src: Source, i1: number) {
   const s = src.s;
   if (s.charCodeAt(i1) === '!'.charCodeAt(0) &&
     s.charCodeAt(i1 + 1) === DASH &&
@@ -510,7 +510,7 @@ export class Source {
     }
   }
 
-  pos(n: number): Position {
+  pos(n: number): acorn.Position {
     const max = this.linestarts.length - 1;
     let i1 = 0, i2 = max;
     while (i1 < i2) {
@@ -533,7 +533,7 @@ export class Source {
     };
   }
 
-  loc(i1: number, i2: number): SourceLocation {
+  loc(i1: number, i2: number): acorn.SourceLocation {
     return {
       source: this.fname,
       start: this.pos(i1),

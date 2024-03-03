@@ -1,4 +1,4 @@
-import { type Expression, type SourceLocation } from 'acorn';
+import * as acorn from 'acorn';
 import { type CodeError } from './types';
 
 export const VOID_ELEMENTS = new Set([
@@ -7,19 +7,19 @@ export const VOID_ELEMENTS = new Set([
   'COMMAND', 'KEYGEN', 'MENUITEM'
 ]);
 
-export type HtmlType = 'node' | 'text' | 'comment' | 'element' | 'attribute' | 'document';
+export type NodeType = 'node' | 'text' | 'comment' | 'element' | 'attribute' | 'document';
 
-export abstract class HtmlNode {
-  doc: HtmlDocument | null;
-  parent: HtmlElement | null;
-  type: HtmlType;
-  loc: SourceLocation;
+export abstract class Node {
+  doc: Document | null;
+  parent: Element | null;
+  type: NodeType;
+  loc: acorn.SourceLocation;
 
   constructor(
-    doc: HtmlDocument | null,
-    parent: HtmlElement | null,
-    type: HtmlType,
-    loc: SourceLocation
+    doc: Document | null,
+    parent: Element | null,
+    type: NodeType,
+    loc: acorn.SourceLocation
   ) {
     this.doc = doc;
     this.parent = null;
@@ -28,7 +28,7 @@ export abstract class HtmlNode {
     parent && this.linkTo(parent);
   }
 
-  linkTo(parent: HtmlElement): void {
+  linkTo(parent: Element): void {
     this.parent && this.unlink();
     this.parent = parent;
     parent.children.push(this);
@@ -58,18 +58,18 @@ export abstract class HtmlNode {
   abstract toMarkup(ret: string[]): void;
 }
 
-export class HtmlText extends HtmlNode {
-  value: string | Expression;
+export class Text extends Node {
+  value: string | acorn.Expression;
 
   constructor (
-    doc: HtmlDocument | null,
-    parent: HtmlElement | null,
-    value: string | Expression,
-    loc: SourceLocation
+    doc: Document | null,
+    parent: Element | null,
+    value: string | acorn.Expression,
+    loc: acorn.SourceLocation
   ) {
     super(doc, parent, 'text', loc);
     this.value = typeof value === 'string'
-      ? htmlUnescape(value)
+      ? unescape(value)
       : value;
   }
 
@@ -88,14 +88,14 @@ export class HtmlText extends HtmlNode {
   }
 }
 
-export class HtmlComment extends HtmlNode {
+export class Comment extends Node {
   value: string;
 
   constructor(
-    doc: HtmlDocument | null,
-    parent: HtmlElement | null,
+    doc: Document | null,
+    parent: Element | null,
     value: string,
-    loc: SourceLocation
+    loc: acorn.SourceLocation
   ) {
     super(doc, parent, 'comment', loc);
     this.value = value;
@@ -116,18 +116,18 @@ export class HtmlComment extends HtmlNode {
   }
 }
 
-export class HtmlAttribute extends HtmlNode {
+export class Attribute extends Node {
   name: string;
-  value: string | Expression;
-  valueLoc?: SourceLocation;
+  value: string | acorn.Expression;
+  valueLoc?: acorn.SourceLocation;
   quote?: string;
 
   constructor(
-    doc: HtmlDocument | null,
-    parent: HtmlElement,
+    doc: Document | null,
+    parent: Element,
     name: string,
     value: string,
-    loc: SourceLocation
+    loc: acorn.SourceLocation
   ) {
     super(doc, null, 'attribute', loc);
     this.parent = parent;
@@ -160,16 +160,16 @@ export class HtmlAttribute extends HtmlNode {
   }
 }
 
-export class HtmlElement extends HtmlNode {
+export class Element extends Node {
   name: string;
-  children: HtmlNode[];
-  attributes: HtmlAttribute[];
+  children: Node[];
+  attributes: Attribute[];
 
   constructor(
-    doc: HtmlDocument | null,
-    parent: HtmlElement | null,
+    doc: Document | null,
+    parent: Element | null,
     name: string,
-    loc: SourceLocation
+    loc: acorn.SourceLocation
   ) {
     super(doc, parent, 'element', loc);
     this.name = name.toUpperCase();
@@ -202,21 +202,21 @@ export class HtmlElement extends HtmlNode {
   }
 }
 
-export class HtmlDocument extends HtmlElement {
+export class Document extends Element {
   errors: CodeError[];
   jsonLoc = true;
 
-  constructor(loc: SourceLocation) {
+  constructor(loc: acorn.SourceLocation) {
     super(null, null, '#document', loc);
     this.doc = this;
     this.type = 'document';
     this.errors = [];
   }
 
-  get documentElement(): HtmlElement | null {
+  get documentElement(): Element | null {
     for (const e of this.children) {
       if (e.type === 'element') {
-        return e as HtmlElement;
+        return e as Element;
       }
     }
     return null;
@@ -256,7 +256,7 @@ function escape(text: string, chars = ''): string {
   return r;
 }
 
-export function htmlUnescape(str: string): string {
+export function unescape(str: string): string {
   return str
     .replace(/&quot;/g, '"')
     .replace(/&apos;/g, '\'')
@@ -280,11 +280,3 @@ export function htmlUnescape(str: string): string {
 //   // if (chars.indexOf("\r") >= 0) r = r.split("\r").join("&#xD;");
 //   return r;
 // }
-
-export function normalizeText(s?: string): string | undefined {
-  return s?.split(/\n\s+/).join('\n').split(/\s{2,}/).join(' ');
-}
-
-export function normalizeSpace(s?: string): string | undefined {
-  return s?.split(/\s+/).join(' ');
-}

@@ -1,4 +1,4 @@
-import { type SourceLocation } from 'acorn';
+import * as acorn from 'acorn';
 
 // export interface CodeSource {
 //   ast?: Program
@@ -11,9 +11,13 @@ export type CodeErrorType = 'error' | 'warning';
 export class CodeError {
   type: 'error' | 'warning';
   msg: string;
-  loc?: SourceLocation;
+  loc?: acorn.SourceLocation;
 
-  constructor(type: CodeErrorType, msg: string, loc: SourceLocation | null | undefined) {
+  constructor(
+    type: CodeErrorType,
+    msg: string,
+    loc: acorn.SourceLocation | null | undefined
+  ) {
     this.type = type;
     this.msg = msg;
     this.loc = loc ?? undefined;
