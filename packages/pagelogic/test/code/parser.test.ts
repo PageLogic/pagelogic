@@ -115,20 +115,20 @@ describe('code: parser', () => {
 
   it('loc() (1)', () => {
     const s = new Source(
-      /* 1 */ '<html :title=${"sample"}\n' +
-      /* 2 */ '      // attr comment\n' +
-      /* 3 */ '      lang="en">\n' +
-      /* 4 */ '  <head></head>\n' +
-      /* 5 */ '  <body>\n' +
-      /* 6 */ '    ${title}\n' +
-      /* 7 */ '  </body>\n' +
-      /* 8 */ '</html>\n',
+      /*  1 */ '<html :title=${"sample"}\n' +
+      /*  2 */ '      // attr comment\n' +
+      /*  3 */ '      lang="en">\n' +
+      /*  4 */ '  <head><style>\n' +
+      /*  5 */ '    body {\n' +
+      /*  6 */ '      color: ${"red"};\n' +
+      /*  7 */ '    }\n' +
+      /*  8 */ '  </style></head>\n' +
+      /*  9 */ '  <body>\n' +
+      /* 10 */ '    ${title}\n' +
+      /* 11 */ '  </body>\n' +
+      /* 12 */ '</html>\n',
       'inline'
     );
-    assert.deepEqual(s.pos(0), { line: 1, column: 0 });
-    assert.deepEqual(s.pos(119), { line: 8, column: 7 });
-    assert.deepEqual(s.pos(120), { line: 8, column: 8 });
-    assert.deepEqual(s.pos(121), { line: 8, column: 9 });
     const doc = parse(s.s, 'inline');
 
     const root = doc.documentElement!;
@@ -136,7 +136,7 @@ describe('code: parser', () => {
     assert.deepEqual(root.loc, {
       source: 'inline',
       start: { line: 1, column: 0 },
-      end: { line: 8, column: 7 },
+      end: { line: 12, column: 7 },
     });
 
     { // root attributes
@@ -180,23 +180,43 @@ describe('code: parser', () => {
     assert.deepEqual(head.loc, {
       source: 'inline',
       start: { line: 4, column: 2 },
-      end: { line: 4, column: 15 },
+      end: { line: 8, column: 17 },
     });
+
+    { // head content
+      const style = head.children[0] as HtmlElement;
+      assert.equal(style.name, 'STYLE');
+      assert.deepEqual(style.loc, {
+        source: 'inline',
+        start: { line: 4, column: 8 },
+        end: { line: 8, column: 10 },
+      });
+      // style text is atomic
+      assert.equal(style.children.length, 1);
+      const styleText = style.children[0] as HtmlText;
+      assert.equal(styleText.type, 'text');
+      assert.equal(typeof styleText.value, 'object');
+      assert.deepEqual(styleText.loc, {
+        source: 'inline',
+        start: { line: 4, column: 15 },
+        end: { line: 8, column: 2 },
+      });
+    }
 
     const rootText2 = root.children[2]!;
     assert.equal(rootText2.type, 'text');
     assert.deepEqual(rootText2.loc, {
       source: 'inline',
-      start: { line: 4, column: 15 },
-      end: { line: 5, column: 2 },
+      start: { line: 8, column: 17 },
+      end: { line: 9, column: 2 },
     });
 
     const body = root.children[3] as HtmlElement;
     assert.equal(body.name, 'BODY');
     assert.deepEqual(body.loc, {
       source: 'inline',
-      start: { line: 5, column: 2 },
-      end: { line: 7, column: 9 },
+      start: { line: 9, column: 2 },
+      end: { line: 11, column: 9 },
     });
 
     { // body text
@@ -205,8 +225,8 @@ describe('code: parser', () => {
       assert.equal(typeof bodyText1.value, 'string');
       assert.deepEqual(bodyText1.loc, {
         source: 'inline',
-        start: { line: 5, column: 8 },
-        end: { line: 6, column: 4 },
+        start: { line: 9, column: 8 },
+        end: { line: 10, column: 4 },
       });
 
       const bodyText2 = body.children[1] as HtmlText;
@@ -214,16 +234,16 @@ describe('code: parser', () => {
       assert.equal(typeof bodyText2.value, 'object');
       assert.deepEqual(bodyText2.loc, {
         source: 'inline',
-        start: { line: 6, column: 4 },
-        end: { line: 6, column: 12 },
+        start: { line: 10, column: 4 },
+        end: { line: 10, column: 12 },
       });
 
       const bodyText3 = body.children[2] as HtmlText;
       assert.equal(bodyText3.type, 'text');
       assert.deepEqual(bodyText3.loc, {
         source: 'inline',
-        start: { line: 6, column: 12 },
-        end: { line: 7, column: 2 },
+        start: { line: 10, column: 12 },
+        end: { line: 11, column: 2 },
       });
     }
 
@@ -231,8 +251,8 @@ describe('code: parser', () => {
     assert.equal(rootText3.type, 'text');
     assert.deepEqual(rootText3.loc, {
       source: 'inline',
-      start: { line: 7, column: 9 },
-      end: { line: 8, column: 0 },
+      start: { line: 11, column: 9 },
+      end: { line: 12, column: 0 },
     });
   });
 });

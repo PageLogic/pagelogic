@@ -20,7 +20,10 @@ export function parse(s: string, fname?: string): HtmlDocument {
   const ret = new HtmlDocument(src.loc(0, s.length));
   try {
     parseNodes(ret, src, 0);
-  } catch (ignored) { /* nop */ }
+  } catch (ignored) {
+    // nop: errors are added to returned doc, throws are used
+    // to abort parsing when an irrecoverable error is found
+  }
   return ret;
 }
 
@@ -255,7 +258,7 @@ function parseAtomicText(p: HtmlElement, src: Source, i1: number, i2: number) {
   const k = s.indexOf(LEXP, i1);
   if (k < 0 || k >= i2) {
     // static text
-    new HtmlText(p.doc, p, s.substring(i1, i2), p.loc);
+    new HtmlText(p.doc, p, s.substring(i1, i2), src.loc(i1, i2));
     return;
   }
   const exps = new Array<Expression>();
@@ -310,24 +313,24 @@ function parseAtomicText(p: HtmlElement, src: Source, i1: number, i2: number) {
     });
   }
   if (exps.length === 1) {
-    new HtmlText(p.doc, p, exps[0], p.loc);
+    new HtmlText(p.doc, p, exps[0], src.loc(i1, i2));
     return;
   }
-  function f(n: number): BinaryExpression {
+  function concat(n: number): BinaryExpression {
     const start = (n > 1 ? exps[n - 1].start : exps[0].start);
     const end = exps[n].end;
     return {
       type: 'BinaryExpression',
       operator: '+',
-      left: (n > 1 ? f(n - 1) : exps[0]),
+      left: (n > 1 ? concat(n - 1) : exps[0]),
       right: exps[n],
       start,
       end,
       loc: src.loc(start, end)
     };
   }
-  const exp = f(exps.length - 1);
-  new HtmlText(p.doc, p, exp, p.loc);
+  const exp = concat(exps.length - 1);
+  new HtmlText(p.doc, p, exp, src.loc(i1, i2));
 }
 
 function parseSplittableText(p: HtmlElement, src: Source, i1: number, i2: number) {
@@ -538,7 +541,7 @@ export class Source {
     };
   }
 
-  get lineCount () {
+  get lineCount() {
     return this.linestarts.length;
   }
 }
