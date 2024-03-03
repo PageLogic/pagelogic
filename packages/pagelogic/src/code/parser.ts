@@ -246,7 +246,7 @@ function parseText(p: HtmlElement, src: Source, i1: number, i2: number) {
   if (ATOMIC_TEXT_TAGS.has(p.name)) {
     parseAtomicText(p, src, i1, i2);
   } else {
-    parseNormalText(p, src, i1, i2);
+    parseSplittableText(p, src, i1, i2);
   }
 }
 
@@ -330,7 +330,7 @@ function parseAtomicText(p: HtmlElement, src: Source, i1: number, i2: number) {
   new HtmlText(p.doc, p, exp, p.loc);
 }
 
-function parseNormalText(p: HtmlElement, src: Source, i1: number, i2: number) {
+function parseSplittableText(p: HtmlElement, src: Source, i1: number, i2: number) {
   const s = src.s;
   for (let j1 = i1; j1 < i2;) {
     let j2 = s.indexOf(LEXP, j1);
@@ -342,6 +342,7 @@ function parseNormalText(p: HtmlElement, src: Source, i1: number, i2: number) {
       new HtmlText(p.doc, p, s.substring(j1, j2), src.loc(j1, j2));
       j1 = j2;
     }
+    const j0 = j2;
     j2 += LEXP.length;
     j1 = skipBlanks(s, j2);
     if (j1 >= i2 || s.charCodeAt(j1) === REXP) {
@@ -358,15 +359,19 @@ function parseNormalText(p: HtmlElement, src: Source, i1: number, i2: number) {
     if (s.charCodeAt(j1) === REXP) {
       j1++;
     }
-    new HtmlText(p.doc, p, exp, p.loc);
+    new HtmlText(p.doc, p, exp, src.loc(j0, j1));
   }
 }
 
 function parseExpression(p: HtmlElement, src: Source, i1: number) {
   const s = src.s;
   try {
-    const exp = parseExpressionAt(s, i1, { ecmaVersion: 'latest', sourceType: 'script' });
-    // TODO: adapt ast nodes location
+    const exp = parseExpressionAt(s, i1, {
+      ecmaVersion: 'latest',
+      sourceType: 'script',
+      locations: true,
+      sourceFile: src.fname
+    });
     return exp;
   } catch (err) {
     p.doc?.errors.push(new CodeError(
