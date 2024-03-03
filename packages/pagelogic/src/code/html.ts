@@ -59,17 +59,20 @@ export abstract class Node {
 
 export class Text extends Node {
   value: string | acorn.Expression;
+  escaping: boolean;
 
   constructor (
     doc: Document | null,
     parent: Element | null,
     value: string | acorn.Expression,
-    loc: acorn.SourceLocation
+    loc: acorn.SourceLocation,
+    escaping = true
   ) {
     super(doc, parent, 'text', loc);
-    this.value = typeof value === 'string'
+    this.value = typeof value === 'string' && escaping
       ? unescapeText(value)
       : value;
+    this.escaping = escaping;
   }
 
   toJSON(): object {
@@ -82,7 +85,9 @@ export class Text extends Node {
 
   toMarkup(ret: string[]): void {
     if (typeof this.value === 'string') {
-      ret.push(this.value);
+      ret.push(this.escaping
+        ? escape(this.value as string, '<>')
+        : this.value as string);
     }
   }
 }

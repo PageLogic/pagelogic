@@ -161,8 +161,7 @@ export class CodeLoader {
       return;
     }
     const e = new html.Element(d.node.doc, null, as, d.node.loc);
-    const t = new html.Text(e.doc, e, '', d.node.loc);
-    t.value = loaded.text; // avoid HTML text unescaping
+    new html.Text(e.doc, e, loaded.text, d.node.loc, false);
     d.parent.children.splice(i, 0, e);
   }
 
