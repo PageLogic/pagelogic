@@ -1,21 +1,21 @@
 import * as acorn from 'acorn';
 import * as html from './html';
 
-export interface CodeSource {
+export interface Source {
   doc?: html.Document
   files: string[]
-  errors: CodeError[]
+  errors: Error[]
 }
 
-export type CodeErrorType = 'error' | 'warning';
+export type ErrorType = 'error' | 'warning';
 
-export class CodeError {
+export class Error {
   type: 'error' | 'warning';
   msg: string;
   loc?: acorn.SourceLocation;
 
   constructor(
-    type: CodeErrorType,
+    type: ErrorType,
     msg: string,
     loc: acorn.SourceLocation | null | undefined
   ) {
@@ -26,7 +26,7 @@ export class CodeError {
 }
 
 // export interface CodeLogic {
-//   page: CodeSource;
+//   page: Source;
 //   root?: CodeScope;
 // }
 

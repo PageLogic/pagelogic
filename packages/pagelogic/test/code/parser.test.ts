@@ -5,7 +5,7 @@ import path from 'path';
 import * as html from '../../src/code/html';
 import * as parser from '../../src/code/parser';
 import * as util from '../../src/code/utils';
-import { CodeError } from '../../src/code/types';
+import * as types from '../../src/code/types';
 
 const rootPath = path.join(__dirname, 'parser');
 
@@ -19,7 +19,7 @@ describe('code: parser', () => {
 
       it(file, async () => {
         const text = await fs.promises.readFile(filePath);
-        const errors = new Array<CodeError>();
+        const errors = new Array<types.Error>();
         const source = parser.parse(text.toString(), file, errors);
         if (errors.length) {
           const fname = file.replace('-in.html', '-err.json');
@@ -132,7 +132,7 @@ describe('code: parser', () => {
       /* 12 */ '</html>\n',
       'inline'
     );
-    const errors = new Array<CodeError>();
+    const errors = new Array<types.Error>();
     const doc = parser.parse(s.s, 'inline', errors);
 
     const root = doc.documentElement!;

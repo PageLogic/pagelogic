@@ -3,6 +3,7 @@ import path from 'path';
 import { normalizeText } from '../../src/code/utils';
 import { assert } from 'chai';
 import { CodeLoader } from '../../src/code/loader';
+import { Config } from '../../src/code/config';
 
 const rootPath = path.join(__dirname, 'loader');
 
@@ -16,7 +17,7 @@ describe('code: loader', () => {
     ) {
 
       describe(dir, () => {
-        const loader = new CodeLoader(dirPath);
+        const loader = new CodeLoader(new Config({ rootPath: dirPath }));
 
         fs.readdirSync(dirPath).forEach(file => {
           if (

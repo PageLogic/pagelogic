@@ -68,7 +68,7 @@ export class Text extends Node {
   ) {
     super(doc, parent, 'text', loc);
     this.value = typeof value === 'string'
-      ? unescape(value)
+      ? unescapeText(value)
       : value;
   }
 
@@ -230,7 +230,6 @@ export class Element extends Node {
 }
 
 export class Document extends Element {
-  // errors: CodeError[];
   jsonLoc = true;
 
   constructor(loc: string | acorn.SourceLocation) {
@@ -241,7 +240,6 @@ export class Document extends Element {
     );
     this.doc = this;
     this.type = 'document';
-    // this.errors = [];
   }
 
   get documentElement(): Element | null {
@@ -256,7 +254,6 @@ export class Document extends Element {
   toJSON(): object {
     return {
       type: this.type,
-      // errors: this.errors,
       children: this.children,
       loc: this.jsonLoc ? this.loc : null
     };
@@ -287,7 +284,7 @@ function escape(text: string, chars = ''): string {
   return r;
 }
 
-export function unescape(str: string): string {
+export function unescapeText(str: string): string {
   return str
     .replace(/&quot;/g, '"')
     .replace(/&apos;/g, '\'')
@@ -295,19 +292,3 @@ export function unescape(str: string): string {
     .replace(/&gt;/g, '>')
     .replace(/&amp;/g, '&');
 }
-
-// function unescape(text: string): string {
-//   let r = text;
-//   r = r.split('&lbrace;').join('{');
-//   r = r.split('&rbrace;').join('}');
-//   // if (chars.indexOf('<') >= 0) r = r.split("<").join("&lt;");
-//   // if (chars.indexOf('>') >= 0) r = r.split(">").join("&gt;");
-//   // if (chars.indexOf('{') >= 0) r = r.split("<").join("&lcub;");
-//   // if (chars.indexOf('}') >= 0) r = r.split(">").join("&rcub;");
-//   // if (chars.indexOf('"') >= 0) r = r.split('"').join("&quot;");
-//   // if (chars.indexOf("'") >= 0) r = r.split("'").join("&apos;");
-//   // if (chars.indexOf(" ") >= 0) r = r.split(" ").join("&nbsp;");
-//   // if (chars.indexOf("\n") >= 0) r = r.split("\n").join("&#xA;");
-//   // if (chars.indexOf("\r") >= 0) r = r.split("\r").join("&#xD;");
-//   return r;
-// }

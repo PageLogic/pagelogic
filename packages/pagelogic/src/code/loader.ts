@@ -3,6 +3,7 @@ import path from 'path';
 import * as types from './types';
 import * as parser from './parser';
 import * as html from './html';
+import { Config } from './config';
 
 export const MAX_NESTING = 100;
 export const TAGS_PREFIX = ':';
@@ -26,12 +27,12 @@ type Directive = {
 export class CodeLoader {
   rootPath: string;
 
-  constructor(rootPath: string) {
-    this.rootPath = rootPath;
+  constructor(config: Config) {
+    this.rootPath = config.rootPath;
   }
 
-  async load(fname: string): Promise<types.CodeSource> {
-    const ret: types.CodeSource = { files: [], errors: [] };
+  async load(fname: string): Promise<types.Source> {
+    const ret: types.Source = { files: [], errors: [] };
     ret.doc = await this.parse(fname, '.', ret, 0);
     if (!ret.errors.length) {
       // processMacros(ret);
@@ -40,7 +41,7 @@ export class CodeLoader {
   }
 
   async parse(
-    fname: string, currDir: string, source: types.CodeSource,
+    fname: string, currDir: string, source: types.Source,
     nesting: number, once = false, from?: html.Element
   ): Promise<html.Document | undefined> {
     if (nesting >= MAX_NESTING) {
@@ -52,7 +53,7 @@ export class CodeLoader {
       return;
     }
 
-    const errors = new Array<types.CodeError>();
+    const errors = new Array<types.Error>();
     const doc = parser.parse(loaded.text, loaded.relPath, errors);
     if (errors.length > 0) {
       source.errors.push(...errors);
@@ -63,7 +64,7 @@ export class CodeLoader {
   }
 
   async loadText(
-    fname: string, currDir: string, source: types.CodeSource,
+    fname: string, currDir: string, source: types.Source,
     once = false, from?: html.Element
   ): Promise<{ text: string, relPath: string } | undefined> {
     if (fname.startsWith('/')) {
@@ -92,7 +93,7 @@ export class CodeLoader {
   }
 
   async processDirectives(
-    doc: html.Document, currDir: string, source: types.CodeSource, nesting: number
+    doc: html.Document, currDir: string, source: types.Source, nesting: number
   ) {
     const directives = new Array<Directive>();
     const collectDirectives = (p: html.Element) => {
@@ -117,7 +118,7 @@ export class CodeLoader {
       //   // nop
       } else {
         i >= 0 && d.parent.children.splice(i, 1);
-        source.errors.push(new types.CodeError(
+        source.errors.push(new types.Error(
           'warning', `unknown directive ${d.name}`, d.node.loc
         ));
       }
@@ -129,11 +130,11 @@ export class CodeLoader {
   // ===========================================================================
 
   async processInclude(
-    d: Directive, i: number, currDir: string, source: types.CodeSource, nesting: number,
+    d: Directive, i: number, currDir: string, source: types.Source, nesting: number,
   ) {
     const src = d.node.getAttribute(INCLUDE_SRC_ATTR);
     if (!src?.trim()) {
-      source.errors.push(new types.CodeError(
+      source.errors.push(new types.Error(
         'error', `missing ${INCLUDE_SRC_ATTR} attribute`, d.node.loc
       ));
       return;
@@ -141,7 +142,7 @@ export class CodeLoader {
     const as = d.node.getAttribute(INCLUDE_AS_ATTR)?.trim()?.toLocaleLowerCase();
     if (as) {
       if (!/^[\w-]+$/.test(as)) {
-        source.errors.push(new types.CodeError(
+        source.errors.push(new types.Error(
           'error', `invalid "${INCLUDE_AS_ATTR}" attribute`, d.node.loc
         ));
         return;
@@ -153,7 +154,7 @@ export class CodeLoader {
 
   async processLiteralInclude(
     d: Directive, fname: string, as: string, i: number, currDir: string,
-    source: types.CodeSource
+    source: types.Source
   ) {
     const loaded = await this.loadText(fname, currDir, source, false, d.node);
     if (!loaded) {
@@ -167,7 +168,7 @@ export class CodeLoader {
 
   async processCodeInclude(
     d: Directive, src: string, i: number, currDir: string,
-    source: types.CodeSource, nesting: number
+    source: types.Source, nesting: number
   ) {
     const doc = await this.parse(
       src, currDir, source, nesting + 1, (d.name === IMPORT_TAG), d.node
@@ -195,8 +196,8 @@ export class CodeLoader {
     d.parent.children.splice(i, 0, ...nn);
   }
 
-  addError(type: types.CodeErrorType, msg: string, ret: types.CodeSource, from?: html.Node) {
-    ret.errors.push(new types.CodeError(type, msg, from?.loc));
+  addError(type: types.ErrorType, msg: string, ret: types.Source, from?: html.Node) {
+    ret.errors.push(new types.Error(type, msg, from?.loc));
   }
 
   applyIncludedAttributes(directive: Directive, rootElement: html.Element) {
