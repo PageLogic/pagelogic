@@ -9,22 +9,17 @@ export const VOID_ELEMENTS = new Set([
 
 export type HtmlType = 'node' | 'text' | 'comment' | 'element' | 'attribute' | 'document';
 
-export interface HtmlLocation extends SourceLocation {
-  i1: number;
-  i2: number;
-}
-
 export abstract class HtmlNode {
   doc: HtmlDocument | null;
   parent: HtmlElement | null;
   type: HtmlType;
-  loc: HtmlLocation;
+  loc: SourceLocation;
 
   constructor(
     doc: HtmlDocument | null,
     parent: HtmlElement | null,
     type: HtmlType,
-    loc: HtmlLocation
+    loc: SourceLocation
   ) {
     this.doc = doc;
     this.parent = null;
@@ -70,7 +65,7 @@ export class HtmlText extends HtmlNode {
     doc: HtmlDocument | null,
     parent: HtmlElement | null,
     value: string | Expression,
-    loc: HtmlLocation
+    loc: SourceLocation
   ) {
     super(doc, parent, 'text', loc);
     this.value = typeof value === 'string'
@@ -100,7 +95,7 @@ export class HtmlComment extends HtmlNode {
     doc: HtmlDocument | null,
     parent: HtmlElement | null,
     value: string,
-    loc: HtmlLocation
+    loc: SourceLocation
   ) {
     super(doc, parent, 'comment', loc);
     this.value = value;
@@ -124,6 +119,7 @@ export class HtmlComment extends HtmlNode {
 export class HtmlAttribute extends HtmlNode {
   name: string;
   value: string | Expression;
+  valueLoc?: SourceLocation;
   quote?: string;
 
   constructor(
@@ -131,7 +127,7 @@ export class HtmlAttribute extends HtmlNode {
     parent: HtmlElement,
     name: string,
     value: string,
-    loc: HtmlLocation
+    loc: SourceLocation
   ) {
     super(doc, null, 'attribute', loc);
     this.parent = parent;
@@ -173,7 +169,7 @@ export class HtmlElement extends HtmlNode {
     doc: HtmlDocument | null,
     parent: HtmlElement | null,
     name: string,
-    loc: HtmlLocation
+    loc: SourceLocation
   ) {
     super(doc, parent, 'element', loc);
     this.name = name.toUpperCase();
@@ -210,7 +206,7 @@ export class HtmlDocument extends HtmlElement {
   errors: CodeError[];
   jsonLoc = true;
 
-  constructor(loc: HtmlLocation) {
+  constructor(loc: SourceLocation) {
     super(null, null, '#document', loc);
     this.doc = this;
     this.type = 'document';

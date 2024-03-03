@@ -1,8 +1,9 @@
 import { assert } from 'chai';
 import fs from 'fs';
 import path from 'path';
-import { normalizeText } from '../../src/code/html';
+import { HtmlAttribute, HtmlElement, normalizeText } from '../../src/code/html';
 import { parse, Source } from '../../src/code/parser';
+import { Expression } from 'acorn';
 
 const rootPath = path.join(__dirname, 'parser');
 
@@ -112,35 +113,64 @@ describe('code: parser', () => {
     assert.deepEqual(s.pos(10), { line: 3, column: 5 });
   });
 
-  // it('loc() (1)', () => {
-  //   const s = new Source(
-  //     /* 1 */ '<html :title=${"sample"}>\n' +
-  //     /* 2 */ '  <head></head>\n' +
-  //     /* 3 */ '  <body>\n' +
-  //     /* 4 */ '    ${title}\n' +
-  //     /* 5 */ '  </body>\n' +
-  //     /* 6 */ '</html>\n',
-  //     'inline'
-  //   );
-  //   assert.deepEqual(s.pos(0), { line: 1, column: 0 });
-  //   assert.deepEqual(s.pos(25), { line: 1, column: 25 });
-  //   assert.deepEqual(s.pos(26), { line: 2, column: 0 });
-  //   const doc = parse(s.s, 'inline');
-  //   const root = doc.documentElement!;
-  //   assert.equal(root.name, 'HTML');
-  //   assert.deepEqual(root.loc, {
-  //     start: { line: 1, column: 0 },
-  //     end: { line: 6, column: 7 },
-  //     source: 'inline',
-  //     i1: 0, i2: 5
-  //   });
-  //   const t1 = root.children[0]!;
-  //   assert.equal(t1.type, 'text');
-  //   assert.deepEqual(t1.loc, {
-  //     start: { line: 2, column: 0 },
-  //     end: { line: 2, column: 2 },
-  //     source: 'inline',
-  //     i1: 0, i2: 0
-  //   });
-  // });
+  it('loc() (1)', () => {
+    const s = new Source(
+      /*  0..25 */ '<html :title=${"sample"}>\n' +
+      /* 26..41 */ '  <head></head>\n' +
+      /* 42..50 */ '  <body>\n' +
+      /* 51..63 */ '    ${title}\n' +
+      /* 64..73 */ '  </body>\n' +
+      /* 74..81 */ '</html>\n',
+      'inline'
+    );
+    assert.deepEqual(s.pos(0), { line: 1, column: 0 });
+    assert.deepEqual(s.pos(25), { line: 1, column: 25 });
+    assert.deepEqual(s.pos(26), { line: 2, column: 0 });
+    const doc = parse(s.s, 'inline');
+
+    const root = doc.documentElement!;
+    assert.equal(root.name, 'HTML');
+    assert.deepEqual(root.loc, {
+      source: 'inline',
+      start: { line: 1, column: 0 },
+      end: { line: 6, column: 7 },
+    });
+
+    const a1 = root.attributes[0] as HtmlAttribute;
+    assert.equal(a1.name, ':title');
+    assert.deepEqual(a1.loc, {
+      source: 'inline',
+      start: { line: 1, column: 6 },
+      end: { line: 1, column: 24 },
+    });
+    assert.deepEqual(a1.valueLoc, {
+      source: 'inline',
+      start: { line: 1, column: 13 },
+      end: { line: 1, column: 24 },
+    });
+    // const exp1 = a1.value as Expression;
+    // assert.deepEqual(exp1.loc, {
+    //   source: 'inline',
+    //   start: { line: 1, column: 15 },
+    //   end: { line: 1, column: 23 },
+    // });
+
+    const t1 = root.children[0]!;
+    assert.equal(t1.type, 'text');
+    assert.deepEqual(t1.loc, {
+      source: 'inline',
+      start: { line: 1, column: 25 },
+      end: { line: 2, column: 2 },
+    });
+
+    const head: HtmlElement = root.children[1] as HtmlElement;
+    assert.equal(head.name, 'HEAD');
+    assert.deepEqual(head.loc, {
+      source: 'inline',
+      start: { line: 2, column: 2 },
+      end: { line: 2, column: 15 },
+    });
+
+    //...
+  });
 });
