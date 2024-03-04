@@ -6,7 +6,8 @@
   "scripts": {
     "build": "tsc",
     "test": "mocha --exit -r ts-node/register test/**/*.test.ts",
-    "coverage": "nyc npm run test"
+    "coverage": "nyc npm run test",
+    "lint": "eslint ."
   },
   "keywords": [],
   "author": "",

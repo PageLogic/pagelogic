@@ -10,7 +10,6 @@ export type NodeType = 'node' | 'text' | 'comment' | 'element' | 'attribute' | '
 
 export abstract class Node {
   doc: Document | null;
-  parent: Element | null;
   type: NodeType;
   loc: acorn.SourceLocation;
 
@@ -21,24 +20,9 @@ export abstract class Node {
     loc: acorn.SourceLocation
   ) {
     this.doc = doc;
-    this.parent = null;
     this.type = type;
     this.loc = loc;
-    parent && this.linkTo(parent);
-  }
-
-  linkTo(parent: Element): void {
-    this.parent && this.unlink();
-    this.parent = parent;
-    parent.children.push(this);
-  }
-
-  unlink(): void {
-    if (this.parent) {
-      const i = this.parent.children.indexOf(this);
-      i >= 0 && this.parent.children.splice(i, 1);
-      this.parent = null;
-    }
+    parent && parent.children.push(this);
   }
 
   toJSON(): object {
@@ -134,7 +118,6 @@ export class Attribute extends Node {
     loc: acorn.SourceLocation
   ) {
     super(doc, null, 'attribute', loc);
-    this.parent = parent;
     this.name = name;
     this.value = value;
     parent && parent.attributes.push(this);
