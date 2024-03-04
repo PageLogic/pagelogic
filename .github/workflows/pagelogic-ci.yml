@@ -31,11 +31,8 @@ jobs:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
     - run: npm ci
-      working-directory: ./packages/pagelogic
     - run: npm run build --if-present
-      working-directory: ./packages/pagelogic
     - run: npm test
-      working-directory: ./packages/pagelogic
 
     # - name: Upload coverage reports to Codecov
     #   uses: codecov/codecov-action@v4.0.1
