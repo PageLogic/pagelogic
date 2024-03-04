@@ -27,9 +27,9 @@ jobs:
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v3
       with:
-        working-directory: ./pagelogic
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
+        cache-dependency-path: pagelogic/package-lock.json
     
     - working-directory: ./pagelogic
       run: |
