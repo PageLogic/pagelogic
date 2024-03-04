@@ -32,20 +32,24 @@ export class Loader {
   }
 
   async load(fname: string): Promise<types.Source> {
-    const ret: types.Source = { files: [], errors: [] };
+    const ret = new types.Source();
     ret.doc = await this.loadSource(fname, '.', ret, 0);
     if (!ret.errors.length) {
-      // processMacros(ret);
+      for (const p of this.config.plugins) {
+        await p.didLoad(ret);
+      }
     }
+    //TODO: check residual directives and emit one warning for each different one
+    //also, remove them from DOM
     return ret;
   }
 
-  async loadSource(
+  protected async loadSource(
     fname: string, currDir: string, source: types.Source,
     nesting: number, once = false, from?: html.Element
   ): Promise<html.Document | undefined> {
     if (nesting >= MAX_NESTING) {
-      this.addError('error', 'too many nested inclusions', source, from);
+      source.addError('error', 'too many nested inclusions', from?.loc);
       return;
     }
     const loaded = await this.loadText(fname, currDir, source, once, from);
@@ -63,7 +67,7 @@ export class Loader {
     return doc;
   }
 
-  async loadText(
+  protected async loadText(
     fname: string, currDir: string, source: types.Source,
     once = false, from?: html.Element
   ): Promise<{ text: string, relPath: string } | undefined> {
@@ -73,7 +77,7 @@ export class Loader {
     const pname = path.normalize(path.join(this.config.rootPath, currDir, fname));
     if (!pname.startsWith(this.config.rootPath)) {
       const s = path.relative(this.config.rootPath, pname);
-      this.addError('error', `forbidden pathname "${s}"`, source, from);
+      source.addError('error', `forbidden pathname "${s}"`, from?.loc);
       return;
     }
     const relPath = pname.substring(this.config.rootPath.length);
@@ -86,14 +90,10 @@ export class Loader {
     try {
       text = await fs.promises.readFile(pname, { encoding: 'utf8' });
     } catch (error) {
-      this.addError('error', `failed to read "${relPath}"`, source, from);
+      source.addError('error', `failed to read "${relPath}"`, from?.loc);
       return;
     }
     return { text, relPath };
-  }
-
-  addError(type: types.ErrorType, msg: string, ret: types.Source, from?: html.Node) {
-    ret.errors.push(new types.Error(type, msg, from?.loc));
   }
 
   // ===========================================================================

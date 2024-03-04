@@ -1,10 +1,19 @@
 import * as acorn from 'acorn';
 import * as html from './html';
 
-export interface Source {
-  doc?: html.Document
-  files: string[]
-  errors: Error[]
+export class Source {
+  doc?: html.Document;
+  files: string[];
+  errors: Error[];
+
+  constructor() {
+    this.files = [];
+    this.errors = [];
+  }
+
+  addError(type: ErrorType, msg: string, loc?: acorn.SourceLocation) {
+    this.errors.push(new Error(type, msg, loc));
+  }
 }
 
 export type ErrorType = 'error' | 'warning';

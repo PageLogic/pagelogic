@@ -1,5 +1,125 @@
-import * as config from '../config';
+import { Plugin } from '../plugin';
+import * as types from '../types';
+import * as html from '../html';
 
-export class Macro extends config.Plugin {
+export const MAX_NESTING = 100;
+export const DEFINE_TAG = ':DEFINE';
+export const DEFINE_TAG_ATTR = 'tag';
+
+type Definitions = {
+  [key: string]: Definition
+};
+
+type Definition = {
+  name: string;
+  node: html.Element;
+  parent: html.Element;
+  base: string;
+  from?: Definition;
+}
+
+export class Macro extends Plugin {
+
+  async didLoad(source: types.Source) {
+    const macros: Definitions = {};
+    this.collectMacros(source, source.doc!, 0, macros);
+    this.removeMacros(source, macros);
+    // this.processMacros(source, source.doc!, 0, {});
+  }
+
+  protected collectMacros(
+    source: types.Source, p: html.Element, nesting: number, ret: Definitions
+  ): Definitions {
+    const f = (p: html.Element) => {
+      for (const e of p.children as html.Element[]) {
+        if (e.type !== 'element' || e.name !== DEFINE_TAG) {
+          continue;
+        }
+        const macro = this.collectMacro(source, p, e, nesting, ret);
+        if (macro) {
+          ret[macro.name.toUpperCase()] = macro;
+        }
+      }
+    };
+    f(p);
+    return ret;
+  }
+
+  protected collectMacro(
+    source: types.Source, p: html.Element, e: html.Element, nesting: number,
+    macros: Definitions
+  ): Definition | null {
+    const tagAttr = e.getAttributeNode(DEFINE_TAG_ATTR);
+    if (!tagAttr || typeof tagAttr.value !== 'string') {
+      source.addError('warning', `bad or missing "${DEFINE_TAG_ATTR}" attribute`, e.loc);
+      return null;
+    }
+    const i = e.attributes.indexOf(tagAttr);
+    e.attributes.splice(i, 1);
+    const tag = tagAttr.value;
+    const res = /^([\w-]+)(:[\w-]+)?$/.exec(tag);
+    if (!res) {
+      source.addError('warning', `invalid tag name "${tag} (does it include a dash?)"`, e.loc);
+      return null;
+    }
+    const name = res[1];
+    const base = (res.length > 1 && res[2] ? res[2].substring(1) : 'div');
+    const from = base.indexOf('-') >= 0 ? macros[base] : undefined;
+    this.expandMacros(source, e, nesting + 1, macros);
+    return { name, node: e, parent: p, base, from };
+  }
+
+  protected removeMacros(source: types.Source, macros: Definitions) {
+    for (const name of Reflect.ownKeys(macros) as string[]) {
+      const macro = macros[name];
+      const i = macro.parent.children.indexOf(macro.node);
+      macro.parent.children.splice(i, 1);
+    }
+  }
+
+  protected expandMacros(
+    source: types.Source, p: html.Element, nesting: number, macros: Definitions
+  ) {
+    const f = (p: html.Element) => {
+      for (const e of p.children as html.Element[]) {
+        if (e.type !== 'element') {
+          continue;
+        }
+        const macro = macros[e.name];
+        if (!macro) {
+          continue;
+        }
+        this.expandMacro(source, p, e, macro, nesting, macros);
+      }
+    };
+    f(p);
+  }
+
+  protected expandMacro(
+    source: types.Source, p: html.Element, e: html.Element, def: Definition,
+    nesting: number, macros: Definitions
+  ): html.Element | null {
+    if (nesting > MAX_NESTING) {
+      source.addError('error', `too many nested macros "${def.name}"`, e.loc);
+      return null;
+    }
+    let ret: html.Element | null = null;
+    if (def.from) {
+      const f = JSON.parse(JSON.stringify(def.node));
+      ret = this.expandMacro(source, p, f, def.from, nesting + 1, macros);
+    } else {
+      ret = JSON.parse(JSON.stringify(def.node)) as html.Element;
+      ret.name = def.base;
+    }
+    ret && this.populateMacro(e, ret, source, nesting, macros);
+    return ret;
+  }
+
+  protected populateMacro(
+    src: html.Element, dst: html.Element, source: types.Source, nesting: number,
+    macros: Definitions
+  ) {
+
+  }
 
 }
