@@ -27,14 +27,15 @@ jobs:
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v3
       with:
+        working-directory: ./pagelogic
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
     
     - working-directory: ./pagelogic
       run: |
         npm ci
-        run: npm run build --if-present
-        run: npm test
+        npm run build --if-present
+        npm test
 
     # - name: Upload coverage reports to Codecov
     #   uses: codecov/codecov-action@v4.0.1
