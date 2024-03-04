@@ -5,22 +5,18 @@
       "path": "../"
     },
     {
-      "name": "packages/docs",
-      "path": "../packages/docs"
+      "name": "docs",
+      "path": "../docs"
     },
     {
-      "name": "packages/exp",
-      "path": "../packages/exp"
-    },
-    {
-      "name": "packages/pagelogic",
-      "path": "../packages/pagelogic"
+      "name": "pagelogic",
+      "path": "../pagelogic"
     },
   ],
   "settings": {
     "files.exclude": {
       "node_modules/": true,
-      "packages/": true
+      "pagelogic/": true
     },
   }
 }

@@ -7,7 +7,7 @@ on:
   push:
     branches: [ "main", "v1.3" ]
     paths:
-      - "packages/pagelogic/**"
+      - "pagelogic/**"
   pull_request:
     branches: [ "main" ]
 
@@ -15,10 +15,6 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
-
-    defaults:
-      run:
-        working-directory: ./packages/pagelogic
 
     strategy:
       matrix:
@@ -34,7 +30,7 @@ jobs:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
     
-    - working-directory: ./packages/pagelogic
+    - working-directory: ./pagelogic
       run: |
         npm ci
         run: npm run build --if-present
