@@ -1,4 +1,5 @@
 import { Plugin } from './plugin';
+import { Macros } from './plugins/macros';
 
 export interface ConfigProps {
   rootPath: string;
@@ -11,6 +12,7 @@ export class Config {
 
   constructor(props: ConfigProps) {
     this.rootPath = props.rootPath;
-    this.plugins = props.plugins ?? [];
+    this.plugins = props.plugins?.slice() ?? [];
+    this.plugins.push(new Macros());
   }
 }

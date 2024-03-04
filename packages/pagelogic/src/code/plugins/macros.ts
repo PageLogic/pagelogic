@@ -5,6 +5,11 @@ import * as html from '../html';
 export const MAX_NESTING = 100;
 export const DEFINE_TAG = ':DEFINE';
 export const DEFINE_TAG_ATTR = 'tag';
+export const SLOT_TAG = ':SLOT';
+export const SLOT_NAME_ATTR = 'name';
+export const SLOT_DEFAULT_NAME = 'default';
+export const SLOT_ATTR = ':slot';
+export const DEFAULT_SLOT_NAME = 'default';
 
 type Definitions = {
   [key: string]: Definition
@@ -18,13 +23,19 @@ type Definition = {
   from?: Definition;
 }
 
-export class Macro extends Plugin {
+export type SlotDefinition = {
+  name: string;
+  element: html.Element;
+  parent: html.Element;
+}
+
+export class Macros extends Plugin {
 
   async didLoad(source: types.Source) {
     const macros: Definitions = {};
     this.collectMacros(source, source.doc!, 0, macros);
     this.removeMacros(source, macros);
-    // this.processMacros(source, source.doc!, 0, {});
+    this.expandMacros(source, source.doc!, 0, macros);
   }
 
   protected collectMacros(
@@ -32,7 +43,11 @@ export class Macro extends Plugin {
   ): Definitions {
     const f = (p: html.Element) => {
       for (const e of p.children as html.Element[]) {
-        if (e.type !== 'element' || e.name !== DEFINE_TAG) {
+        if (e.type !== 'element') {
+          continue;
+        }
+        if (e.name !== DEFINE_TAG) {
+          f(e);
           continue;
         }
         const macro = this.collectMacro(source, p, e, nesting, ret);
@@ -87,6 +102,7 @@ export class Macro extends Plugin {
         }
         const macro = macros[e.name];
         if (!macro) {
+          f(e);
           continue;
         }
         this.expandMacro(source, p, e, macro, nesting, macros);
@@ -116,10 +132,70 @@ export class Macro extends Plugin {
   }
 
   protected populateMacro(
-    src: html.Element, dst: html.Element, source: types.Source, nesting: number,
+    src: html.Element, dst: html.Element,
+    source: types.Source, nesting: number,
     macros: Definitions
   ) {
-
+    src.attributes.forEach(srcAttr => {
+      const dstAttr = dst.getAttributeNode(srcAttr.name);
+      dstAttr && dst.delAttributeNode(dstAttr);
+      dst.attributes.push(srcAttr);
+    });
+    const slots = this.collectSlots(dst, source);
+    src.children.slice().forEach(n => {
+      let slotName = DEFAULT_SLOT_NAME;
+      if (n.type === 'element') {
+        const e = n as html.Element;
+        const a = e.getAttributeNode(SLOT_ATTR);
+        if (a && typeof a.value === 'string' && a.value.trim()) {
+          if (typeof a.value === 'string' && a.value.trim()) {
+            slotName = a.value;
+          }
+          e.delAttributeNode(a);
+        }
+      }
+      if (slotName === DEFAULT_SLOT_NAME && !slots.has(slotName)) {
+        dst.children.push(n);
+        return;
+      }
+      const slot = slots.get(slotName);
+      if (!slot) {
+        source.addError('error', `unknown slot "${slotName}"`, n.loc);
+        return;
+      }
+      const i = slot.parent.children.indexOf(slot.element);
+      slot.parent.children.splice(i, 0, n);
+    });
+    slots.forEach(slot => {
+      const i = slot.parent.children.indexOf(slot.element);
+      slot.parent.children.splice(i, 1);
+    });
+    this.expandMacros(source, dst, nesting + 1, macros);
   }
 
+  protected collectSlots(
+    node: html.Element, source: types.Source
+  ): Map<string, SlotDefinition> {
+    const ret = new Map<string, SlotDefinition>();
+    const f = (p: html.Element) => {
+      p.children.forEach(n => {
+        if (n.type !== 'element') {
+          return;
+        }
+        const e = n as html.Element;
+        if (e.name !== SLOT_TAG) {
+          f(e);
+          return;
+        }
+        const name = e.getAttribute(SLOT_NAME_ATTR);
+        if (!name || !/^[\w-]+?$/.test(name)) {
+          source.addError('warning', 'bad slot name', e.loc);
+          return;
+        }
+        ret.set(name, { name, element: e, parent: p });
+      });
+    };
+    f(node);
+    return ret;
+  }
 }

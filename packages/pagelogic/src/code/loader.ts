@@ -108,7 +108,7 @@ export class Loader {
       for (const n of p.children) {
         if (n.type === 'element') {
           const e = n as html.Element;
-          if (e.name.startsWith(TAGS_PREFIX)) {
+          if (e.name === INCLUDE_TAG || e.name === IMPORT_TAG) {
             directives.push({ name: e.name, parent: p, node: e });
           } else {
             collectIncludes(e);

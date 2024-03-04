@@ -209,6 +209,11 @@ export class Element extends Node {
     return null;
   }
 
+  delAttributeNode(attr: Attribute) {
+    const i = this.attributes.indexOf(attr);
+    i >= 0 && this.attributes.splice(i, 1);
+  }
+
   toJSON(): object {
     return {
       type: this.type,
