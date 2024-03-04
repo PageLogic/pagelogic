@@ -6,8 +6,6 @@ name: Node.js CI
 on:
   push:
     branches: [ "main", "v1.3" ]
-    paths:
-      - "packages/pagelogic/**"
   pull_request:
     branches: [ "main" ]
 
@@ -15,6 +13,10 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./packages/pagelogic
 
     strategy:
       matrix:
