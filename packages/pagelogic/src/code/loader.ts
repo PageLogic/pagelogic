@@ -39,8 +39,28 @@ export class Loader {
         await p.didLoad(ret);
       }
     }
-    //TODO: check residual directives and emit one warning for each different one
-    //also, remove them from DOM
+    const leftovers = new Map<string, html.Element>();
+    const f = (p: html.Element) => {
+      for (const e of p.children.slice() as html.Element[]) {
+        if (e.type !== 'element') {
+          continue;
+        }
+        if (e.name.startsWith(TAGS_PREFIX)) {
+          const i = p.children.indexOf(e);
+          p.children.splice(i, 1);
+          leftovers.has(e.name) || leftovers.set(e.name, e);
+        }
+        f(e);
+      }
+    };
+    ret.doc && f(ret.doc);
+    leftovers.forEach((e, name) => {
+      ret.addError(
+        'warning',
+        `unsupported directive "${name.toLowerCase()}"`,
+        e.loc
+      );
+    });
     return ret;
   }
 
