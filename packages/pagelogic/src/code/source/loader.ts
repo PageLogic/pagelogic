@@ -1,12 +1,12 @@
 import fs from 'fs';
 import path from 'path';
-import * as types from './types';
+import * as types from '../types';
 import * as parser from './parser';
 import * as html from './html';
-import { Config } from './config';
+import { Config } from '../config';
 
 export const MAX_NESTING = 100;
-export const TAGS_PREFIX = ':';
+export const DIRECTIVE_PREFIX = ':';
 export const INCLUDE_TAG = ':INCLUDE';
 export const IMPORT_TAG = ':IMPORT';
 export const INCLUDE_SRC_ATTR = 'src';
@@ -45,7 +45,7 @@ export class Loader {
         if (e.type !== 'element') {
           continue;
         }
-        if (e.name.startsWith(TAGS_PREFIX)) {
+        if (e.name.startsWith(DIRECTIVE_PREFIX)) {
           const i = p.children.indexOf(e);
           p.children.splice(i, 1);
           leftovers.has(e.name) || leftovers.set(e.name, e);

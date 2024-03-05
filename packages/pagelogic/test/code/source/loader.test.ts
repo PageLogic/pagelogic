@@ -1,14 +1,14 @@
 import fs from 'fs';
 import path from 'path';
-import { normalizeText } from '../../src/code/utils';
+import { normalizeText } from '../../../src/code/source/utils';
 import { assert } from 'chai';
-import { Loader } from '../../src/code/loader';
-import { Config } from '../../src/code/config';
+import { Loader } from '../../../src/code/source/loader';
+import { Config } from '../../../src/code/config';
 
 const rootPath = path.join(__dirname, 'loader');
 
 // https://nodejs.org/docs/latest-v20.x/api/test.html
-describe('code: loader', () => {
+describe('code/source: loader', () => {
   fs.readdirSync(rootPath).forEach(dir => {
     const dirPath = path.join(rootPath, dir);
     if (

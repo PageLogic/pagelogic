@@ -1,13 +1,13 @@
 import { Plugin } from '../plugin';
 import * as types from '../types';
-import * as html from '../html';
+import * as html from '../source/html';
+import { DIRECTIVE_PREFIX } from '../source/loader';
 
 export const MAX_NESTING = 100;
-export const DEFINE_TAG = ':DEFINE';
+export const DEFINE_TAG = DIRECTIVE_PREFIX + 'DEFINE';
 export const DEFINE_TAG_ATTR = 'tag';
-export const SLOT_TAG = ':SLOT';
+export const SLOT_TAG = DIRECTIVE_PREFIX + 'SLOT';
 export const SLOT_NAME_ATTR = 'name';
-export const SLOT_DEFAULT_NAME = 'default';
 export const SLOT_ATTR = ':slot';
 export const DEFAULT_SLOT_NAME = 'default';
 

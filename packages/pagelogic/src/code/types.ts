@@ -1,5 +1,5 @@
 import * as acorn from 'acorn';
-import * as html from './html';
+import * as html from './source/html';
 
 export class Source {
   doc?: html.Document;

@@ -2,14 +2,14 @@ import * as acorn from 'acorn';
 import { assert } from 'chai';
 import fs from 'fs';
 import path from 'path';
-import * as html from '../../src/code/html';
-import * as parser from '../../src/code/parser';
-import * as util from '../../src/code/utils';
-import * as types from '../../src/code/types';
+import * as html from '../../../src/code/source/html';
+import * as parser from '../../../src/code/source/parser';
+import * as util from '../../../src/code/source/utils';
+import * as types from '../../../src/code/types';
 
 const rootPath = path.join(__dirname, 'parser');
 
-describe('code: parser', () => {
+describe('code/source: parser', () => {
   fs.readdirSync(rootPath).forEach(file => {
     const filePath = path.join(rootPath, file);
     if (
