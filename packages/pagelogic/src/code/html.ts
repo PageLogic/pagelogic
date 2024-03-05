@@ -39,6 +39,7 @@ export abstract class Node {
   }
 
   abstract toMarkup(ret: string[]): void;
+  abstract clone(parent: Element | null): Node;
 }
 
 export class Text extends Node {
@@ -74,6 +75,10 @@ export class Text extends Node {
         : this.value as string);
     }
   }
+
+  clone(parent: Element | null): Text {
+    return new Text(this.doc, parent, this.value, this.loc, this.escaping);
+  }
 }
 
 export class Comment extends Node {
@@ -102,6 +107,10 @@ export class Comment extends Node {
     ret.push(this.value);
     ret.push('-->');
   }
+
+  clone(parent: Element | null): Comment {
+    return new Comment(this.doc, parent, this.value, this.loc);
+  }
 }
 
 export class Attribute extends Node {
@@ -112,9 +121,9 @@ export class Attribute extends Node {
 
   constructor(
     doc: Document | null,
-    parent: Element,
+    parent: Element | null,
     name: string,
-    value: string,
+    value: string | acorn.Expression,
     loc: acorn.SourceLocation
   ) {
     super(doc, null, 'attribute', loc);
@@ -144,6 +153,13 @@ export class Attribute extends Node {
     ret.push(q);
     ret.push(escape(this.value as string, '&<' + q));
     ret.push(q);
+  }
+
+  clone(parent: Element | null): Attribute {
+    const ret = new Attribute(this.doc, parent, this.name, this.value, this.loc);
+    ret.valueLoc = this.valueLoc;
+    ret.quote = this.quote;
+    return ret;
   }
 }
 
@@ -219,6 +235,13 @@ export class Element extends Node {
     ret.push('</');
     ret.push(this.name.toLowerCase());
     ret.push('>');
+  }
+
+  clone(parent: Element | null): Element {
+    const ret = new Element(this.doc, parent, this.name, this.loc);
+    this.attributes.forEach(a => a.clone(ret));
+    this.children.forEach(n => n.clone(ret));
+    return ret;
   }
 }
 

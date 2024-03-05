@@ -121,10 +121,10 @@ export class Macros extends Plugin {
     }
     let ret: html.Element | null = null;
     if (def.from) {
-      const f = JSON.parse(JSON.stringify(def.node));
+      const f = def.node.clone(null);
       ret = this.expandMacro(source, p, f, def.from, nesting + 1, macros);
     } else {
-      ret = JSON.parse(JSON.stringify(def.node)) as html.Element;
+      ret = def.node.clone(null);
       ret.name = def.base;
     }
     ret && this.populateMacro(e, ret, source, nesting, macros);
