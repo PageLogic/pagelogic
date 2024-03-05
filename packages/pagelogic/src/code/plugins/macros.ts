@@ -38,6 +38,10 @@ export class Macros extends Plugin {
     this.expandMacros(source, source.doc!, 0, macros);
   }
 
+  // ===========================================================================
+  // collection
+  // ===========================================================================
+
   protected collectMacros(
     source: types.Source, p: html.Element, nesting: number, ret: Definitions
   ): Definitions {
@@ -79,7 +83,7 @@ export class Macros extends Plugin {
     }
     const name = res[1];
     const base = (res.length > 1 && res[2] ? res[2].substring(1) : 'div');
-    const from = base.indexOf('-') >= 0 ? macros[base] : undefined;
+    const from = base.indexOf('-') >= 0 ? macros[base.toUpperCase()] : undefined;
     this.expandMacros(source, e, nesting + 1, macros);
     return { name, node: e, parent: p, base, from };
   }
@@ -92,9 +96,44 @@ export class Macros extends Plugin {
     }
   }
 
+  protected collectSlots(
+    node: html.Element, source: types.Source
+  ): Map<string, SlotDefinition> {
+    const ret = new Map<string, SlotDefinition>();
+    const f = (p: html.Element) => {
+      p.children.forEach(n => {
+        if (n.type !== 'element') {
+          return;
+        }
+        const e = n as html.Element;
+        if (e.name !== SLOT_TAG) {
+          f(e);
+          return;
+        }
+        const name = e.getAttribute(SLOT_NAME_ATTR);
+        if (!name || !/^[\w-]+?$/.test(name)) {
+          source.addError('warning', 'bad slot name', e.loc);
+          return;
+        }
+        ret.set(name, { name, element: e, parent: p });
+      });
+    };
+    f(node);
+    return ret;
+  }
+
+  // ===========================================================================
+  // expansion
+  // ===========================================================================
+
   protected expandMacros(
     source: types.Source, p: html.Element, nesting: number, macros: Definitions
   ) {
+    const subs = new Array<{
+      parent: html.Element,
+      replacer: html.Element,
+      replaced: html.Element
+    }>();
     const f = (p: html.Element) => {
       for (const e of p.children as html.Element[]) {
         if (e.type !== 'element') {
@@ -105,10 +144,16 @@ export class Macros extends Plugin {
           f(e);
           continue;
         }
-        this.expandMacro(source, p, e, macro, nesting, macros);
+        const r = this.expandMacro(source, p, e, macro, nesting, macros);
+        r && subs.push({ parent: p, replacer: r, replaced: e });
       }
     };
     f(p);
+    subs.forEach(sub => {
+      const p = sub.parent.children;
+      const i = p.indexOf(sub.replaced);
+      p.splice(i, 1, sub.replacer);
+    });
   }
 
   protected expandMacro(
@@ -171,31 +216,5 @@ export class Macros extends Plugin {
       slot.parent.children.splice(i, 1);
     });
     this.expandMacros(source, dst, nesting + 1, macros);
-  }
-
-  protected collectSlots(
-    node: html.Element, source: types.Source
-  ): Map<string, SlotDefinition> {
-    const ret = new Map<string, SlotDefinition>();
-    const f = (p: html.Element) => {
-      p.children.forEach(n => {
-        if (n.type !== 'element') {
-          return;
-        }
-        const e = n as html.Element;
-        if (e.name !== SLOT_TAG) {
-          f(e);
-          return;
-        }
-        const name = e.getAttribute(SLOT_NAME_ATTR);
-        if (!name || !/^[\w-]+?$/.test(name)) {
-          source.addError('warning', 'bad slot name', e.loc);
-          return;
-        }
-        ret.set(name, { name, element: e, parent: p });
-      });
-    };
-    f(node);
-    return ret;
   }
 }
