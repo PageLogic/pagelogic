@@ -1,5 +1,4 @@
-import { DID_VALUE_PREFIX, WILL_VALUE_PREFIX } from '../web/context';
-import { Context, DATA_KEY, NAME_KEY, OUTER_KEY, PRINT_KEY, SCOPE_KEY, VALUE_KEY } from './context';
+import { Context, DATA_KEY, DID_VALUE_PREFIX, NAME_KEY, OUTER_KEY, PRINT_KEY, SCOPE_KEY, VALUE_KEY, WILL_VALUE_PREFIX } from './context';
 import { Value, ValueProps } from './value';
 
 export interface ScopeProps {

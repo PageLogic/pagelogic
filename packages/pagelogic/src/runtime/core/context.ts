@@ -8,8 +8,11 @@ export const SCOPE_KEY = '$scope';
 export const OUTER_KEY = '$outer';
 export const PRINT_KEY = '$print';
 export const VALUE_KEY = '$value';
+export const DID_VALUE_PREFIX = 'did$';
+export const WILL_VALUE_PREFIX = 'will$';
 
 export interface ContextProps {
+  root: ScopeProps;
 }
 
 export class Context {
@@ -25,12 +28,13 @@ export class Context {
     this.scopes = new Map();
     this.cycle = 0;
     this.refreshLevel = this.pushLevel = 0;
+    this.root = this.loadScope(null, props.root);
   }
 
-  load(props: ScopeProps): this {
-    this.root = this.loadScope(null, props);
-    return this;
-  }
+  // load(props: ScopeProps): this {
+  //   this.root = this.loadScope(null, props);
+  //   return this;
+  // }
 
   refresh(scope?: Scope, nextCycle = true): this {
     this.refreshLevel++;

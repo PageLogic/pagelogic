@@ -12,8 +12,6 @@ export const CLASS_VALUE_PREFIX = 'class$';
 export const STYLE_VALUE_PREFIX = 'style$';
 export const EVENT_VALUE_PREFIX = 'on$';
 export const HANDLE_VALUE_PREFIX = 'handle$';
-export const DID_VALUE_PREFIX = 'did$';
-export const WILL_VALUE_PREFIX = 'will$';
 export const ATTR_VALUE_PREFIX = 'attr$';
 export const TEXT_VALUE_PREFIX = 'text$';
 
