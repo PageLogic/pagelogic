@@ -7,6 +7,6 @@ import { WebScopeProps } from './scope';
     const ctx = new WebContext(window, window.document, {
       root: props
     }).refresh();
-    (window as any)[GLOBAL_NAME] = ctx.root?.proxy;
+    (window as any)[GLOBAL_NAME] = ctx.root.proxy;
   }
 };

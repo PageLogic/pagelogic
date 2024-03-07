@@ -6,7 +6,7 @@ export interface ValueProps {
   refs?: ValueRef[];
 }
 
-export type ValueExp = () => never;
+export type ValueExp = () => unknown;
 export type ValueRef = () => Value;
 
 const uninitialized = Symbol('uninitialized');
@@ -14,16 +14,19 @@ const uninitialized = Symbol('uninitialized');
 export class Value {
   key: string;
   props: ValueProps;
-  cb?: (v: never) => never | null;
+  cb?: (v: unknown) => unknown | null;
   // protected static uninitialized = Symbol('uninitialized');
   protected scope: Scope;
   protected cycle: number;
-  protected v1: never;
-  protected v2: never | null | undefined;
+  protected v1: unknown;
+  protected v2: unknown | null | undefined;
   protected src?: Set<Value>;
   protected dst?: Set<Value>;
 
-  constructor(scope: Scope, key: string, props: ValueProps, cb?: (v: never) => never | null) {
+  constructor(
+    scope: Scope, key: string, props: ValueProps,
+    cb?: (v: unknown) => unknown | null
+  ) {
     this.scope = scope;
     this.key = key;
     this.props = props;
@@ -42,7 +45,7 @@ export class Value {
       try {
         that = ref.apply(this.scope.proxy);
         if (that === this) {
-          that = this.scope.parent ? ref.apply(this.scope.parent.proxy) : undefined;
+          that = this.scope.parent && ref.apply(this.scope.parent.proxy);
         }
       } catch (ignored) { /* nop */ }
       if (that) {

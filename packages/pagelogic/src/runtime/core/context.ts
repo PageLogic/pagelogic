@@ -21,7 +21,7 @@ export class Context {
   cycle: number;
   refreshLevel: number;
   pushLevel: number;
-  root?: Scope;
+  root: Scope;
 
   constructor(props: ContextProps) {
     this.props = props;
@@ -30,11 +30,6 @@ export class Context {
     this.refreshLevel = this.pushLevel = 0;
     this.root = this.loadScope(null, props.root);
   }
-
-  // load(props: ScopeProps): this {
-  //   this.root = this.loadScope(null, props);
-  //   return this;
-  // }
 
   refresh(scope?: Scope, nextCycle = true): this {
     this.refreshLevel++;

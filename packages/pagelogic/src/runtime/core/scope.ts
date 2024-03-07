@@ -1,4 +1,8 @@
-import { Context, DATA_KEY, DID_VALUE_PREFIX, NAME_KEY, OUTER_KEY, PRINT_KEY, SCOPE_KEY, VALUE_KEY, WILL_VALUE_PREFIX } from './context';
+import {
+  Context,
+  DATA_KEY, NAME_KEY, OUTER_KEY, PRINT_KEY, SCOPE_KEY,
+  VALUE_KEY, WILL_VALUE_PREFIX, DID_VALUE_PREFIX
+} from './context';
 import { Value, ValueProps } from './value';
 
 export interface ScopeProps {
@@ -190,7 +194,7 @@ class Replicator {
     this.scope = scope;
   }
 
-  dataValueCB(v: never): never | null {
+  dataValueCB(v: unknown): unknown | null {
     // return Array.isArray(v) && !this.scope.isClone ? this.replicate(v) : v;
     if (Array.isArray(v) && !this.scope.isClone) {
       return this.replicate(v);
@@ -201,7 +205,7 @@ class Replicator {
     return v;
   }
 
-  replicate(vv: never[]): never | null {
+  replicate(vv: unknown[]): unknown | null {
     !this.clones && (this.clones = []);
     // data window (offset/length)
     const offset = 0, length = vv.length;

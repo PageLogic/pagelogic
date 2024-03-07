@@ -41,7 +41,7 @@ export class WebValue extends Value {
     return this.scope as WebScope;
   }
 
-  attrCB(k: string, v: never) {
+  attrCB(k: string, v: unknown) {
     const e = this.webScope.dom;
     if (v != null) {
       e.setAttribute(k, `${v}`.trim());
@@ -51,7 +51,7 @@ export class WebValue extends Value {
     return v;
   }
 
-  attrClassCB(k: string, v: never) {
+  attrClassCB(k: string, v: unknown) {
     const e = this.webScope.dom;
     const p1 = this.classParts!;
     const p2 = new Set(`${v || ''}`.trim().split(/\s+/));
@@ -61,13 +61,13 @@ export class WebValue extends Value {
     return v;
   }
 
-  classCB(k: string, v: never) {
+  classCB(k: string, v: unknown) {
     const e = this.webScope.dom;
     v ? e.classList.add(k) : e.classList.remove(k);
     return v;
   }
 
-  attrStyleCB(k: string, v: never) {
+  attrStyleCB(k: string, v: unknown) {
     const e = this.webScope.dom as HTMLElement;
     const p1 = this.styleParts!;
     const p2 = new Map<string, string>();
@@ -92,7 +92,7 @@ export class WebValue extends Value {
     return v as never;
   }
 
-  textCB(id: string, v: never) {
+  textCB(id: string, v: unknown) {
     const n = this.webScope.texts.get(id);
     n && (n.nodeValue = (v != null ? `${v}` : ''));
     return v;
