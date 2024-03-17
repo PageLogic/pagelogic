@@ -8,7 +8,7 @@ import { Config } from '../../../src/compiler/config';
 const rootPath = path.join(__dirname, 'loader');
 
 // https://nodejs.org/docs/latest-v20.x/api/test.html
-describe('code/source: loader', () => {
+describe('compiler: loader', () => {
   fs.readdirSync(rootPath).forEach(dir => {
     const dirPath = path.join(rootPath, dir);
     if (

@@ -9,7 +9,7 @@ import * as types from '../../../src/compiler/types';
 
 const rootPath = path.join(__dirname, 'parser');
 
-describe('code/source: parser', () => {
+describe('compiler: parser', () => {
   fs.readdirSync(rootPath).forEach(file => {
     const filePath = path.join(rootPath, file);
     if (
