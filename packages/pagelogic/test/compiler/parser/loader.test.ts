@@ -1,9 +1,9 @@
 import fs from 'fs';
 import path from 'path';
-import { normalizeText } from '../../../src/code/source/utils';
+import { normalizeText } from '../../../src/compiler/parser/utils';
 import { assert } from 'chai';
-import { Loader } from '../../../src/code/source/loader';
-import { Config } from '../../../src/code/config';
+import { Loader } from '../../../src/compiler/parser/loader';
+import { Config } from '../../../src/compiler/config';
 
 const rootPath = path.join(__dirname, 'loader');
 

@@ -1,7 +1,7 @@
 import { Plugin } from '../plugin';
 import * as types from '../types';
-import * as html from '../source/html';
-import { DIRECTIVE_PREFIX } from '../source/loader';
+import * as html from '../parser/html';
+import { DIRECTIVE_PREFIX } from '../parser/loader';
 
 export const MAX_NESTING = 100;
 export const DEFINE_TAG = DIRECTIVE_PREFIX + 'DEFINE';

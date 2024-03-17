@@ -2,10 +2,10 @@ import * as acorn from 'acorn';
 import { assert } from 'chai';
 import fs from 'fs';
 import path from 'path';
-import * as html from '../../../src/code/source/html';
-import * as parser from '../../../src/code/source/parser';
-import * as util from '../../../src/code/source/utils';
-import * as types from '../../../src/code/types';
+import * as html from '../../../src/compiler/parser/html';
+import * as parser from '../../../src/compiler/parser/parser';
+import * as util from '../../../src/compiler/parser/utils';
+import * as types from '../../../src/compiler/types';
 
 const rootPath = path.join(__dirname, 'parser');
 
