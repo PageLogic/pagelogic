@@ -71,7 +71,8 @@ export class Context {
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/create
 
 export type Props = {
-  [key: string | symbol]: unknown,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [key: string | symbol]: any,
 };
 
 export interface Scope extends Props {
@@ -167,8 +168,8 @@ export function newScope(
 // Value
 // =============================================================================
 
-export type ValueFunction = () => unknown;
-export type RefFunction = () => Value | undefined;
+export type ValueFunction = (this: Scope) => unknown;
+export type RefFunction = (this: Scope) => Value | undefined;
 
 const uninit = Symbol('uninit');
 

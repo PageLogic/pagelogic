@@ -46,7 +46,6 @@ describe('runtime: core', () => {
 
   it('should access other values', () => {
     const scope = newScope(new Context(), {
-      // @ts-expect-error this has any type
       x: new Value(function() { return this.y + 1; }),
       y: 2
     }, null, null);
@@ -61,8 +60,7 @@ describe('runtime: core', () => {
       y: 2
     }, null, null);
     const scope1 = newScope(ctx, {
-      // @ts-expect-error this has any type
-      x: new Value(function() { return this.y + 1;})
+      x: new Value(function() { return this.y + 1; })
     }, scope0, null);
     ctx.refresh(scope0);
 
@@ -73,7 +71,6 @@ describe('runtime: core', () => {
     const ctx = new Context();
     const scope0 = newScope(ctx, {
       x: 10,
-      // @ts-expect-error this has any type
       y: new Value(function() { return this.x + 1; })
     }, null, null);
     const scope1 = newScope(ctx, {
@@ -89,7 +86,6 @@ describe('runtime: core', () => {
     let count = 0;
     const scope = newScope(new Context(), {
       x: new Value(function() {
-        // @ts-expect-error this has any type
         return this.y + 1;
       }, undefined, (v) => {
         value = v as number;
@@ -112,7 +108,6 @@ describe('runtime: core', () => {
     let count = 0;
     const scope = newScope(new Context(), {
       x: new Value(function() {
-        // @ts-expect-error this has any type
         return this.y + 1;
       }, undefined, (v) => {
         value = v as number;
@@ -135,10 +130,8 @@ describe('runtime: core', () => {
     const scope = newScope(new Context(), {
       x: new Value(function() { return 1; }),
       y: new Value(function() {
-        // @ts-expect-error this has any type
         return this.x * 2;
       }, [function() {
-        // @ts-expect-error this has any type
         return this.$value('x');
       }]),
     }, null, null);
@@ -157,10 +150,8 @@ describe('runtime: core', () => {
     const scope = newScope(new Context(), {
       x: new Value(function() { return 1; }),
       y: new Value(function() {
-        // @ts-expect-error this has any type
         return this.x * 2;
       }, [function() {
-        // @ts-expect-error this has any type
         return this.$value('x');
       }], (v: unknown) => {
         value = v;
@@ -186,24 +177,20 @@ describe('runtime: core', () => {
     const scope0 = newScope(ctx, {
       x: 10,
       y: new Value(function() { return (() => {
-        // @ts-expect-error this has any type
         return this.x;
       }); })
     }, null, null);
     const scope1 = newScope(ctx, {
       x: 20,
       z1: new Value(function() {
-        // @ts-expect-error this has any type
         return this.y();
       }),
       z2: new Value(function() {
-        // @ts-expect-error this has any type
         return this.x;
       })
     }, scope0, null);
     ctx.refresh(scope0);
 
-    // @ts-expect-error scope0.y is of type unknown
     assert.equal(scope0.y(), 10);
     assert.equal(scope1.z1, 10);
     assert.equal(scope1.z2, 20);
