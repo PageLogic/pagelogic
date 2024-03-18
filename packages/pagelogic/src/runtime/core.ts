@@ -184,7 +184,11 @@ export class Value {
   dst = new Set<Value>();
   scope!: Scope;
 
-  constructor(fn: ValueFunction, refs?: RefFunction[], cb?: (v: unknown) => unknown) {
+  constructor(
+    fn: ValueFunction,
+    refs?: RefFunction[],
+    cb?: (v: unknown) => unknown
+  ) {
     this.fn = fn;
     this.refs = refs;
     this.cb = cb || ((v: unknown) => v);

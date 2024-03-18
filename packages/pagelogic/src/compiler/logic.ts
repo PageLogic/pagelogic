@@ -1,3 +1,4 @@
+import * as acorn from 'acorn';
 import * as html from './html';
 import { Source } from './types';
 
@@ -24,6 +25,8 @@ export interface Logic {
   tt: html.Text[];
   // children
   cc: Logic[];
+  // generated code
+  ast?: acorn.ObjectExpression;
 }
 
 export function parseLogic(source: Source) {
@@ -71,7 +74,7 @@ export function parseLogic(source: Source) {
     return scope;
   }
 
-  if (source.errors.length < 1) {
+  if (source.doc && source.errors.length < 1) {
     source.logic = scan(source.doc!.documentElement!);
   }
 }
