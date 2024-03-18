@@ -137,6 +137,7 @@ function parseElement(p: html.Element, src: Source, i1: number, i2: number, erro
     }
   }
   e.loc.end = src.pos(i1);
+  e.loc.i2 = i1;
   return i1;
 }
 
@@ -217,7 +218,9 @@ function parseLiteralValue(
     a.value = html.unescapeText(s.substring(i1, i2));
     i1 = i2 + term.length;
     a.loc.end = src.pos(i1);
+    a.loc.i2 = i1;
     a.valueLoc!.end = src.pos(i1);
+    a.valueLoc!.i2 = i1;
   }
   return i1;
 }
@@ -241,7 +244,9 @@ function parseExpressionValue(
   i2++;
   a.value = exp;
   a.loc.end = src.pos(i2);
+  a.loc.i2 = i2;
   a.valueLoc!.end = src.pos(i2);
+  a.valueLoc!.i2 = i2;
   return i2;
 }
 
@@ -533,11 +538,12 @@ export class Source {
     };
   }
 
-  loc(i1: number, i2: number): acorn.SourceLocation {
+  loc(i1: number, i2: number): html.SourceLocation {
     return {
       source: this.fname,
       start: this.pos(i1),
-      end: this.pos(i2)
+      end: this.pos(i2),
+      i1, i2
     };
   }
 

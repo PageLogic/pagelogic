@@ -144,6 +144,8 @@ describe('compiler: parser', () => {
       source: 'inline',
       start: { line: 1, column: 0 },
       end: { line: 12, column: 7 },
+      i1: 0,
+      i2: 177,
     });
 
     { // root attributes
@@ -153,11 +155,15 @@ describe('compiler: parser', () => {
         source: 'inline',
         start: { line: 1, column: 6 },
         end: { line: 1, column: 24 },
+        i1: 6,
+        i2: 24,
       });
       assert.deepEqual(a1.valueLoc, {
         source: 'inline',
         start: { line: 1, column: 13 },
         end: { line: 1, column: 24 },
+        i1: 13,
+        i2: 24,
       });
       const exp1 = a1.value as acorn.Expression;
       assert.deepEqual(JSON.parse(JSON.stringify(exp1.loc)), {
@@ -171,6 +177,8 @@ describe('compiler: parser', () => {
         source: 'inline',
         start: { line: 3, column: 6 },
         end: { line: 3, column: 15 },
+        i1: 53,
+        i2: 62,
       });
     }
 
@@ -180,6 +188,8 @@ describe('compiler: parser', () => {
       source: 'inline',
       start: { line: 3, column: 16 },
       end: { line: 4, column: 2 },
+      i1: 63,
+      i2: 66,
     });
 
     const head = root.children[1] as html.Element;
@@ -188,6 +198,8 @@ describe('compiler: parser', () => {
       source: 'inline',
       start: { line: 4, column: 2 },
       end: { line: 8, column: 17 },
+      i1: 66,
+      i2: 137,
     });
 
     { // head content
@@ -197,6 +209,8 @@ describe('compiler: parser', () => {
         source: 'inline',
         start: { line: 4, column: 8 },
         end: { line: 8, column: 10 },
+        i1: 72,
+        i2: 130,
       });
       // style text is atomic
       assert.equal(style.children.length, 1);
@@ -207,6 +221,8 @@ describe('compiler: parser', () => {
         source: 'inline',
         start: { line: 4, column: 15 },
         end: { line: 8, column: 2 },
+        i1: 79,
+        i2: 122,
       });
     }
 
@@ -216,6 +232,8 @@ describe('compiler: parser', () => {
       source: 'inline',
       start: { line: 8, column: 17 },
       end: { line: 9, column: 2 },
+      i1: 137,
+      i2: 140,
     });
 
     const body = root.children[3] as html.Element;
@@ -224,6 +242,8 @@ describe('compiler: parser', () => {
       source: 'inline',
       start: { line: 9, column: 2 },
       end: { line: 11, column: 9 },
+      i1: 140,
+      i2: 169,
     });
 
     { // body text
@@ -234,6 +254,8 @@ describe('compiler: parser', () => {
         source: 'inline',
         start: { line: 9, column: 8 },
         end: { line: 10, column: 4 },
+        i1: 146,
+        i2: 151,
       });
 
       const bodyText2 = body.children[1] as html.Text;
@@ -243,6 +265,8 @@ describe('compiler: parser', () => {
         source: 'inline',
         start: { line: 10, column: 4 },
         end: { line: 10, column: 12 },
+        i1: 151,
+        i2: 159,
       });
 
       const bodyText3 = body.children[2] as html.Text;
@@ -251,6 +275,8 @@ describe('compiler: parser', () => {
         source: 'inline',
         start: { line: 10, column: 12 },
         end: { line: 11, column: 2 },
+        i1: 159,
+        i2: 162,
       });
     }
 
@@ -260,6 +286,8 @@ describe('compiler: parser', () => {
       source: 'inline',
       start: { line: 11, column: 9 },
       end: { line: 12, column: 0 },
+      i1: 169,
+      i2: 170,
     });
   });
 });

@@ -8,16 +8,21 @@ export const VOID_ELEMENTS = new Set([
 
 export type NodeType = 'node' | 'text' | 'comment' | 'element' | 'attribute' | 'document';
 
+export interface SourceLocation extends acorn.SourceLocation {
+  i1: number;
+  i2: number;
+}
+
 export abstract class Node {
   doc: Document | null;
   type: NodeType;
-  loc: acorn.SourceLocation;
+  loc: SourceLocation;
 
   constructor(
     doc: Document | null,
     parent: Element | null,
     type: NodeType,
-    loc: acorn.SourceLocation
+    loc: SourceLocation
   ) {
     this.doc = doc;
     this.type = type;
@@ -50,7 +55,7 @@ export class Text extends Node {
     doc: Document | null,
     parent: Element | null,
     value: string | acorn.Expression,
-    loc: acorn.SourceLocation,
+    loc: SourceLocation,
     escaping = true
   ) {
     super(doc, parent, 'text', loc);
@@ -88,7 +93,7 @@ export class Comment extends Node {
     doc: Document | null,
     parent: Element | null,
     value: string,
-    loc: acorn.SourceLocation
+    loc: SourceLocation
   ) {
     super(doc, parent, 'comment', loc);
     this.value = value;
@@ -116,7 +121,7 @@ export class Comment extends Node {
 export class Attribute extends Node {
   name: string;
   value: string | acorn.Expression;
-  valueLoc?: acorn.SourceLocation;
+  valueLoc?: SourceLocation;
   quote?: string;
 
   constructor(
@@ -124,7 +129,7 @@ export class Attribute extends Node {
     parent: Element | null,
     name: string,
     value: string | acorn.Expression,
-    loc: acorn.SourceLocation
+    loc: SourceLocation
   ) {
     super(doc, null, 'attribute', loc);
     this.name = name;
@@ -172,7 +177,7 @@ export class Element extends Node {
     doc: Document | null,
     parent: Element | null,
     name: string,
-    loc: acorn.SourceLocation
+    loc: SourceLocation
   ) {
     super(doc, parent, 'element', loc);
     this.name = name.toUpperCase();
@@ -257,10 +262,10 @@ export class Element extends Node {
 export class Document extends Element {
   jsonLoc = true;
 
-  constructor(loc: string | acorn.SourceLocation) {
+  constructor(loc: string | SourceLocation) {
     super(null, null, '#document',
       typeof loc === 'string'
-        ? { source: loc, start: { line: 1, column: 0 }, end: { line: 1, column: 0 }}
+        ? { source: loc, start: { line: 1, column: 0 }, end: { line: 1, column: 0 }, i1: 0, i2: 0 }
         : loc
     );
     this.doc = this;

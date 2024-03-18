@@ -1,3 +1,5 @@
+import * as acorn from 'acorn';
+import * as html from './html';
 
 export function normalizeText(s?: string): string | undefined {
   return s?.split(/\n\s+/).join('\n').split(/\s{2,}/).join(' ');
@@ -21,3 +23,11 @@ export class Stack<T> extends Array<T> {
     return this[this.length - 1];
   }
 }
+
+// export function object(ref: html.Node): acorn.ObjectExpression {
+//   return {
+//     type: 'ObjectExpression',
+//     properties: [],
+//     start: ref.start, end: ref.end, loc: ref.loc
+//   };
+// }
