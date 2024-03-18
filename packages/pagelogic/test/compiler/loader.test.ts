@@ -1,9 +1,12 @@
+/// <reference types="node" />
+
+import { assert } from 'chai';
+import { describe } from 'mocha';
 import fs from 'fs';
 import path from 'path';
-import { normalizeText } from '../../src/compiler/utils';
-import { assert } from 'chai';
-import { Loader } from '../../src/compiler/loader';
 import { Config } from '../../src/compiler/config';
+import { Loader } from '../../src/compiler/loader';
+import { normalizeText } from '../../src/compiler/utils';
 
 const rootPath = path.join(__dirname, 'loader');
 

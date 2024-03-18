@@ -1,0 +1,25 @@
+{
+  "id": 0,
+  "vv": {
+    ":scope-name": "page"
+  },
+  "tt": [],
+  "cc": [
+    {
+      "id": 1,
+      "vv": {
+        ":scope-name": "head"
+      },
+      "tt": [],
+      "cc": []
+    },
+    {
+      "id": 2,
+      "vv": {
+        ":scope-name": "body"
+      },
+      "tt": [],
+      "cc": []
+    }
+  ]
+}

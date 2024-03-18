@@ -1,11 +1,14 @@
+/// <reference types="node" />
+
 import * as acorn from 'acorn';
 import { assert } from 'chai';
+import { describe } from 'mocha';
 import fs from 'fs';
 import path from 'path';
 import * as html from '../../src/compiler/html';
 import * as parser from '../../src/compiler/parser';
-import * as util from '../../src/compiler/utils';
 import * as types from '../../src/compiler/types';
+import * as util from '../../src/compiler/utils';
 
 const rootPath = path.join(__dirname, 'parser');
 

@@ -1,7 +1,7 @@
 {
   "id": 0,
   "vv": {
-    ":scope-name": "page",
+    ":scope-name": true,
     ":x": true,
     "y": true
   },

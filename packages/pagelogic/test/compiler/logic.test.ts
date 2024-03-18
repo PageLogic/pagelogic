@@ -1,4 +1,7 @@
+/// <reference types="node" />
+
 import { assert } from 'chai';
+import { describe } from 'mocha';
 import fs from 'fs';
 import path from 'path';
 import { Loader } from '../../src/compiler/loader';
@@ -47,8 +50,11 @@ describe('compiler: logic', () => {
               const pname = path.join(dirPath, fname);
               const text = (await fs.promises.readFile(pname)).toString();
               const expected = JSON.parse(text);
+              const actual = JSON.parse(JSON.stringify(source.logic), (key, val) => {
+                return val['type'] === 'attribute' || val['type'] === 'text' ? true : val;
+              });
 
-              assert.deepEqual(source.logic, expected);
+              assert.deepEqual(actual, expected);
             });
 
           }

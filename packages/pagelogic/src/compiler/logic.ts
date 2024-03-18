@@ -6,10 +6,10 @@ export const SCOPE_ATTR_PREFIX = LOGIC_ATTR_PREFIX + 'scope-';
 export const CLASS_ATTR_PREFIX = LOGIC_ATTR_PREFIX + 'class-';
 export const STYLE_ATTR_PREFIX = LOGIC_ATTR_PREFIX + 'style-';
 export const HANDLE_ATTR_PREFIX = LOGIC_ATTR_PREFIX + 'handle-';
-export const ON_ATTR_PREFIX = LOGIC_ATTR_PREFIX + 'on-';
 export const SCOPE_NAME_ATTR = SCOPE_ATTR_PREFIX + 'name';
+export const ON_ATTR_PREFIX = LOGIC_ATTR_PREFIX + 'on-';
 
-export const DOM_SCOPE_ID_ATTR = 'data-pl-id';
+export const DOM_SCOPE_ID_ATTR = 'data-pagelogic';
 const AUTO_NAMES: { [key: string]: string } = {
   'HTML': 'page',
   'HEAD': 'head',
@@ -18,7 +18,11 @@ const AUTO_NAMES: { [key: string]: string } = {
 
 export interface Logic {
   id: number;
-  vv: { [key: string]: string | false };
+  // values
+  vv: { [key: string]: string | html.Attribute };
+  // texts
+  tt: html.Text[];
+  // children
   cc: Logic[];
 }
 
@@ -26,7 +30,7 @@ export function parseLogic(source: Source) {
   let nextId = 0;
 
   function needsScope(dom: html.Element) {
-    const vv: { [key: string]: string | false } = {};
+    const vv: { [key: string]: string | html.Attribute } = {};
     if (AUTO_NAMES[dom.name]) {
       vv[SCOPE_NAME_ATTR] = AUTO_NAMES[dom.name];
     }
@@ -35,7 +39,7 @@ export function parseLogic(source: Source) {
         a.name.startsWith(LOGIC_ATTR_PREFIX) ||
         typeof a.value !== 'string'
       ) {
-        vv[a.name] = typeof a.value === 'string' && a.value;
+        vv[a.name] = a;
       }
     });
     return Reflect.ownKeys(vv).length ? vv : null;
@@ -47,6 +51,7 @@ export function parseLogic(source: Source) {
       const s = {
         id: nextId++,
         vv: vv ?? {},
+        tt: [],
         cc: [],
       };
       dom.setAttribute(DOM_SCOPE_ID_ATTR, `${s.id}`);
@@ -56,8 +61,11 @@ export function parseLogic(source: Source) {
     dom.children.forEach(n => {
       if (n.type === 'element') {
         scan(n as html.Element, scope);
-      } else if (n.type === 'text') {
-        //TODO
+      } else if (
+        n.type === 'text' &&
+        typeof (n as html.Text).value !== 'string'
+      ) {
+        scope?.tt.push(n as html.Text);
       }
     });
     return scope;

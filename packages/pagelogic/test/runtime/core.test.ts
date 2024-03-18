@@ -1,4 +1,5 @@
 import { assert } from 'chai';
+import { describe } from 'mocha';
 import { Context, Value, newScope } from '../../src/runtime/core';
 
 describe('runtime: core', () => {

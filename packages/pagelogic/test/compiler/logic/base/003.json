@@ -5,6 +5,6 @@
     ":x": true,
     "y": true
   },
-  "tt": [],
+  "tt": [true],
   "cc": []
 }
