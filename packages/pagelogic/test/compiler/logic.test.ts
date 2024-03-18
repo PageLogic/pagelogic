@@ -1,9 +1,9 @@
 import { assert } from 'chai';
 import fs from 'fs';
 import path from 'path';
-import { Loader } from '../../src/compiler/parser/loader';
+import { Loader } from '../../src/compiler/loader';
 import { Config } from '../../src/compiler/config';
-import { parseLogic } from '../../src/compiler/transpiler/logic';
+import { parseLogic } from '../../src/compiler/logic';
 
 const rootPath = path.join(__dirname, 'logic');
 
@@ -48,7 +48,7 @@ describe('compiler: logic', () => {
               const text = (await fs.promises.readFile(pname)).toString();
               const expected = JSON.parse(text);
 
-              // assert.deepEqual(source.logic, expected);
+              assert.deepEqual(source.logic, expected);
             });
 
           }

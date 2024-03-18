@@ -1,6 +1,6 @@
 import * as acorn from 'acorn';
 import * as html from './html';
-import * as types from '../types';
+import * as types from './types';
 
 const SKIP_CONTENT_TAGS = new Set(['SCRIPT', 'CODE']);
 const ATOMIC_TEXT_TAGS = new Set(['STYLE', 'TITLE']);

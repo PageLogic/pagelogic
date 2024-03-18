@@ -1,6 +1,6 @@
 import * as acorn from 'acorn';
-import * as html from './parser/html';
-import { Logic } from './transpiler/logic';
+import * as html from './html';
+import { Logic } from './logic';
 
 export class Source {
   doc?: html.Document;
