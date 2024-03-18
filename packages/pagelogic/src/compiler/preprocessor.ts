@@ -24,7 +24,7 @@ export type Include = {
  * Parses the pages, resolves possible inclusions,
  * and returns a combined Document.
  */
-export class Loader {
+export class Preprocessor {
   config: Config;
 
   constructor(config: Config) {

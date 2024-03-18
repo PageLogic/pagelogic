@@ -4,7 +4,7 @@ import { assert } from 'chai';
 import { describe } from 'mocha';
 import fs from 'fs';
 import path from 'path';
-import { Loader } from '../../src/compiler/loader';
+import { Preprocessor } from '../../src/compiler/preprocessor';
 import { Config } from '../../src/compiler/config';
 import { parseLogic } from '../../src/compiler/logic';
 
@@ -19,7 +19,7 @@ describe('compiler: logic', () => {
     ) {
 
       describe(dir, () => {
-        const loader = new Loader(new Config({ rootPath: dirPath }));
+        const preprocessor = new Preprocessor(new Config({ rootPath: dirPath }));
 
         fs.readdirSync(dirPath).forEach(file => {
           if (
@@ -28,7 +28,7 @@ describe('compiler: logic', () => {
           ) {
 
             it(file, async () => {
-              const source = await loader.load(file);
+              const source = await preprocessor.load(file);
               parseLogic(source);
 
               if (source.errors.length) {

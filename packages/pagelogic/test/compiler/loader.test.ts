@@ -5,12 +5,12 @@ import { describe } from 'mocha';
 import fs from 'fs';
 import path from 'path';
 import { Config } from '../../src/compiler/config';
-import { Loader } from '../../src/compiler/loader';
+import { Preprocessor } from '../../src/compiler/preprocessor';
 import { normalizeText } from '../../src/compiler/utils';
 
-const rootPath = path.join(__dirname, 'loader');
+const rootPath = path.join(__dirname, 'preprocessor');
 
-describe('compiler: loader', () => {
+describe('compiler: preprocessor', () => {
   fs.readdirSync(rootPath).forEach(dir => {
     const dirPath = path.join(rootPath, dir);
     if (
@@ -19,7 +19,7 @@ describe('compiler: loader', () => {
     ) {
 
       describe(dir, () => {
-        const loader = new Loader(new Config({ rootPath: dirPath }));
+        const preprocessor = new Preprocessor(new Config({ rootPath: dirPath }));
 
         fs.readdirSync(dirPath).forEach(file => {
           if (
@@ -28,7 +28,7 @@ describe('compiler: loader', () => {
           ) {
 
             it(file, async () => {
-              const source = await loader.load(file);
+              const source = await preprocessor.load(file);
               if (source.errors.length) {
                 const fname = file.replace('-in.html', '-err.json');
                 const pname = path.join(dirPath, fname);
