@@ -1,8 +1,10 @@
 import * as acorn from 'acorn';
 import * as html from './parser/html';
+import { Logic } from './transpiler/logic';
 
 export class Source {
   doc?: html.Document;
+  logic?: Logic;
   files: string[];
   errors: Error[];
 

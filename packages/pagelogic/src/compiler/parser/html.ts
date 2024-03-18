@@ -213,6 +213,15 @@ export class Element extends Node {
     i >= 0 && this.attributes.splice(i, 1);
   }
 
+  setAttribute(name: string, value: string) {
+    let a = this.getAttributeNode(name);
+    if (a) {
+      a.value = value;
+      return;
+    }
+    a = new Attribute(this.doc, this, name, value, this.loc);
+  }
+
   toJSON(): object {
     return {
       type: this.type,

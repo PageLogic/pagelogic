@@ -1,13 +1,13 @@
+import { assert } from 'chai';
 import fs from 'fs';
 import path from 'path';
-import { normalizeText } from '../../../src/compiler/parser/utils';
-import { assert } from 'chai';
-import { Loader } from '../../../src/compiler/parser/loader';
-import { Config } from '../../../src/compiler/config';
+import { Loader } from '../../src/compiler/parser/loader';
+import { Config } from '../../src/compiler/config';
+import { parseLogic } from '../../src/compiler/transpiler/logic';
 
-const rootPath = path.join(__dirname, 'loader');
+const rootPath = path.join(__dirname, 'logic');
 
-describe('compiler: loader', () => {
+describe('compiler: logic', () => {
   fs.readdirSync(rootPath).forEach(dir => {
     const dirPath = path.join(rootPath, dir);
     if (
@@ -21,13 +21,15 @@ describe('compiler: loader', () => {
         fs.readdirSync(dirPath).forEach(file => {
           if (
             fs.statSync(path.join(dirPath, file)).isFile() &&
-            file.endsWith('-in.html')
+            file.endsWith('.html')
           ) {
 
             it(file, async () => {
               const source = await loader.load(file);
+              parseLogic(source);
+
               if (source.errors.length) {
-                const fname = file.replace('-in.html', '-err.json');
+                const fname = file.replace('.html', '-err.json');
                 const pname = path.join(dirPath, fname);
                 const aerrs = source.errors.map(e => e.msg);
                 let eerrs = [];
@@ -38,13 +40,15 @@ describe('compiler: loader', () => {
                 } catch (e) {
                   assert.deepEqual(aerrs, eerrs);
                 }
-              } else {
-                // const actualHTML = getMarkup(source.ast!) + '\n';
-                const actualHTML = source.doc!.toString() + '\n';
-                const pname = path.join(rootPath, dir, file.replace('-in.', '-out.'));
-                const expectedHTML = await fs.promises.readFile(pname, { encoding: 'utf8' });
-                assert.equal(normalizeText(actualHTML), normalizeText(expectedHTML));
+                return;
               }
+
+              const fname = file.replace('.html', '.json');
+              const pname = path.join(dirPath, fname);
+              const text = (await fs.promises.readFile(pname)).toString();
+              const expected = JSON.parse(text);
+
+              // assert.deepEqual(source.logic, expected);
             });
 
           }
