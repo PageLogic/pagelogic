@@ -1,4 +1,3 @@
-import * as acorn from 'acorn';
 import * as html from './html';
 import { Source } from './types';
 
@@ -19,14 +18,13 @@ const AUTO_NAMES: { [key: string]: string } = {
 
 export interface Logic {
   id: number;
+  ref: html.Element;
   // values
   vv: { [key: string]: string | html.Attribute };
   // texts
   tt: html.Text[];
   // children
   cc: Logic[];
-  // generated code
-  ast?: acorn.ObjectExpression;
 }
 
 export function parseLogic(source: Source) {
@@ -53,6 +51,7 @@ export function parseLogic(source: Source) {
     if (!scope || vv) {
       const s = {
         id: nextId++,
+        ref: dom,
         vv: vv ?? {},
         tt: [],
         cc: [],

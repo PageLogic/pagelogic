@@ -1,5 +1,6 @@
 {
   "id": 0,
+  "ref": true,
   "vv": {
     ":scope-name": true,
     ":x": true,

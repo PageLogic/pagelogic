@@ -5,6 +5,7 @@ import { Logic } from './logic';
 export class Source {
   doc?: html.Document;
   logic?: Logic;
+  ast?: acorn.ObjectExpression;
   files: string[];
   errors: Error[];
 

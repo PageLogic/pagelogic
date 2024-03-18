@@ -1,5 +1,6 @@
 {
   "id": 0,
+  "ref": true,
   "vv": {
     ":scope-name": "page"
   },
@@ -7,6 +8,7 @@
   "cc": [
     {
       "id": 1,
+      "ref": true,
       "vv": {
         ":scope-name": "head"
       },
@@ -15,6 +17,7 @@
     },
     {
       "id": 2,
+      "ref": true,
       "vv": {
         ":scope-name": "body"
       },

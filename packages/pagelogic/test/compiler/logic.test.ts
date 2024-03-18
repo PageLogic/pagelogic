@@ -51,7 +51,10 @@ describe('compiler: logic', () => {
               const text = (await fs.promises.readFile(pname)).toString();
               const expected = JSON.parse(text);
               const actual = JSON.parse(JSON.stringify(source.logic), (key, val) => {
-                return val['type'] === 'attribute' || val['type'] === 'text' ? true : val;
+                if (['element', 'attribute', 'text'].includes(val['type'])) {
+                  return true;
+                }
+                return val;
               });
 
               assert.deepEqual(actual, expected);

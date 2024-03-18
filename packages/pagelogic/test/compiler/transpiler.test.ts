@@ -1,13 +1,15 @@
 /// <reference types="node" />
 
 import { assert } from 'chai';
-import { describe } from 'mocha';
+import { generate } from 'escodegen';
 import fs from 'fs';
+import { describe } from 'mocha';
 import path from 'path';
-import { Preprocessor } from '../../src/compiler/preprocessor';
 import { Config } from '../../src/compiler/config';
 import { parseLogic } from '../../src/compiler/logic';
+import { Preprocessor } from '../../src/compiler/preprocessor';
 import { transpile } from '../../src/compiler/transpiler';
+import * as utils from '../../src/compiler/utils';
 
 const rootPath = path.join(__dirname, 'transpiler');
 
@@ -51,9 +53,12 @@ describe('compiler: transpiler', () => {
               const fname = file.replace('.html', '.js');
               const pname = path.join(dirPath, fname);
               const expected = (await fs.promises.readFile(pname)).toString();
-              const actual = '';//TODO
+              const actual = generate(source.ast);
 
-              assert.equal(actual, expected);
+              assert.equal(
+                utils.normalizeSpace(actual)?.trim(),
+                utils.normalizeSpace(expected)?.trim()
+              );
             });
 
           }

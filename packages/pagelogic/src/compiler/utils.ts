@@ -24,10 +24,15 @@ export class Stack<T> extends Array<T> {
   }
 }
 
-// export function object(ref: html.Node): acorn.ObjectExpression {
-//   return {
-//     type: 'ObjectExpression',
-//     properties: [],
-//     start: ref.start, end: ref.end, loc: ref.loc
-//   };
-// }
+export function object(ref: html.Node): acorn.ObjectExpression {
+  return {
+    type: 'ObjectExpression',
+    properties: [],
+    start: ref.loc.i1, end: ref.loc.i2,
+    loc: {
+      source: ref.loc.source,
+      start: ref.loc.start,
+      end: ref.loc.end
+    }
+  };
+}
