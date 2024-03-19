@@ -1,4 +1,4 @@
-import * as acorn from 'acorn';
+import * as html from './html';
 import * as utils from './utils';
 import { Logic } from './logic';
 import { Source } from './types';
@@ -6,19 +6,22 @@ import { Stack } from './utils';
 
 export function transpile(source: Source) {
 
-  function genValue(key: string, scope: Logic, stack: Stack<Logic>) {
-    const ret = utils.object(scope.ref);
-    const ref = scope.ref;
+  function genValue(key: string, val: string | html.Attribute, scope: Logic, stack: Stack<Logic>) {
+    const ref = typeof val === 'string' ? scope.ref : (val as html.Attribute);
+    const ret = utils.object(ref);
+    // ret.properties.push(utils.property('fn', utils.fnExpression(
+
+    // ), ref));
     return ret;
   }
 
   function genValues(scope: Logic, stack: Stack<Logic>) {
-    const ret = utils.object(scope.ref);
     const ref = scope.ref;
+    const ret = utils.object(ref);
     for (const key of Reflect.ownKeys(scope.vv) as string[]) {
       ret.properties.push(utils.property(
         key,
-        genValue(key, scope, stack), ref)
+        genValue(key, scope.vv[key], scope, stack), ref)
       );
     }
     return ret;
