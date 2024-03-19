@@ -19,7 +19,7 @@ export interface Logic {
   id: number;
   ref: html.Element;
   // values
-  vv: { [key: string]: string | html.Attribute };
+  vv: { [key: string]: html.Attribute };
   // texts
   tt: html.Text[];
   // children
@@ -40,9 +40,11 @@ export function parseLogic(source: Source) {
   }
 
   function needsScope(dom: html.Element) {
-    const vv: { [key: string]: string | html.Attribute } = {};
+    const vv: { [key: string]: html.Attribute } = {};
     if (AUTO_NAMES[dom.name]) {
-      vv[valueName(SCOPE_NAME_ATTR)] = AUTO_NAMES[dom.name];
+      vv[valueName(SCOPE_NAME_ATTR)] = new html.Attribute(
+        dom.doc, dom, SCOPE_NAME_ATTR, AUTO_NAMES[dom.name], dom.loc
+      );
     }
     dom.attributes.forEach(a => {
       if (
