@@ -8,13 +8,13 @@ export function genRefFunctions(
   source: Source, scope: Logic, logicStack: Stack<Logic>,
   exp: es.Expression
 ): es.FunctionExpression[] {
-  const ret: es.FunctionExpression[] = [];
+  const refs = new Map<string, es.FunctionExpression>();
   const stack: es.Node[] = [];
   estraverse.traverse(exp, {
     enter: (node) => {
       stack.push(node);
       if (node.type === 'Identifier' || node.type === 'Literal') {
-        maybeGenRefFunction(source, scope, logicStack, node, stack);
+        maybeGenRefFunction(source, scope, logicStack, node, stack, refs);
       }
     },
 
@@ -22,30 +22,34 @@ export function genRefFunctions(
       stack.pop();
     },
   });
-  return ret;
+  return [...refs.values()];
 }
 
 function maybeGenRefFunction(
   source: Source, scope: Logic, logicStack: Stack<Logic>,
-  node: es.Identifier | es.Literal, stack: es.Node[]
+  node: es.Identifier | es.Literal, stack: es.Node[],
+  refs: Map<string, es.FunctionExpression>
 ) {
-  const exp = lookupRefExpression(stack);
-  if (!exp) {
+  const chain = lookupRefChain(stack);
+  if (!chain) {
     return;
   }
-  console.log(JSON.stringify(exp, (key, val) => {
-    return ['start', 'end', 'loc', 'range', 'computed', 'optional', 'raw'].includes(key) ? undefined : val;
-  }));
+  console.log('lookupRefExpression', chain.join('.'));//tempdebug
+  for (let i = 1; i < chain.length; i++) {
+
+  }
 }
 
-function lookupRefExpression(stack: es.Node[]): es.MemberExpression | null {
+function lookupRefChain(stack: es.Node[]): string[] | null {
   const exp = lookupRefStart(stack);
-  const chain = exp ? getRefChain(exp) : [];
-  if (chain.length < 2 || chain[0] !== 'this') {
+  const chain = exp && getRefChain(exp);
+  if (!chain || chain.length < 2 || chain[0] !== 'this') {
     return null;
   }
-  console.log('lookupRefExpression', chain.join('.'));//tempdebug
-  return exp;
+  // console.log(JSON.stringify(exp, (key, val) => {
+  //   return ['start', 'end', 'loc', 'range', 'computed', 'optional', 'raw'].includes(key) ? undefined : val;
+  // }));
+  return chain;
 }
 
 function lookupRefStart(stack: es.Node[]): es.MemberExpression | null {
@@ -81,6 +85,6 @@ function getRefChain(exp: es.MemberExpression): string[] {
       //TODO: err?
     }
   }
-  exp && f(exp);
+  f(exp);
   return sb;
 }
