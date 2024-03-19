@@ -1,42 +1,20 @@
 import estraverse from 'estraverse';
-import * as acorn from 'acorn';
 import * as es from 'estree';
-import { Source } from './types';
 import { Logic } from './logic';
+import { Source } from './types';
 import { Stack } from './utils';
 
-// const nodeInfo = Symbol('nodeInfo');
-
-// https://astexplorer.net
-export function qualifyReferences(
+export function genRefFunctions(
   source: Source, scope: Logic, logicStack: Stack<Logic>,
-  key: string, exp: es.Expression, refs: string[]
-): acorn.Expression {
-  if (exp.type === 'Literal') {
-    return exp as acorn.Expression;
-  }
-  // const toQualify = new Array<es.Node[]>();
+  exp: es.Expression
+): es.FunctionExpression[] {
+  const ret: es.FunctionExpression[] = [];
   const stack: es.Node[] = [];
-  // https://github.com/estools/estraverse
-  const ret = estraverse.replace(exp, {
-    enter: (node, parent) => {
+  estraverse.traverse(exp, {
+    enter: (node) => {
       stack.push(node);
-      if (node.type === 'Identifier') {
-        if (isInDeclaration(node, stack)) {
-          // this ID is getting declared
-        } else if (!isLocalAccess(node, stack)) {
-          if (!isQualified(node, parent)) {
-            // this unqualified remote ID is being referenced
-            return {
-              type: 'MemberExpression',
-              object:  { type: 'ThisExpression', ...loc(node) },
-              property: node,
-              computed: false,
-              optional: false,
-              ...loc(node)
-            } as es.MemberExpression;
-          }
-        }
+      if (node.type === 'Identifier' || node.type === 'Literal') {
+        maybeGenRefFunction(source, scope, logicStack, node, stack);
       }
     },
 
@@ -44,39 +22,65 @@ export function qualifyReferences(
       stack.pop();
     },
   });
-  return ret as acorn.Expression;
+  return ret;
 }
 
-function loc(node: es.Node) {
-  const anode = node as acorn.Node;
-  return {
-    range: [anode.start, anode.end],
-    loc: node.loc
-  };
-}
-
-function isInDeclaration(id: es.Identifier, ancestors: es.Node[]) {
-  if (ancestors.length <= 1) {
-    return false;
+function maybeGenRefFunction(
+  source: Source, scope: Logic, logicStack: Stack<Logic>,
+  node: es.Identifier | es.Literal, stack: es.Node[]
+) {
+  const exp = lookupRefExpression(stack);
+  if (!exp) {
+    return;
   }
-  const parent = ancestors[ancestors.length - 2];
-  if ([
-    'VariableDeclarator',
-    'ObjectExpression',
-    'FunctionExpression',
-    'ArrowFunctionExpression',
-    'CatchClause'
-  ].includes(parent.type)) {
-    return true;
+  console.log(JSON.stringify(exp, (key, val) => {
+    return ['start', 'end', 'loc', 'range', 'computed', 'optional', 'raw'].includes(key) ? undefined : val;
+  }));
+}
+
+function lookupRefExpression(stack: es.Node[]): es.MemberExpression | null {
+  const exp = lookupRefStart(stack);
+  const chain = exp ? getRefChain(exp) : [];
+  if (chain.length < 2 || chain[0] !== 'this') {
+    return null;
   }
-  return false;
+  console.log('lookupRefExpression', chain.join('.'));//tempdebug
+  return exp;
 }
 
-function isLocalAccess(id: es.Identifier, ancestor: es.Node[]) {
-  //TODO
-  return false;
+function lookupRefStart(stack: es.Node[]): es.MemberExpression | null {
+  let exp: es.MemberExpression | null = null;
+  let i = stack.length - 2;
+  while (i >= 0) {
+    const n = stack[i];
+    const p = (i > 0 ? stack[i - 1] : null);
+    if (n.type === 'MemberExpression' && p?.type !== 'MemberExpression') {
+      exp = n;
+      break;
+    }
+    i--;
+  }
+  return exp;
 }
 
-function isQualified(id: es.Identifier, parent: es.Node | null) {
-  return parent?.type === 'MemberExpression' && parent.property === id;
+function getRefChain(exp: es.MemberExpression): string[] {
+  const sb: string[] = [];
+  function f(e: es.MemberExpression) {
+    if (e.object.type === 'MemberExpression') {
+      f(e.object);
+    } else if (e.object.type === 'ThisExpression') {
+      sb.push('this');
+    } else {
+      //TODO: err?
+    }
+    if (e.property.type === 'Identifier') {
+      sb.push(e.property.name);
+    } else if (e.property.type === 'Literal' && typeof e.property.value === 'string') {
+      sb.push(e.property.value);
+    } else {
+      //TODO: err?
+    }
+  }
+  exp && f(exp);
+  return sb;
 }

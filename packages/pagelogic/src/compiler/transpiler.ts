@@ -5,7 +5,8 @@ import * as utils from './utils';
 import { Logic } from './logic';
 import { Source } from './types';
 import { Stack } from './utils';
-import { qualifyReferences } from './reference';
+import { genRefFunctions } from './reference';
+import { qualifyReferences } from './qualifier';
 
 export function transpile(source: Source) {
   if (source.logic && source.errors.length < 1) {
@@ -69,18 +70,28 @@ function genValue(
   key: string, val: html.Attribute | html.Text
 ) {
   const ref = val;
-  const refs = new Array<string>();
+  // const refs = new Array<string>();
   let exp = typeof val.value === 'string'
     ? utils.literal(val.value, val)
     : val.value as acorn.Expression;
-  exp = qualifyReferences(source, scope, stack, key, exp as es.Expression, refs);
+  exp = qualifyReferences(source, scope, stack, key, exp as es.Expression);
   const ret = utils.object(ref);
   ret.properties.push(utils.property(
     'fn', utils.fnExpression(exp, ref), ref)
   );
-  if (refs.length) {
-    const arr = utils.array(ref);
-    ret.properties.push(utils.property('refs', arr, ref));
+  if (![
+    'FunctionExpression',
+    'ArrowFunctionExpression'
+  ].includes(exp.type)) {
+    // not a function: create dependencies
+    const refFunctions = genRefFunctions(
+      source, scope, stack, exp as es.Expression
+    ) as acorn.Expression[];
+    if (refFunctions.length) {
+      const arr = utils.array(ref);
+      arr.elements.push(...refFunctions);
+      ret.properties.push(utils.property('refs', arr, ref));
+    }
   }
   return ret;
 }

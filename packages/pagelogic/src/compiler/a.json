@@ -1,0 +1,33 @@
+[
+  {
+    "type": "MemberExpression",
+    "object": {
+      "type": "MemberExpression",
+      "object": {
+        "type": "ThisExpression"
+      },
+      "property": {
+        "type": "Identifier",
+        "name": "a"
+      }
+    },
+    "property": {
+      "type": "Identifier",
+      "name": "x"
+    }
+  },
+  {
+    "type": "MemberExpression",
+    "object": {
+      "type": "ThisExpression"
+    },
+    "property": {
+      "type": "Identifier",
+      "name": "a"
+    }
+  },
+  {
+    "type": "Identifier",
+    "name": "a"
+  }
+]
