@@ -1,10 +1,11 @@
 import * as acorn from 'acorn';
+import * as es from 'estree';
 import * as html from './html';
 import * as utils from './utils';
-import * as walk from 'acorn-walk';
 import { Logic } from './logic';
 import { Source } from './types';
 import { Stack } from './utils';
+import { qualifyReferences } from './reference';
 
 export function transpile(source: Source) {
   if (source.logic && source.errors.length < 1) {
@@ -44,11 +45,19 @@ function genScope(source: Source, scope: Logic, stack: Stack<Logic>) {
 function genValues(source: Source, scope: Logic, stack: Stack<Logic>) {
   const ref = scope.ref;
   const ret = utils.object(ref);
+  // logic attributes
   for (const key of Reflect.ownKeys(scope.vv) as string[]) {
     ret.properties.push(utils.property(
       key, genValue(source, scope, stack, key, scope.vv[key]), ref)
     );
   }
+  // logic texts
+  scope.tt.forEach((text, index) => {
+    const key = 't$' + index;
+    ret.properties.push(utils.property(
+      key, genValue(source, scope, stack, key, text), ref)
+    );
+  });
   return ret;
 }
 
@@ -57,38 +66,21 @@ function genValues(source: Source, scope: Logic, stack: Stack<Logic>) {
  */
 function genValue(
   source: Source, scope: Logic, stack: Stack<Logic>,
-  key: string, val: html.Attribute
+  key: string, val: html.Attribute | html.Text
 ) {
   const ref = val;
-  const exp = typeof val.value === 'string'
+  const refs = new Array<string>();
+  let exp = typeof val.value === 'string'
     ? utils.literal(val.value, val)
     : val.value as acorn.Expression;
-  const refs = qualifyReferences(source, scope, stack, key, exp);
+  exp = qualifyReferences(source, scope, stack, key, exp as es.Expression, refs);
   const ret = utils.object(ref);
   ret.properties.push(utils.property(
     'fn', utils.fnExpression(exp, ref), ref)
   );
-  if (refs) {
+  if (refs.length) {
     const arr = utils.array(ref);
     ret.properties.push(utils.property('refs', arr, ref));
   }
   return ret;
-}
-
-// https://astexplorer.net
-function qualifyReferences(
-  source: Source, scope: Logic, stack: Stack<Logic>,
-  key: string, exp: acorn.Expression
-): string[] | null {
-  if (exp.type === 'Literal') {
-    return null;
-  }
-  const ret: string[] = [];
-  walk.fullAncestor(exp, (node, state, ancestors, type) => {
-    if (type === 'Identifier') {
-      const id = node as acorn.Identifier;
-      console.log('walk', 'Identifier', id.name);
-    }
-  });
-  return ret.length > 0 ? ret : null;
 }

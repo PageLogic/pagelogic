@@ -41,7 +41,7 @@ export function parseLogic(source: Source) {
 
   function needsScope(dom: html.Element) {
     const vv: { [key: string]: html.Attribute } = {};
-    if (AUTO_NAMES[dom.name]) {
+    if (AUTO_NAMES[dom.name] && !dom.getAttributeNode(SCOPE_NAME_ATTR)) {
       vv[valueName(SCOPE_NAME_ATTR)] = new html.Attribute(
         dom.doc, dom, SCOPE_NAME_ATTR, AUTO_NAMES[dom.name], dom.loc
       );
