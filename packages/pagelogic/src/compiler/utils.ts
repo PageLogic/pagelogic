@@ -24,6 +24,32 @@ export class Stack<T> extends Array<T> {
   }
 }
 
+export function regexMap(
+  re: RegExp, s: string, cb: (match: RegExpExecArray) => string
+): string {
+  const _re = re.flags.indexOf('g') >= 0 ? re : new RegExp(re, 'g' + re.flags);
+  const sb = new Array<string>();
+  let i = 0;
+  for (let match; (match = _re.exec(s)) !== null; i = match.index + match[0].length) {
+    match.index > i && sb.push(s.substring(i, match.index));
+    sb.push(cb(match));
+  }
+  s.length > i && sb.push(s.substring(i));
+  return sb.join('');
+}
+
+export function hyphenToCamel(s: string) {
+  return regexMap(/([-.].)/g, s, match =>
+    s.substring(match.index + 1, match.index + 2).toUpperCase()
+  );
+}
+
+export function camelToHyphen(s: string) {
+  return regexMap(/([0-9a-z][A-Z])/g, s, match =>
+    s.charAt(match.index) + '-' + s.charAt(match.index + 1).toLowerCase()
+  );
+}
+
 function loc(ref: html.Node) {
   return {
     start: ref.loc.i1,

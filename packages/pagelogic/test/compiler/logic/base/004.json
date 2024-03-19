@@ -2,7 +2,7 @@
   "id": 0,
   "ref": true,
   "vv": {
-    ":scope-name": "page"
+    "$name": "page"
   },
   "tt": [],
   "cc": [
@@ -10,7 +10,7 @@
       "id": 1,
       "ref": true,
       "vv": {
-        ":scope-name": "head"
+        "$name": "head"
       },
       "tt": [],
       "cc": []
@@ -19,7 +19,7 @@
       "id": 2,
       "ref": true,
       "vv": {
-        ":scope-name": "body"
+        "$name": "body"
       },
       "tt": [],
       "cc": []

@@ -2,9 +2,9 @@
   "id": 0,
   "ref": true,
   "vv": {
-    ":scope-name": true,
-    ":x": true,
-    "y": true
+    "$name": true,
+    "x": true,
+    "attr$y": true
   },
   "tt": [],
   "cc": []

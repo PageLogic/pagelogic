@@ -1,15 +1,14 @@
 import * as html from './html';
 import { Source } from './types';
 
-export const LOGIC_ATTR_PREFIX = ':';
-export const SCOPE_ATTR_PREFIX = LOGIC_ATTR_PREFIX + 'scope-';
-export const CLASS_ATTR_PREFIX = LOGIC_ATTR_PREFIX + 'class-';
-export const STYLE_ATTR_PREFIX = LOGIC_ATTR_PREFIX + 'style-';
-export const HANDLE_ATTR_PREFIX = LOGIC_ATTR_PREFIX + 'handle-';
-export const SCOPE_NAME_ATTR = SCOPE_ATTR_PREFIX + 'name';
-export const ON_ATTR_PREFIX = LOGIC_ATTR_PREFIX + 'on-';
+export const LOGIC_ATTR_MARKER = ':';
+export const LOGIC_VALUE_MARKER = '$';
+export const DOM_ID_ATTR = 'data-pagelogic';
 
-export const DOM_SCOPE_ID_ATTR = 'data-pagelogic';
+export const SCOPE_NAME_ATTR = '::name';
+
+export const ATTR_VALUE_PREFIX = 'attr$';
+
 const AUTO_NAMES: { [key: string]: string } = {
   'HTML': 'page',
   'HEAD': 'head',
@@ -30,17 +29,27 @@ export interface Logic {
 export function parseLogic(source: Source) {
   let nextId = 0;
 
+  function valueName(attrName: string) {
+    let ret = attrName;
+    if (!ret.startsWith(LOGIC_ATTR_MARKER)) {
+      ret = ATTR_VALUE_PREFIX + ret;
+    } else {
+      ret = ret.substring(1).replace(':', '$');
+    }
+    return ret;
+  }
+
   function needsScope(dom: html.Element) {
     const vv: { [key: string]: string | html.Attribute } = {};
     if (AUTO_NAMES[dom.name]) {
-      vv[SCOPE_NAME_ATTR] = AUTO_NAMES[dom.name];
+      vv[valueName(SCOPE_NAME_ATTR)] = AUTO_NAMES[dom.name];
     }
     dom.attributes.forEach(a => {
       if (
-        a.name.startsWith(LOGIC_ATTR_PREFIX) ||
+        a.name.startsWith(LOGIC_ATTR_MARKER) ||
         typeof a.value !== 'string'
       ) {
-        vv[a.name] = a;
+        vv[valueName(a.name)] = a;
       }
     });
     return Reflect.ownKeys(vv).length ? vv : null;
@@ -56,7 +65,7 @@ export function parseLogic(source: Source) {
         tt: [],
         cc: [],
       };
-      dom.setAttribute(DOM_SCOPE_ID_ATTR, `${s.id}`);
+      dom.setAttribute(DOM_ID_ATTR, `${s.id}`);
       scope && scope.cc.push(s);
       scope = s;
     }

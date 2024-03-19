@@ -2,9 +2,9 @@
   "id": 0,
   "ref": true,
   "vv": {
-    ":scope-name": "page",
-    ":x": true,
-    "y": true
+    "$name": "page",
+    "x": true,
+    "attr$y": true
   },
   "tt": [true],
   "cc": []
