@@ -2,7 +2,7 @@ import { Context, Props, RefFunction, Scope, Value, ValueFunction } from './core
 
 export interface BootScope {
   id: number;
-  values: { [key: string]: BootValue };
+  values: { [key: string]: BootValue | string };
   name?: string;
   isolate?: boolean;
   parent?: BootScope;
@@ -23,11 +23,7 @@ export interface BootFactory {
     isolate: boolean
   ): Scope;
 
-  newValue(
-    scope: Scope,
-    fn: ValueFunction,
-    refs?: RefFunction[]
-  ): Value;
+  newValue(fn: ValueFunction, refs?: RefFunction[]): Value;
 }
 
 export interface BootRuntime {
@@ -40,13 +36,11 @@ export function boot(desc: BootScope, factory: BootFactory): BootRuntime {
 
   function scan(desc: BootScope, p: Scope | null): Scope {
     const props: Props = {};
-    const ret = factory.newScope(context, props, p, null, desc.isolate || false);
     (Reflect.ownKeys(desc.values) as string[]).forEach(key => {
       const d = desc.values[key];
-      const v = factory.newValue(ret, d.fn, d.refs);
-      ret.$object[key] = v;
-      props[key] = v;
+      props[key] = typeof d === 'string' ? d : factory.newValue(d.fn, d.refs);
     });
+    const ret = factory.newScope(context, props, p, null, desc.isolate || false);
     desc.children?.forEach(child => {
       scan(child, ret);
     });

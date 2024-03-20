@@ -34,11 +34,24 @@ function maybeGenRefFunction(
   if (!chain) {
     return;
   }
-  console.log('lookupRefExpression', chain.join('.'));//tempdebug
-  for (let i = 1; i < chain.length; i++) {
-
-  }
+  //TODO
 }
+
+// =============================================================================
+// Logic reference path
+// =============================================================================
+
+function lookupScope(
+  chain: string[], scope: Logic, logicStack: Stack<Logic>
+): Logic | null {
+  console.log('lookupRefExpression', chain.join('.'));//tempdebug
+  //TODO
+  return null;
+}
+
+// =============================================================================
+// AST reference path
+// =============================================================================
 
 function lookupRefChain(stack: es.Node[]): string[] | null {
   const exp = lookupRefStart(stack);

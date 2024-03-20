@@ -81,6 +81,7 @@ export interface Scope extends Props {
   $props: Props;
   $object: Props;
   $scope: Scope;
+  $name?: string;
   $parent: Scope | null;
   $children: Scope[];
   $isolate: boolean;
@@ -159,6 +160,7 @@ export function newScope(
 
   if (parent) {
     parent.$children.push(ret);
+    props.$name && (parent.$object[props.$name] = ret);
   }
 
   return ret;

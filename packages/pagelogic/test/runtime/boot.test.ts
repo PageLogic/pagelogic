@@ -10,10 +10,8 @@ const factory = new class implements BootFactory {
   newScope(ctx: Context, props: Props, parent: Scope | null, proto: object | null, isolate: boolean): Scope {
     return newScope(ctx, props, parent, proto, isolate);
   }
-  newValue(scope: Scope, fn: ValueFunction, refs?: RefFunction[] | undefined): Value {
-    const ret = new Value(fn, refs);
-    ret.scope = scope;
-    return ret;
+  newValue(fn: ValueFunction, refs?: RefFunction[] | undefined): Value {
+    return new Value(fn, refs);
   }
 };
 
@@ -68,6 +66,28 @@ describe('runtime: boot', () => {
     assert.isFalse(Reflect.ownKeys(scope1.$object).includes('y'));
     assert.equal(scope1.y, 4);
     assert.equal(scope0.y, 4);
+  });
+
+  it('should support scope name', () => {
+    const { root } = boot({
+      id: 0,
+      values: {},
+      children: [
+        {
+          id: 1,
+          values: {
+            $name: 'body',
+            y: { fn: function() { return 20; }},
+          }
+        }
+      ]
+    }, factory);
+    const scope0 = root;
+    const scope1 = root.$children[0];
+
+    assert.equal(scope1.$name, 'body');
+    assert.equal(scope0.body, scope1);
+    assert.equal(scope0.body.y, 20);
   });
 
 });

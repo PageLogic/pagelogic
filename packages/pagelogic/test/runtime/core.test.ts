@@ -211,4 +211,18 @@ describe('runtime: core', () => {
     assert.equal(scope1.y, 20);
   });
 
+  it('should support scope name', () => {
+    const ctx = new Context();
+    const scope0 = newScope(ctx, {}, null, null);
+    const scope1 = newScope(ctx, {
+      $name: 'body',
+      y: 20,
+    }, scope0, null, true);
+    ctx.refresh(scope0);
+
+    assert.equal(scope1.$name, 'body');
+    assert.equal(scope0.body, scope1);
+    assert.equal(scope0.body.y, 20);
+  });
+
 });
