@@ -1,0 +1,3 @@
+<html :x=${1} x="no">
+  <head :y=${x + 1}></head>
+</html>

@@ -1,4 +1,5 @@
 import * as acorn from 'acorn';
+import * as es from 'estree';
 import * as html from './html';
 
 export function normalizeText(s?: string): string | undefined {
@@ -126,5 +127,39 @@ export function fnExpression(exp: acorn.Literal | acorn.Expression, ref: html.No
       ...loc(ref),
     },
     ...loc(ref),
+  };
+}
+
+export function esFunction(exp: es.Expression): es.FunctionExpression {
+  return {
+    type: 'FunctionExpression',
+    id: null,
+    params: [],
+    body: {
+      type: 'BlockStatement',
+      body: [{
+        type: 'ReturnStatement',
+        argument: exp
+      }]
+    }
+  };
+}
+
+export function esMember(obj: es.Expression, key: es.Expression): es.MemberExpression {
+  return {
+    type: 'MemberExpression',
+    object: obj,
+    property: key,
+    computed: false,
+    optional: false
+  };
+}
+
+export function esCall(callee: es.Expression, args: es.Expression[]): es.CallExpression {
+  return {
+    type: 'CallExpression',
+    callee,
+    arguments: args,
+    optional: false
   };
 }
