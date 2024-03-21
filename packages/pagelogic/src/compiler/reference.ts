@@ -7,7 +7,7 @@ import { generate } from 'escodegen';
 import { Attribute } from './html';
 
 export function genRefFunctions(
-  source: Source, scope: Logic, logicStack: utils.Stack<Logic>,
+  source: Source, scope: Logic,
   exp: es.Expression
 ): es.FunctionExpression[] {
   const refs = new Map<string, es.FunctionExpression>();
@@ -16,7 +16,7 @@ export function genRefFunctions(
     enter: (node) => {
       stack.push(node);
       if (node.type === 'Identifier' || node.type === 'Literal') {
-        maybeGenRefFunction(source, scope, logicStack, node, stack, refs);
+        maybeGenRefFunction(source, scope, node, stack, refs);
       }
     },
 
@@ -28,7 +28,7 @@ export function genRefFunctions(
 }
 
 function maybeGenRefFunction(
-  source: Source, scope: Logic, logicStack: utils.Stack<Logic>,
+  source: Source, scope: Logic,
   node: es.Identifier | es.Literal, stack: es.Node[],
   refs: Map<string, es.FunctionExpression>
 ) {
@@ -37,7 +37,7 @@ function maybeGenRefFunction(
     return;
   }
   chain.shift(); // remove initial 'this'
-  const refExp = getRefExpression(chain, scope, logicStack);
+  const refExp = getRefExpression(chain, scope);
   if (!refExp) {
     return;
   }
@@ -50,10 +50,10 @@ function maybeGenRefFunction(
 // =============================================================================
 
 function getRefExpression(
-  chain: string[], scope: Logic, logicStack: utils.Stack<Logic>
+  chain: string[], scope: Logic
 ): es.CallExpression | null {
 
-  function getChildScope(scope: Logic, key: string) {
+  function lookup(scope: Logic, key: string): Logic | Attribute | null {
     for (const child of scope.cc) {
       const a = child.vv[SCOPE_NAME_KEY];
       const n = typeof a?.value === 'string' ? a.value : null;
@@ -61,49 +61,38 @@ function getRefExpression(
         return child;
       }
     }
+    for (const name of Reflect.ownKeys(scope.vv) as string[]) {
+      if (name === key) {
+        return scope.vv[name];
+      }
+    }
+    if (scope.parent) {
+      return lookup(scope.parent, key);
+    }
     return null;
   }
-
-  // function lookup(scope: Logic, key: string): Logic | Attribute | null {
-  //   for (const child of scope.cc) {
-  //     const a = child.vv[SCOPE_NAME_KEY];
-  //     const n = typeof a?.value === 'string' ? a.value : null;
-  //     if (n === key) {
-  //       return child;
-  //     }
-  //   }
-  //   for (const name of Reflect.ownKeys(scope.vv) as string[]) {
-  //     if (name === key) {
-  //       return scope.vv[name];
-  //     }
-  //   }
-
-  // }
 
   let ret: es.Expression = {
     type: 'ThisExpression',
   };
 
-  //FIXME: scope visibility!
   for (const i in chain) {
-    const k = chain[i];
-    const child = getChildScope(scope, k);
-    if (child) {
-      scope = child;
-      ret = utils.esMember(ret, { type: 'Identifier', name: k });
+    const key = chain[i];
+    const item = lookup(scope, key);
+    if (item instanceof Logic) {
+      scope = item;
+      ret = utils.esMember(ret, { type: 'Identifier', name: key });
       continue;
     }
-    const attr = scope.vv[k];
-    if (!attr) {
-      //TODO error?
-      break;
+    if (item) {
+      ret = utils.esMember(ret, { type: 'Identifier', name: '$value' });
+      ret = utils.esCall(ret, [{ type: 'Literal', value: key }]);
+      return ret;
     }
-    // found target value
-    ret = utils.esMember(ret, { type: 'Identifier', name: '$value' });
-    ret = utils.esCall(ret, [{ type: 'Literal', value: k }]);
-    return ret;
+    break;
   }
 
+  //TODO: error: reference not found
   return null;
 }
 
@@ -118,7 +107,9 @@ function lookupRefChain(stack: es.Node[]): string[] | null {
     return null;
   }
   // console.log(JSON.stringify(exp, (key, val) => {
-  //   return ['start', 'end', 'loc', 'range', 'computed', 'optional', 'raw'].includes(key) ? undefined : val;
+  //   return [
+  //     'start', 'end', 'loc', 'range', 'computed', 'optional', 'raw'
+  //   ].includes(key) ? undefined : val;
   // }));
   return chain;
 }

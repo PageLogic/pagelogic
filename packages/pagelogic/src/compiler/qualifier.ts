@@ -3,17 +3,15 @@ import * as acorn from 'acorn';
 import * as es from 'estree';
 import { Source } from './types';
 import { Logic } from './logic';
-import { Stack } from './utils';
 
 // https://astexplorer.net
 export function qualifyReferences(
-  source: Source, scope: Logic, logicStack: Stack<Logic>,
+  source: Source, scope: Logic,
   key: string, exp: es.Expression
 ): acorn.Expression {
   if (exp.type === 'Literal') {
     return exp as acorn.Expression;
   }
-  // const toQualify = new Array<es.Node[]>();
   const stack: es.Node[] = [];
   // https://github.com/estools/estraverse
   const ret = estraverse.replace(exp, {
