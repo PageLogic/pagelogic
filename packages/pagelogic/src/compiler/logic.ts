@@ -16,7 +16,19 @@ const AUTO_NAMES: { [key: string]: string } = {
   'BODY': 'body'
 };
 
-export interface Logic {
+// export interface Logic {
+//   id: number;
+//   ref: html.Element;
+//   // values
+//   vv: { [key: string]: html.Attribute };
+//   // texts
+//   tt: html.Text[];
+//   // children
+//   cc: Logic[];
+// }
+
+export class Logic {
+  parent: Logic | null;
   id: number;
   ref: html.Element;
   // values
@@ -25,6 +37,30 @@ export interface Logic {
   tt: html.Text[];
   // children
   cc: Logic[];
+
+  constructor(
+    parent: Logic | null,
+    id: number,
+    ref: html.Element,
+    vv: { [key: string]: html.Attribute } | null
+  ) {
+    this.parent = parent;
+    this.id = id;
+    this.ref = ref;
+    this.vv = vv || {};
+    this.tt = [];
+    this.cc = [];
+  }
+
+  toJSON() {
+    return {
+      id: this.id,
+      ref: this.ref,
+      vv: this.vv,
+      tt: this.tt,
+      cc: this.cc
+    };
+  }
 }
 
 export function parseLogic(source: Source) {
@@ -61,13 +97,7 @@ export function parseLogic(source: Source) {
   function scan(dom: html.Element, scope?: Logic): Logic | undefined {
     const vv = needsScope(dom);
     if (!scope || vv) {
-      const s = {
-        id: nextId++,
-        ref: dom,
-        vv: vv ?? {},
-        tt: [],
-        cc: [],
-      };
+      const s = new Logic(scope || null, nextId++, dom, vv);
       dom.setAttribute(DOM_ID_ATTR, `${s.id}`);
       scope && scope.cc.push(s);
       scope = s;
