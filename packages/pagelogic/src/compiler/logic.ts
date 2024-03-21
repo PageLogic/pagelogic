@@ -6,6 +6,7 @@ export const LOGIC_VALUE_MARKER = '$';
 export const DOM_ID_ATTR = 'data-pagelogic';
 
 export const SCOPE_NAME_ATTR = '::name';
+export const SCOPE_NAME_KEY = '$name';
 
 export const ATTR_VALUE_PREFIX = 'attr$';
 

@@ -6,9 +6,7 @@
     attr$y: { fn: function () { return 1; } },
     t$0: {
       fn: function () { return this.x; },
-      refs: [
-        function() { return this.$value('x'); }
-      ]
+      refs: [function () { return this.$value('x'); }]
     }
   }
 }

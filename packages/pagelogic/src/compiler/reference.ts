@@ -1,8 +1,9 @@
 import estraverse from 'estraverse';
 import * as es from 'estree';
-import { Logic } from './logic';
+import { Logic, SCOPE_NAME_KEY } from './logic';
 import { Source } from './types';
 import { Stack } from './utils';
+import { generate } from 'escodegen';
 
 export function genRefFunctions(
   source: Source, scope: Logic, logicStack: Stack<Logic>,
@@ -31,21 +32,89 @@ function maybeGenRefFunction(
   refs: Map<string, es.FunctionExpression>
 ) {
   const chain = lookupRefChain(stack);
-  if (!chain) {
+  if (!chain || chain.length < 2 || chain[0] !== 'this') {
     return;
   }
-  //TODO
+  chain.shift(); // remove initial 'this'
+  const refExp = getRefExpression(chain, scope, logicStack);
+  if (!refExp) {
+    return;
+  }
+  const refFn: es.FunctionExpression = {
+    type: 'FunctionExpression',
+    id: null,
+    params: [],
+    body: {
+      type: 'BlockStatement',
+      body: [{
+        type: 'ReturnStatement',
+        argument: refExp
+      }]
+    }
+  };
+  refs.set(chain.join('.'), refFn);
 }
 
 // =============================================================================
 // Logic reference path
 // =============================================================================
 
-function lookupScope(
+function getRefExpression(
   chain: string[], scope: Logic, logicStack: Stack<Logic>
-): Logic | null {
-  console.log('lookupRefExpression', chain.join('.'));//tempdebug
-  //TODO
+): es.CallExpression | null {
+
+  function getChildByName(key: string, scope: Logic) {
+    for (const child of scope.cc) {
+      const a = child.vv[SCOPE_NAME_KEY];
+      const n = typeof a?.value === 'string' ? a.value : null;
+      if (n === key) {
+        return child;
+      }
+    }
+    return null;
+  }
+
+  let ret: es.Expression = {
+    type: 'ThisExpression',
+  };
+
+  //FIXME: scope visibility!
+  for (const i in chain) {
+    const k = chain[i];
+    const child = getChildByName(k, scope);
+    if (child) {
+      scope = child;
+      ret = {
+        type: 'MemberExpression',
+        object: ret,
+        property: { type: 'Identifier', name: k },
+        computed: false,
+        optional: false
+      };
+      continue;
+    }
+    const attr = scope.vv[k];
+    if (!attr) {
+      //TODO error?
+      break;
+    }
+    // found target value
+    ret = {
+      type: 'MemberExpression',
+      object: ret,
+      property: { type: 'Identifier', name: '$value' },
+      computed: false,
+      optional: false
+    };
+    ret = {
+      type: 'CallExpression',
+      callee: ret,
+      arguments: [{ type: 'Literal', value: k }],
+      optional: false
+    };
+    return ret;
+  }
+
   return null;
 }
 
