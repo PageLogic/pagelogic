@@ -3,7 +3,6 @@ import * as es from 'estree';
 import { Logic, SCOPE_NAME_KEY } from './logic';
 import { Source } from './types';
 import * as utils from './utils';
-import { generate } from 'escodegen';
 import { Attribute } from './html';
 
 export function genRefFunctions(
@@ -66,6 +65,11 @@ function getRefExpression(
         return scope.vv[name];
       }
     }
+    const a = scope.vv[SCOPE_NAME_KEY];
+    const n = typeof a?.value === 'string' ? a.value : null;
+    if (n === key) {
+      return scope;
+    }
     if (scope.parent) {
       return lookup(scope.parent, key);
     }
@@ -106,11 +110,6 @@ function lookupRefChain(stack: es.Node[]): string[] | null {
   if (!chain || chain.length < 2 || chain[0] !== 'this') {
     return null;
   }
-  // console.log(JSON.stringify(exp, (key, val) => {
-  //   return [
-  //     'start', 'end', 'loc', 'range', 'computed', 'optional', 'raw'
-  //   ].includes(key) ? undefined : val;
-  // }));
   return chain;
 }
 
