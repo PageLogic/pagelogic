@@ -1,4 +1,4 @@
-{
+({
   id: 0,
   values: {
     $name: { fn: function () { return 'page'; } },
@@ -14,4 +14,4 @@
       }
     }
   }]
-}
+})

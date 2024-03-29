@@ -56,7 +56,7 @@ describe('compiler: transpiler', () => {
               const actual = generate(source.ast);
 
               assert.equal(
-                utils.normalizeSpace(actual)?.trim(),
+                '(' + utils.normalizeSpace(actual)?.trim() + ')',
                 utils.normalizeSpace(expected)?.trim()
               );
             });

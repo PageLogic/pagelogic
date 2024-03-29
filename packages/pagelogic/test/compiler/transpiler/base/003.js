@@ -1,4 +1,4 @@
-{
+({
   id: 0,
   values: {
     $name: { fn: function () { return 'page'; } },
@@ -9,4 +9,4 @@
       refs: [function () { return this.$value('x'); }]
     }
   }
-}
+})
