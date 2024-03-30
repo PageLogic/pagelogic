@@ -74,18 +74,44 @@ function isInDeclaration(id: es.Identifier, stack: es.Node[]) {
   ) {
     return parent.params.includes(id);
   }
+  if (
+    parent.type === 'AssignmentPattern'
+  ) {
+    return parent.left === id;
+  }
   return false;
 }
 
 function isLocalAccess(id: es.Identifier, stack: es.Node[]) {
-  // for (let i = stack.length - 2; i > 0; i--) {
-  //   const p = stack[i];
-  //   if (
-  //     p.type === 'FunctionDeclaration' ||
-  //     p.type === 'FunctionExpression' ||
-  //     p.type === 'ArrowFunctionExpression'
-  //   ) {
-  //   }
-  // }
+  for (let i = stack.length - 2; i >= 0; i--) {
+    const parent = stack[i];
+    if (
+      parent.type === 'FunctionDeclaration' ||
+      parent.type === 'FunctionExpression' ||
+      parent.type === 'ArrowFunctionExpression'
+    ) {
+      if (isInParams(id.name, parent.params)) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+function isInParams(name: string, params: es.Pattern[]) {
+  for (const p of params) {
+    switch (p.type) {
+    case 'Identifier':
+      if (p.name === name) {
+        return true;
+      }
+      break;
+    case 'AssignmentPattern':
+      if (p.left.type === 'Identifier' && p.left.name === name) {
+        return true;
+      }
+      break;
+    }
+  }
   return false;
 }
