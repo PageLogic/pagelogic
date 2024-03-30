@@ -1,6 +1,6 @@
 import estraverse from 'estraverse';
 import * as es from 'estree';
-import { SCOPE_NAME_KEY } from '../runtime/boot';
+import * as rt from '../runtime/boot';
 import { Attribute } from './html';
 import { Logic } from './logic';
 import { Source } from './types';
@@ -54,8 +54,11 @@ function getRefExpression(
 ): es.CallExpression | null {
 
   function lookup(scope: Logic, key: string): Logic | Attribute | null {
+    if (key === rt.SCOPE_PARENT_KEY) {
+      return scope.parent;
+    }
     for (const child of scope.cc) {
-      const a = child.vv[SCOPE_NAME_KEY];
+      const a = child.vv[rt.SCOPE_NAME_KEY];
       const n = typeof a?.value === 'string' ? a.value : null;
       if (n === key) {
         return child;
@@ -66,7 +69,7 @@ function getRefExpression(
         return scope.vv[name];
       }
     }
-    const a = scope.vv[SCOPE_NAME_KEY];
+    const a = scope.vv[rt.SCOPE_NAME_KEY];
     const n = typeof a?.value === 'string' ? a.value : null;
     if (n === key) {
       return scope;

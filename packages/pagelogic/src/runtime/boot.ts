@@ -6,6 +6,7 @@ export const DOM_ID_ATTR = 'data-pagelogic';
 
 export const SCOPE_NAME_ATTR = '::name';
 export const SCOPE_NAME_KEY = '$name';
+export const SCOPE_PARENT_KEY = '$parent';
 export const ATTR_VALUE_PREFIX = 'attr$';
 
 export interface BootScope {

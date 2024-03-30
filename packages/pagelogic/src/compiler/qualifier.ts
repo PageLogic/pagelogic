@@ -1,6 +1,7 @@
 import * as acorn from 'acorn';
 import estraverse from 'estraverse';
 import * as es from 'estree';
+import * as rt from '../runtime/boot';
 import { Logic } from './logic';
 import { Source } from './types';
 
@@ -23,9 +24,20 @@ export function qualifyReferences(
         } else if (!isLocalAccess(node, stack)) {
           if (!isQualified(node, parent)) {
             // unqualified remote ID reference: prefix with `this.`
+            let object: unknown = { type: 'ThisExpression', ...loc(node) };
+            if (node.name === key && !inFunctionBody(stack)) {
+              object = {
+                type: 'MemberExpression',
+                object:  { type: 'ThisExpression', ...loc(node) },
+                property: { type: 'Identifier', name: rt.SCOPE_PARENT_KEY, ...loc(node) },
+                computed: false,
+                optional: false,
+                ...loc(node)
+              };
+            }
             return {
               type: 'MemberExpression',
-              object:  { type: 'ThisExpression', ...loc(node) },
+              object,
               property: node,
               computed: false,
               optional: false,
@@ -118,6 +130,19 @@ function isFunctionParam(name: string, params: es.Pattern[]) {
         return true;
       }
       break;
+    }
+  }
+  return false;
+}
+
+function inFunctionBody(stack: es.Node[]) {
+  for (let i = stack.length - 2; i >= 0; i--) {
+    if ([
+      'FunctionDeclaration',
+      'FunctionExpression',
+      'ArrowFunctionExpression'
+    ].includes(stack[i].type)) {
+      return true;
     }
   }
   return false;

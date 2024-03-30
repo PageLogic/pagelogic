@@ -68,6 +68,20 @@ describe('runtime: core', () => {
     assert.equal(scope1.x, 3);
   });
 
+  it('should reference outer namesake value', () => {
+    const ctx = new Context();
+    const scope0 = newScope(ctx, {
+      x: 1
+    }, null, null);
+    const scope1 = newScope(ctx, {
+      // @ts-expect-error object is possibly null
+      x: new Value(function() { return this.$parent.x + 1; })
+    }, scope0, null);
+    ctx.refresh(scope0);
+
+    assert.equal(scope1.x, 2);
+  });
+
   it('should evaluate in the right scope', () => {
     const ctx = new Context();
     const scope0 = newScope(ctx, {

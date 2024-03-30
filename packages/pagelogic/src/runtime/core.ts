@@ -3,6 +3,8 @@
 // Context
 // =============================================================================
 
+import { SCOPE_PARENT_KEY } from './boot';
+
 export class Context {
   cycle = 0;
   refreshLevel = 0;
@@ -35,7 +37,7 @@ export class Context {
         try {
           o = ref.apply(scope);
           if (o === v) {
-            o = scope.$parent ? ref.apply(scope.$parent) : undefined;
+            o = scope[SCOPE_PARENT_KEY] ? ref.apply(scope[SCOPE_PARENT_KEY]) : undefined;
           }
         } catch (ignored) { /* nop */ }
         if (o) {
@@ -105,8 +107,8 @@ export function newScope(
           return v.get();
         }
         return v;
-      } else if (target.$parent && !target.$isolate) {
-        return (target.$parent as Scope)[key];
+      } else if (target[SCOPE_PARENT_KEY] && !target.$isolate) {
+        return (target[SCOPE_PARENT_KEY] as Scope)[key];
       }
       return undefined;
     },
@@ -119,9 +121,9 @@ export function newScope(
           return true;
         }
         return false;
-      } else if (target.$parent && !target.$isolate) {
+      } else if (target[SCOPE_PARENT_KEY] && !target.$isolate) {
         try {
-          (target.$parent as Scope)[key] = val;
+          (target[SCOPE_PARENT_KEY] as Scope)[key] = val;
           return true;
         } catch (err) {
           return false;
@@ -144,7 +146,7 @@ export function newScope(
   obj.$props = props;
   obj.$object = obj;
   obj.$scope = ret;
-  obj.$parent = parent;
+  obj[SCOPE_PARENT_KEY] = parent;
   obj.$children = [];
   obj.$isolate = isolate;
 
@@ -153,7 +155,7 @@ export function newScope(
     let value: unknown = undefined;
     while (scope && !value) {
       value = scope.$object[key];
-      scope = scope.$parent;
+      scope = scope[SCOPE_PARENT_KEY];
     }
     return value instanceof Value ? value : undefined;
   };
