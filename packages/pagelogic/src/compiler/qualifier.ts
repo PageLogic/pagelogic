@@ -22,7 +22,7 @@ export function qualifyReferences(
           // this ID is getting declared
         } else if (!isLocalAccess(node, stack)) {
           if (!isQualified(node, parent)) {
-            // this unqualified remote ID is being referenced
+            // unqualified remote ID reference: prefix with `this.`
             return {
               type: 'MemberExpression',
               object:  { type: 'ThisExpression', ...loc(node) },
@@ -51,28 +51,41 @@ function loc(node: es.Node) {
   };
 }
 
-function isInDeclaration(id: es.Identifier, ancestors: es.Node[]) {
-  if (ancestors.length <= 1) {
+function isQualified(id: es.Identifier, parent: es.Node | null) {
+  return parent?.type === 'MemberExpression' && parent.property === id;
+}
+
+function isInDeclaration(id: es.Identifier, stack: es.Node[]) {
+  if (stack.length < 2) {
     return false;
   }
-  const parent = ancestors[ancestors.length - 2];
+  const parent = stack[stack.length - 2];
   if ([
     'VariableDeclarator',
-    'ObjectExpression',
-    'FunctionExpression',
-    'ArrowFunctionExpression',
+    'Property',
     'CatchClause'
   ].includes(parent.type)) {
     return true;
   }
+  if (
+    parent.type === 'FunctionDeclaration' ||
+    parent.type === 'FunctionExpression' ||
+    parent.type === 'ArrowFunctionExpression'
+  ) {
+    return parent.params.includes(id);
+  }
   return false;
 }
 
-function isLocalAccess(id: es.Identifier, ancestor: es.Node[]) {
-  //TODO
+function isLocalAccess(id: es.Identifier, stack: es.Node[]) {
+  // for (let i = stack.length - 2; i > 0; i--) {
+  //   const p = stack[i];
+  //   if (
+  //     p.type === 'FunctionDeclaration' ||
+  //     p.type === 'FunctionExpression' ||
+  //     p.type === 'ArrowFunctionExpression'
+  //   ) {
+  //   }
+  // }
   return false;
-}
-
-function isQualified(id: es.Identifier, parent: es.Node | null) {
-  return parent?.type === 'MemberExpression' && parent.property === id;
 }
