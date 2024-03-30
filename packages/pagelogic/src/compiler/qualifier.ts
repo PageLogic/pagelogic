@@ -90,7 +90,14 @@ function isLocalAccess(id: es.Identifier, stack: es.Node[]) {
       parent.type === 'FunctionExpression' ||
       parent.type === 'ArrowFunctionExpression'
     ) {
-      if (isInParams(id.name, parent.params)) {
+      if (isInFunctionParams(id.name, parent.params)) {
+        return true;
+      }
+    }
+    if (
+      parent.type === 'BlockStatement'
+    ) {
+      if (isInBlockDeclarations(id.name, parent.body)) {
         return true;
       }
     }
@@ -98,7 +105,7 @@ function isLocalAccess(id: es.Identifier, stack: es.Node[]) {
   return false;
 }
 
-function isInParams(name: string, params: es.Pattern[]) {
+function isInFunctionParams(name: string, params: es.Pattern[]) {
   for (const p of params) {
     switch (p.type) {
     case 'Identifier':
@@ -111,6 +118,21 @@ function isInParams(name: string, params: es.Pattern[]) {
         return true;
       }
       break;
+    }
+  }
+  return false;
+}
+
+function isInBlockDeclarations(name: string, body: es.Statement[]) {
+  for (const s of body) {
+    if (s.type === 'VariableDeclaration') {
+      for (const d of s.declarations) {
+        if (d.id.type === 'Identifier') {
+          if (d.id.name === name) {
+            return true;
+          }
+        }
+      }
     }
   }
   return false;
