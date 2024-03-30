@@ -1,8 +1,8 @@
-import estraverse from 'estraverse';
 import * as acorn from 'acorn';
+import estraverse from 'estraverse';
 import * as es from 'estree';
-import { Source } from './types';
 import { Logic } from './logic';
+import { Source } from './types';
 
 // https://astexplorer.net
 export function qualifyReferences(
@@ -90,14 +90,14 @@ function isLocalAccess(id: es.Identifier, stack: es.Node[]) {
       parent.type === 'FunctionExpression' ||
       parent.type === 'ArrowFunctionExpression'
     ) {
-      if (isInFunctionParams(id.name, parent.params)) {
+      if (isFunctionParam(id.name, parent.params)) {
         return true;
       }
     }
     if (
       parent.type === 'BlockStatement'
     ) {
-      if (isInBlockDeclarations(id.name, parent.body)) {
+      if (isDeclaredInBlock(id.name, parent.body)) {
         return true;
       }
     }
@@ -105,7 +105,7 @@ function isLocalAccess(id: es.Identifier, stack: es.Node[]) {
   return false;
 }
 
-function isInFunctionParams(name: string, params: es.Pattern[]) {
+function isFunctionParam(name: string, params: es.Pattern[]) {
   for (const p of params) {
     switch (p.type) {
     case 'Identifier':
@@ -123,7 +123,7 @@ function isInFunctionParams(name: string, params: es.Pattern[]) {
   return false;
 }
 
-function isInBlockDeclarations(name: string, body: es.Statement[]) {
+function isDeclaredInBlock(name: string, body: es.Statement[]) {
   for (const s of body) {
     if (s.type === 'VariableDeclaration') {
       for (const d of s.declarations) {

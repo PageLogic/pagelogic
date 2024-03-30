@@ -1,7 +1,7 @@
 import { assert } from 'chai';
 import { describe } from 'mocha';
+import { BootFactory, boot } from '../../src/runtime/boot';
 import { Context, Props, RefFunction, Scope, Value, ValueFunction, newScope } from '../../src/runtime/core';
-import { boot, BootFactory } from '../../src/runtime/boot';
 
 const factory = new class implements BootFactory {
   newContext(): Context {

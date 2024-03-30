@@ -1,9 +1,10 @@
 import estraverse from 'estraverse';
 import * as es from 'estree';
-import { Logic, SCOPE_NAME_KEY } from './logic';
+import { SCOPE_NAME_KEY } from '../runtime/boot';
+import { Attribute } from './html';
+import { Logic } from './logic';
 import { Source } from './types';
 import * as utils from './utils';
-import { Attribute } from './html';
 
 export function genRefFunctions(
   source: Source, scope: Logic,

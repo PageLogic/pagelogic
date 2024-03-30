@@ -1,11 +1,11 @@
 import * as acorn from 'acorn';
 import * as es from 'estree';
 import * as html from './html';
-import * as utils from './utils';
 import { Logic } from './logic';
-import { Source } from './types';
-import { genRefFunctions } from './reference';
 import { qualifyReferences } from './qualifier';
+import { genRefFunctions } from './reference';
+import { Source } from './types';
+import * as utils from './utils';
 
 export function transpile(source: Source) {
   if (source.logic && source.errors.length < 1) {

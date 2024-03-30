@@ -2,8 +2,8 @@
 
 import * as acorn from 'acorn';
 import { assert } from 'chai';
-import { describe } from 'mocha';
 import fs from 'fs';
+import { describe } from 'mocha';
 import path from 'path';
 import * as html from '../../src/compiler/html';
 import * as parser from '../../src/compiler/parser';

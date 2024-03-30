@@ -1,31 +1,12 @@
+import * as rt from '../runtime/boot';
 import * as html from './html';
 import { Source } from './types';
-
-export const LOGIC_ATTR_MARKER = ':';
-export const LOGIC_VALUE_MARKER = '$';
-export const DOM_ID_ATTR = 'data-pagelogic';
-
-export const SCOPE_NAME_ATTR = '::name';
-export const SCOPE_NAME_KEY = '$name';
-
-export const ATTR_VALUE_PREFIX = 'attr$';
 
 const AUTO_NAMES: { [key: string]: string } = {
   'HTML': 'page',
   'HEAD': 'head',
   'BODY': 'body'
 };
-
-// export interface Logic {
-//   id: number;
-//   ref: html.Element;
-//   // values
-//   vv: { [key: string]: html.Attribute };
-//   // texts
-//   tt: html.Text[];
-//   // children
-//   cc: Logic[];
-// }
 
 export class Logic {
   parent: Logic | null;
@@ -68,8 +49,8 @@ export function parseLogic(source: Source) {
 
   function valueName(attrName: string) {
     let ret = attrName;
-    if (!ret.startsWith(LOGIC_ATTR_MARKER)) {
-      ret = ATTR_VALUE_PREFIX + ret;
+    if (!ret.startsWith(rt.LOGIC_ATTR_MARKER)) {
+      ret = rt.ATTR_VALUE_PREFIX + ret;
     } else {
       ret = ret.substring(1).replace(':', '$');
     }
@@ -78,14 +59,14 @@ export function parseLogic(source: Source) {
 
   function needsScope(dom: html.Element) {
     const vv: { [key: string]: html.Attribute } = {};
-    if (AUTO_NAMES[dom.name] && !dom.getAttributeNode(SCOPE_NAME_ATTR)) {
-      vv[valueName(SCOPE_NAME_ATTR)] = new html.Attribute(
-        dom.doc, dom, SCOPE_NAME_ATTR, AUTO_NAMES[dom.name], dom.loc
+    if (AUTO_NAMES[dom.name] && !dom.getAttributeNode(rt.SCOPE_NAME_ATTR)) {
+      vv[valueName(rt.SCOPE_NAME_ATTR)] = new html.Attribute(
+        dom.doc, dom, rt.SCOPE_NAME_ATTR, AUTO_NAMES[dom.name], dom.loc
       );
     }
     dom.attributes.forEach(a => {
       if (
-        a.name.startsWith(LOGIC_ATTR_MARKER) ||
+        a.name.startsWith(rt.LOGIC_ATTR_MARKER) ||
         typeof a.value !== 'string'
       ) {
         vv[valueName(a.name)] = a;
@@ -98,7 +79,7 @@ export function parseLogic(source: Source) {
     const vv = needsScope(dom);
     if (!scope || vv) {
       const s = new Logic(scope || null, nextId++, dom, vv);
-      dom.setAttribute(DOM_ID_ATTR, `${s.id}`);
+      dom.setAttribute(rt.DOM_ID_ATTR, `${s.id}`);
       scope && scope.cc.push(s);
       scope = s;
     }

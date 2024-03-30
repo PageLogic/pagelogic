@@ -1,7 +1,7 @@
-import { Plugin } from '../plugin';
-import * as types from '../types';
 import * as html from '../html';
+import { Plugin } from '../plugin';
 import { DIRECTIVE_PREFIX } from '../preprocessor';
+import * as types from '../types';
 
 export const MAX_NESTING = 100;
 export const DEFINE_TAG = DIRECTIVE_PREFIX + 'DEFINE';

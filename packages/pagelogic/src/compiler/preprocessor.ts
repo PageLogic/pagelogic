@@ -1,9 +1,9 @@
 import fs from 'fs';
 import path from 'path';
-import * as types from './types';
-import * as parser from './parser';
-import * as html from './html';
 import { Config } from './config';
+import * as html from './html';
+import * as parser from './parser';
+import * as types from './types';
 
 export const MAX_NESTING = 100;
 export const DIRECTIVE_PREFIX = ':';

@@ -1,8 +1,8 @@
 /// <reference types="node" />
 
 import { assert } from 'chai';
-import { describe } from 'mocha';
 import fs from 'fs';
+import { describe } from 'mocha';
 import path from 'path';
 import { Config } from '../../src/compiler/config';
 import { Preprocessor } from '../../src/compiler/preprocessor';

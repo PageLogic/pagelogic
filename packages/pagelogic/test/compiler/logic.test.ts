@@ -1,12 +1,12 @@
 /// <reference types="node" />
 
 import { assert } from 'chai';
-import { describe } from 'mocha';
 import fs from 'fs';
+import { describe } from 'mocha';
 import path from 'path';
-import { Preprocessor } from '../../src/compiler/preprocessor';
 import { Config } from '../../src/compiler/config';
 import { parseLogic } from '../../src/compiler/logic';
+import { Preprocessor } from '../../src/compiler/preprocessor';
 
 const rootPath = path.join(__dirname, 'logic');
 

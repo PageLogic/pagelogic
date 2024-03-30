@@ -36,22 +36,3 @@ export class Error {
     this.loc = loc ?? undefined;
   }
 }
-
-// export interface CodeLogic {
-//   page: Source;
-//   root?: CodeScope;
-// }
-
-// export interface CodeScope {
-//   id: number;
-//   name?: string;
-//   isolate?: boolean;
-//   children: CodeScope[];
-//   values: { [key: string]: CodeValue };
-//   node: Node;
-// }
-
-// export interface CodeValue {
-//   val: string,
-//   node: Node;
-// }
