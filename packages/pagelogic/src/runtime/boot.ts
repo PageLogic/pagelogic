@@ -1,10 +1,10 @@
 import { Context, Props, RefFunction, Scope, Value, ValueFunction } from './core';
 
-export const LOGIC_ATTR_MARKER = ':';
-export const LOGIC_VALUE_MARKER = '$';
+export const LOGIC_ATTR_RE = /^[:$]/;
+export const LOGIC_VALUE_RE = /^:?(\$?[^:]+)$/;
 export const DOM_ID_ATTR = 'data-pagelogic';
 
-export const SCOPE_NAME_ATTR = '::name';
+export const SCOPE_NAME_ATTR = '$name';
 export const SCOPE_NAME_KEY = '$name';
 export const SCOPE_PARENT_KEY = '$parent';
 export const ATTR_VALUE_PREFIX = 'attr$';

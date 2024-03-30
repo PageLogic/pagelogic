@@ -1,5 +1,6 @@
 import * as rt from '../runtime/boot';
 import * as html from './html';
+import * as utils from './utils';
 import { Source } from './types';
 
 const AUTO_NAMES: { [key: string]: string } = {
@@ -49,10 +50,10 @@ export function parseLogic(source: Source) {
 
   function valueName(attrName: string) {
     let ret = attrName;
-    if (!ret.startsWith(rt.LOGIC_ATTR_MARKER)) {
-      ret = rt.ATTR_VALUE_PREFIX + ret;
+    if (rt.LOGIC_ATTR_RE.test(ret)) {
+      ret = utils.regexMap(rt.LOGIC_VALUE_RE, ret, match => match[1]);
     } else {
-      ret = ret.substring(1).replace(':', '$');
+      ret = rt.ATTR_VALUE_PREFIX + ret;
     }
     return ret;
   }
@@ -66,7 +67,7 @@ export function parseLogic(source: Source) {
     }
     dom.attributes.forEach(a => {
       if (
-        a.name.startsWith(rt.LOGIC_ATTR_MARKER) ||
+        rt.LOGIC_ATTR_RE.test(a.name) ||
         typeof a.value !== 'string'
       ) {
         vv[valueName(a.name)] = a;
