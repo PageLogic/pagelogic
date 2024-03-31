@@ -3,7 +3,7 @@
 // Context
 // =============================================================================
 
-import { SCOPE_PARENT_KEY } from './boot';
+import { BootFactory, DATA_KEY, LISTFOR_KEY, SCOPE_PARENT_KEY } from './boot';
 
 export class Context {
   cycle = 0;
@@ -25,13 +25,13 @@ export class Context {
   }
 
   private unlinkValues(scope: Scope) {
-    this.foreachValue(scope, v => {
+    scope.$values.forEach(v => {
       v.src.forEach(o => o.dst.delete(v));
     });
   }
 
   private linkValues(scope: Scope) {
-    this.foreachValue(scope, v => {
+    scope.$values.forEach(v => {
       v.refs?.forEach(ref => {
         let o: Value | undefined;
         try {
@@ -49,17 +49,9 @@ export class Context {
   }
 
   private updateValues(scope: Scope) {
-    this.foreachValue(scope, v => {
+    scope.$values.forEach(v => {
       v.get();
     });
-  }
-
-  private foreachValue(scope: Scope, cb: (v: Value) => void) {
-    const obj = scope.$object;
-    for (const key in obj) {
-      const val = key.startsWith('$') ? null : obj[key];
-      val instanceof Value && cb(val);
-    }
   }
 }
 
@@ -83,17 +75,22 @@ export interface Scope extends Props {
   $props: Props;
   $object: Props;
   $scope: Scope;
+  $values: Map<string, Value>;
   $name?: string;
   $parent: Scope | null;
   $children: Scope[];
   $isolate: boolean;
   $value: (key: string) => Value | undefined;
+  $replicator: (data: unknown, parent: Scope) => Scope;
+  $cloneOf: Scope | undefined;
+  $clones: Scope[] | undefined;
 }
 
 export function newScope(
   ctx: Context, props: Props,
   parent: Scope | null, proto: object | null,
-  isolate = false
+  isolate = false,
+  cloneOf?: Scope
 ): Scope {
   const obj = { ...props };
   Object.setPrototypeOf(obj, proto);
@@ -134,10 +131,13 @@ export function newScope(
 
   }) as Scope;
 
+  const values = new Map<string, Value>();
   for (const key in obj) {
     const val = obj[key];
     if (val instanceof Value) {
+      //TODO: this should be done by BootFactory.setValueScope()
       val.scope = ret;
+      values.set(key, val);
     }
   }
 
@@ -146,9 +146,11 @@ export function newScope(
   obj.$props = props;
   obj.$object = obj;
   obj.$scope = ret;
+  obj.$values = values;
   obj[SCOPE_PARENT_KEY] = parent;
   obj.$children = [];
   obj.$isolate = isolate;
+  obj.$cloneOf = cloneOf;
 
   obj.$value = (key: string) => {
     let scope: Scope | null = ret;
@@ -158,6 +160,19 @@ export function newScope(
       scope = scope[SCOPE_PARENT_KEY];
     }
     return value instanceof Value ? value : undefined;
+  };
+
+  obj.$replicator = (data: unknown, parent: Scope) => {
+    const pp: Props = {};
+    for (const k of (Reflect.ownKeys(props) as string[])) {
+      const v = props[k];
+      pp[k] = v instanceof Value ? new Value(v.fn, v.refs, v.cb) : v;
+    }
+    //TODO: id
+    pp[DATA_KEY] = data;
+    const clone = newScope(ctx, pp, parent, proto, isolate, ret);
+    obj.$clones ? obj.$clones.push(clone) : (obj.$clones = [clone]);
+    return clone;
   };
 
   if (parent) {
@@ -239,5 +254,28 @@ export class Value {
       this.dst?.forEach(v => v.update());
     } catch (ignored) { /* nop */ }
     ctx.pushLevel--;
+  }
+}
+
+// =============================================================================
+// Factory
+// =============================================================================
+
+export class CoreFactory implements BootFactory {
+  newContext(): Context {
+    return new Context();
+  }
+  newScope(ctx: Context, props: Props, parent: Scope | null, proto: object | null, isolate: boolean): Scope {
+    return newScope(ctx, props, parent, proto, isolate);
+  }
+  newValue(key: string, fn: ValueFunction, refs?: RefFunction[] | undefined): Value {
+    return new Value(fn, refs);
+  }
+  setValueScope(key: string, value: Value, scope: Scope) {
+    if (key === LISTFOR_KEY) {
+      value.cb = (v: unknown) => {
+        scope.$parent && scope.$replicator(v, scope.$parent);
+      };
+    }
   }
 }

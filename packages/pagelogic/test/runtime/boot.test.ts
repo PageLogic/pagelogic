@@ -1,19 +1,9 @@
 import { assert } from 'chai';
 import { describe } from 'mocha';
-import { BootFactory, boot } from '../../src/runtime/boot';
-import { Context, Props, RefFunction, Scope, Value, ValueFunction, newScope } from '../../src/runtime/core';
+import { CoreFactory, Value } from '../../src/runtime/core';
+import { boot } from '../../src/runtime/boot';
 
-const factory = new class implements BootFactory {
-  newContext(): Context {
-    return new Context();
-  }
-  newScope(ctx: Context, props: Props, parent: Scope | null, proto: object | null, isolate: boolean): Scope {
-    return newScope(ctx, props, parent, proto, isolate);
-  }
-  newValue(fn: ValueFunction, refs?: RefFunction[] | undefined): Value {
-    return new Value(fn, refs);
-  }
-};
+const coreFactory = new CoreFactory();
 
 describe('runtime: boot', () => {
 
@@ -24,7 +14,7 @@ describe('runtime: boot', () => {
         x: { fn: function() { return 1; }},
         y: { fn: function() { return 2; }},
       }
-    }, factory);
+    }, coreFactory);
 
     assert.equal(root.x, 1);
     assert.equal(root.y, 2);
@@ -49,7 +39,7 @@ describe('runtime: boot', () => {
           }
         }
       ]
-    }, factory);
+    }, coreFactory);
     const scope0 = root;
     const scope1 = root.$children[0];
 
@@ -81,7 +71,7 @@ describe('runtime: boot', () => {
           }
         }
       ]
-    }, factory);
+    }, coreFactory);
     const scope0 = root;
     const scope1 = root.$children[0];
 

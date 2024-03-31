@@ -9,6 +9,11 @@ export const SCOPE_NAME_KEY = '$name';
 export const SCOPE_PARENT_KEY = '$parent';
 export const ATTR_VALUE_PREFIX = 'attr$';
 
+export const DATA_KEY = '$data';
+export const LISTFOR_KEY = '$listFor';
+export const NESTFOR_KEY = '$nestFor';
+export const NESTIN_KEY = '$nestIn';
+
 export interface BootScope {
   id: number;
   values: { [key: string]: BootValue | string };
@@ -32,7 +37,9 @@ export interface BootFactory {
     isolate: boolean
   ): Scope;
 
-  newValue(fn: ValueFunction, refs?: RefFunction[]): Value;
+  newValue(key: string, fn: ValueFunction, refs?: RefFunction[]): Value;
+
+  setValueScope(key: string, value: Value, scope: Scope): void;
 }
 
 export interface BootRuntime {
@@ -47,9 +54,15 @@ export function boot(desc: BootScope, factory: BootFactory): BootRuntime {
     const props: Props = {};
     (Reflect.ownKeys(desc.values) as string[]).forEach(key => {
       const d = desc.values[key];
-      props[key] = typeof d === 'string' ? d : factory.newValue(d.fn, d.refs);
+      props[key] = typeof d === 'string' ? d : factory.newValue(key, d.fn, d.refs);
     });
     const ret = factory.newScope(context, props, p, null, desc.isolate || false);
+    for (const k of Reflect.ownKeys(ret.$object) as string[]) {
+      const v = ret.$object[k];
+      if (v instanceof Value) {
+        factory.setValueScope(k, v, ret);
+      }
+    }
     desc.children?.forEach(child => {
       scan(child, ret);
     });
