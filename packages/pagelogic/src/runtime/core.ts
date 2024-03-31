@@ -24,20 +24,22 @@ export class Context {
     this.refreshLevel--;
   }
 
-  private unlinkValues(scope: Scope) {
-    scope.$values.forEach(v => {
+  unlinkValues(scope: Scope) {
+    this.foreachValue(scope, v => {
       v.src.forEach(o => o.dst.delete(v));
     });
   }
 
   private linkValues(scope: Scope) {
-    scope.$values.forEach(v => {
+    this.foreachValue(scope, v => {
       v.refs?.forEach(ref => {
         let o: Value | undefined;
         try {
           o = ref.apply(scope);
           if (o === v) {
-            o = scope[SCOPE_PARENT_KEY] ? ref.apply(scope[SCOPE_PARENT_KEY]) : undefined;
+            o = scope[SCOPE_PARENT_KEY]
+              ? ref.apply(scope[SCOPE_PARENT_KEY])
+              : undefined;
           }
         } catch (ignored) { /* nop */ }
         if (o) {
@@ -49,9 +51,14 @@ export class Context {
   }
 
   private updateValues(scope: Scope) {
-    scope.$values.forEach(v => {
+    this.foreachValue(scope, v => {
       v.get();
     });
+  }
+
+  private foreachValue(scope: Scope, cb: (v: Value) => void) {
+    scope.$values.forEach(cb);
+    scope.$children.forEach(s => this.foreachValue(s, cb));
   }
 }
 
@@ -81,7 +88,8 @@ export interface Scope extends Props {
   $children: Scope[];
   $isolate: boolean;
   $value: (key: string) => Value | undefined;
-  $replicator: (data: unknown, parent: Scope) => Scope;
+  $dispose: () => void;
+  $replicator: (data: unknown, parent: Scope, removeKeys: string[]) => void;
   $cloneOf: Scope | undefined;
   $clones: Scope[] | undefined;
 }
@@ -93,6 +101,7 @@ export function newScope(
   cloneOf?: Scope
 ): Scope {
   const obj = { ...props };
+  obj[DATA_KEY] || (obj[DATA_KEY] = new Value(() => null));
   Object.setPrototypeOf(obj, proto);
 
   const ret = new Proxy(obj, {
@@ -135,24 +144,25 @@ export function newScope(
   for (const key in obj) {
     const val = obj[key];
     if (val instanceof Value) {
-      //TODO: this should be done by BootFactory.setValueScope()
+      //TODO: this should be done by BootFactory.setValueScope(),
+      //but currently core.test.ts relies on it
       val.scope = ret;
       values.set(key, val);
     }
   }
 
-  obj.$id = ctx.nextId++;
-  obj.$context = ctx;
-  obj.$props = props;
-  obj.$object = obj;
-  obj.$scope = ret;
-  obj.$values = values;
-  obj[SCOPE_PARENT_KEY] = parent;
-  obj.$children = [];
-  obj.$isolate = isolate;
-  obj.$cloneOf = cloneOf;
+  (obj as Scope).$id = ctx.nextId++;
+  (obj as Scope).$context = ctx;
+  (obj as Scope).$props = props;
+  (obj as Scope).$object = obj;
+  (obj as Scope).$scope = ret;
+  (obj as Scope).$values = values;
+  (obj as Scope)[SCOPE_PARENT_KEY] = parent;
+  (obj as Scope).$children = [];
+  (obj as Scope).$isolate = isolate;
+  (obj as Scope).$cloneOf = cloneOf;
 
-  obj.$value = (key: string) => {
+  (obj as Scope).$value = (key: string) => {
     let scope: Scope | null = ret;
     let value: unknown = undefined;
     while (scope && !value) {
@@ -162,22 +172,59 @@ export function newScope(
     return value instanceof Value ? value : undefined;
   };
 
-  obj.$replicator = (data: unknown, parent: Scope) => {
-    const pp: Props = {};
-    for (const k of (Reflect.ownKeys(props) as string[])) {
-      const v = props[k];
-      pp[k] = v instanceof Value ? new Value(v.fn, v.refs, v.cb) : v;
+  (obj as Scope).$dispose = () => {
+    ctx.unlinkValues(ret);
+    const i = (parent ? parent.$children.indexOf(ret) : -1);
+    i >= 0 && parent?.$children.splice(i, 1);
+  };
+
+  (obj as Scope).$replicator = (
+    data: unknown, parent: Scope, removeKeys: string[]
+  ) => {
+    obj.$clones || (obj.$clones = []);
+
+    function addClone(data: unknown) {
+      // clone props
+      const pp: Props = {};
+      for (const k of (Reflect.ownKeys(props) as string[])) {
+        if (removeKeys.includes(k)) {
+          continue;
+        }
+        const v = props[k];
+        pp[k] = v instanceof Value ? new Value(v.fn, v.refs, v.cb) : v;
+      }
+      //TODO: id
+      pp[DATA_KEY] = new Value(() => data);
+      // clone scope
+      const clone = newScope(ctx, pp, parent, proto, isolate, ret);
+      obj.$clones.push(clone);
+      ctx.refresh(clone, false);
     }
-    //TODO: id
-    pp[DATA_KEY] = data;
-    const clone = newScope(ctx, pp, parent, proto, isolate, ret);
-    obj.$clones ? obj.$clones.push(clone) : (obj.$clones = [clone]);
-    return clone;
+
+    const list = Array.isArray(data) ? data : [];
+    const count = Math.max(0, list.length - 1);
+    for (let i = 0; i < count; i++) {
+      if (i < obj.$clones.length) {
+        const clone = obj.$clones[i];
+        clone[DATA_KEY] = list[i];
+      } else {
+        addClone(list[i]);
+      }
+    }
+    while (obj.$clones.length > count) {
+      obj.$clones.pop()!.$dispose();
+    }
+    ret[DATA_KEY] = (list.length > 0 ? list[count] : null);
   };
 
   if (parent) {
-    parent.$children.push(ret);
-    props.$name && (parent.$object[props.$name] = ret);
+    const i = cloneOf ? parent.$children.indexOf(cloneOf) : -1;
+    if (i < 0) {
+      parent.$children.push(ret);
+    } else {
+      parent.$children.splice(i, 0, ret);
+    }
+    !cloneOf && props.$name && (parent.$object[props.$name] = ret);
   }
 
   return ret;
@@ -265,16 +312,26 @@ export class CoreFactory implements BootFactory {
   newContext(): Context {
     return new Context();
   }
-  newScope(ctx: Context, props: Props, parent: Scope | null, proto: object | null, isolate: boolean): Scope {
+  newScope(
+    ctx: Context,
+    props: Props,
+    parent: Scope | null,
+    proto: object | null,
+    isolate: boolean
+  ): Scope {
     return newScope(ctx, props, parent, proto, isolate);
   }
-  newValue(key: string, fn: ValueFunction, refs?: RefFunction[] | undefined): Value {
+  newValue(
+    key: string, fn: ValueFunction, refs?: RefFunction[] | undefined
+  ): Value {
     return new Value(fn, refs);
   }
   setValueScope(key: string, value: Value, scope: Scope) {
     if (key === LISTFOR_KEY) {
       value.cb = (v: unknown) => {
-        scope.$parent && scope.$replicator(v, scope.$parent);
+        scope.$parent && scope.$replicator(
+          v, scope.$parent, [LISTFOR_KEY, DATA_KEY]
+        );
       };
     }
   }
