@@ -1,4 +1,7 @@
 {
-  "liveServer.settings.root": "/www",
-  "npm.exclude": ["**/dist"]
+  "npm.exclude": ["**/dist"],
+  "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": "always"
+  },
+  "eslint.validate": ["typescript"]
 }
