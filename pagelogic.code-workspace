@@ -2,15 +2,15 @@
   "folders": [
     {
       "name": "ROOT",
-      "path": "../"
+      "path": "./"
     },
     {
       "name": "packages/docs",
-      "path": "../packages/docs"
+      "path": "./packages/docs"
     },
     {
       "name": "packages/pagelogic",
-      "path": "../packages/pagelogic"
+      "path": "./packages/pagelogic"
     },
   ],
   "settings": {
