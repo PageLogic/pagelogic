@@ -1,4 +1,5 @@
 import * as acorn from 'acorn';
+import { DIRECTIVE_TAG_PREFIX } from './preprocessor';
 
 export const VOID_ELEMENTS = new Set([
   'AREA', 'BASE', 'BR', 'COL', 'EMBED', 'HR', 'IMG', 'INPUT',
@@ -238,6 +239,9 @@ export class Element extends Node {
   }
 
   toMarkup(ret: string[]): void {
+    if (this.name.startsWith(DIRECTIVE_TAG_PREFIX)) {
+      return;
+    }
     ret.push('<');
     ret.push(this.name.toLowerCase());
     this.attributes.forEach(a => a.toMarkup(ret));

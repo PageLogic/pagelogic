@@ -14,8 +14,8 @@ const DOLLAR = '$'.charCodeAt(0);
 const LEXP = '${';
 const REXP = '}'.charCodeAt(0);
 
-export function parse(s: string, fname?: string, docroot?: string): Source {
-  const ret = new Source(s, fname, docroot);
+export function parse(s: string, fname?: string, ret?: Source): Source {
+  ret || (ret = new Source(s, fname));
   try {
     parseNodes(ret.doc, ret, 0, ret.errors);
   } catch (ignored) {
@@ -506,23 +506,35 @@ export function normalizeText(s?: string): string | undefined {
 }
 
 export class Source {
-  s: string;
+  s!: string;
   fname?: string;
-  docroot?: string;
-  linestarts: number[];
-  errors: PageError[];
-  doc: dom.Document;
+  files: string[];
+  linestarts!: number[];
+  errors!: PageError[];
+  doc!: dom.Document;
 
-  constructor(s: string, fname?: string, docroot?: string) {
-    this.s = s = s.trimEnd();
+  constructor(s: string, fname?: string) {
+    this.reset(s);
     this.fname = fname;
-    this.docroot = docroot;
+    this.files = [];
+  }
+
+  reset(s: string) {
+    this.s = s = s.trimEnd();
     this.linestarts = [0];
     this.errors = [];
     this.doc = new dom.Document(this.loc(0, s.length));
     for (let i1 = 0, i2; (i2 = s.indexOf('\n', i1)) >= 0; i1 = i2 + 1) {
       this.linestarts.push(i2 + 1);
     }
+  }
+
+  addError(
+    type: 'error' | 'warning',
+    msg: string,
+    loc: acorn.SourceLocation | null | undefined
+  ) {
+    this.errors.push(new PageError(type, msg, loc));
   }
 
   pos(n: number): acorn.Position {

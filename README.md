@@ -25,7 +25,3 @@ ls -l dist
 * Elements can be assigned reactive values using `:`-prefixed attributes
 * Attributes and texts can contain reactive logic in `${...}` expressions
 * Custom elements (aka Components) can be declared with the `<:define>` directive
-
-## Implementation overview
-
-![alt text](diagram.drawio.svg)
