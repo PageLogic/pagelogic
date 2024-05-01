@@ -4,11 +4,11 @@ import * as utils from './utils';
 import { PageError, Source } from '../source/parser';
 import { ATTR_VALUE_PREFIX, SCOPE_NAME_KEY } from '../runtime/types';
 
-export const LOGIC_ID_ATTR = 'data-pl-id';
+export const LOGIC_ID_ATTR = 'data-pl';
 export const LOGIC_TEXT_MARKER1 = '-t';
 export const LOGIC_TEXT_MARKER2 = '-/t';
 export const LOGIC_ATTR_NAME_PREFIX = ':';
-export const DEFAULT_TAG_SCOPES = {
+export const DEFAULT_TAG_SCOPES: { [key: string]: string } = {
   HTML: 'page',
   HEAD: 'head',
   BODY: 'body'
@@ -53,7 +53,7 @@ export function load(source: Source, global: Scope | null, docroot?: string): Lo
       type: 'scope',
       id: `${count++}`,
       tagName: e.name,
-      name: null,
+      name: DEFAULT_TAG_SCOPES[e.name] ?? null,
       values: {},
       texts: [],
       children: [],
@@ -133,9 +133,11 @@ export function load(source: Source, global: Scope | null, docroot?: string): Lo
 }
 
 function needsScope(e: dom.Element): boolean {
+  if (DEFAULT_TAG_SCOPES[e.name]) {
+    return true;
+  }
   for (const attr of e.attributes) {
     if (
-      Reflect.has(DEFAULT_TAG_SCOPES, attr.name) ||
       attr.name.startsWith(LOGIC_ATTR_NAME_PREFIX) ||
       typeof attr.value === 'object'
     ) {

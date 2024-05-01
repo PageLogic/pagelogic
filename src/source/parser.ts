@@ -14,13 +14,29 @@ const DOLLAR = '$'.charCodeAt(0);
 const LEXP = '${';
 const REXP = '}'.charCodeAt(0);
 
-export function parse(s: string, fname?: string, ret?: Source): Source {
+export function parse(s: string, fname?: string, ret?: Source, sanitize = true): Source {
   ret || (ret = new Source(s, fname));
   try {
     parseNodes(ret.doc, ret, 0, ret.errors);
   } catch (ignored) {
     // nop: errors are added to returned doc, throws are used
     // to abort parsing when an irrecoverable error is found
+  }
+  if (sanitize) {
+    // sanitize doc
+    const doc = ret.doc;
+    doc.documentElement || doc.children.push(new dom.Element(doc, null, 'HTML', doc.loc));
+    let head, body;
+    doc.documentElement?.children.forEach(n => {
+      if (n.type === 'element') {
+        const e = n as unknown as dom.Element;
+        e.name === 'HEAD' && (head = e);
+        e.name === 'BODY' && (body = e);
+      }
+    });
+    body || (body = new dom.Element(doc, doc.documentElement, 'BODY', doc.loc));
+    head || new dom.Element(doc, doc.documentElement, 'HEAD', doc.loc, body);
+    doc.documentElement!.name = 'HTML';
   }
   return ret;
 }

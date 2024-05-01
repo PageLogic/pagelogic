@@ -35,7 +35,7 @@ export class Preprocessor {
     if (!loaded) {
       return;
     }
-    const source = parse(loaded.text, loaded.relPath);
+    const source = parse(loaded.text, loaded.relPath, undefined, (nesting === 0));
     if (source.errors.length) {
       main.errors.push(...source.errors);
       return;

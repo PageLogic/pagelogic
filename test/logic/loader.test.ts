@@ -15,21 +15,43 @@ describe('logic/loader', () => {
     const logic = load(source, null);
     assert.equal(
       source.doc.toString(),
-      '<div data-pl-id="0">hello <!---t0--><!---/t-->!</div>'
+      '<html data-pl="0">hello <!---t0--><!---/t-->!' +
+      '<head data-pl="1"></head>' +
+      '<body data-pl="2"></body>' +
+      '</html>'
     );
     assert.deepEqual(
       cleanup(logic.root),
       {
         type: 'scope',
         id: '0',
-        name: null,
-        tagName: 'DIV',
+        name: 'page',
+        tagName: 'HTML',
         values: {
           'user': { type: 'value', key: ':user', val: 'x' },
           'attr$title': { type: 'value', key: 'title', val: '<exp>' }
         },
         texts: [{ type: 'value', val: '<exp>' }],
-        children: []
+        children: [
+          {
+            id: '1',
+            name: 'head',
+            tagName: 'HEAD',
+            texts: [],
+            type: 'scope',
+            values: {},
+            children: [],
+          },
+          {
+            id: '2',
+            name: 'body',
+            tagName: 'BODY',
+            texts: [],
+            type: 'scope',
+            values: {},
+            children: [],
+          }
+        ]
       }
     );
   });
@@ -43,23 +65,44 @@ describe('logic/loader', () => {
     const logic = load(source, null);
     assert.equal(
       source.doc.toString(),
-      '<div data-pl-id="0">' +
+      '<html data-pl="0">' +
         'hello <span><!---t0--><!---/t--></span>!' +
-      '</div>'
+        '<head data-pl="1"></head>' +
+        '<body data-pl="2"></body>' +
+      '</html>'
     );
     assert.deepEqual(
       cleanup(logic.root),
       {
         type: 'scope',
         id: '0',
-        name: null,
-        tagName: 'DIV',
+        name: 'page',
+        tagName: 'HTML',
         values: {
           'user': { type: 'value', key: ':user', val: 'x' },
           'attr$title': { type: 'value', key: 'title', val: '<exp>' }
         },
         texts: [{ type: 'value', val: '<exp>' }],
-        children: []
+        children: [
+          {
+            id: '1',
+            name: 'head',
+            tagName: 'HEAD',
+            texts: [],
+            type: 'scope',
+            values: {},
+            children: [],
+          },
+          {
+            id: '2',
+            name: 'body',
+            tagName: 'BODY',
+            texts: [],
+            type: 'scope',
+            values: {},
+            children: [],
+          }
+        ]
       }
     );
   });
@@ -74,18 +117,20 @@ describe('logic/loader', () => {
     const logic = load(source, null);
     assert.equal(
       source.doc.toString(),
-      '<div data-pl-id="0">' +
+      '<html data-pl="0">' +
         'hello <span><!---t0--><!---/t--></span>!' +
-        '<div data-pl-id="1">!</div>' +
-      '</div>'
+        '<div data-pl="1">!</div>' +
+        '<head data-pl="2"></head>' +
+        '<body data-pl="3"></body>' +
+      '</html>'
     );
     assert.deepEqual(
       cleanup(logic.root),
       {
         type: 'scope',
         id: '0',
-        name: null,
-        tagName: 'DIV',
+        name: 'page',
+        tagName: 'HTML',
         values: {
           'user': { type: 'value', key: ':user', val: 'x' },
           'attr$title': { type: 'value', key: 'title', val: '<exp>' }
@@ -102,6 +147,24 @@ describe('logic/loader', () => {
             },
             texts: [],
             children: []
+          },
+          {
+            id: '2',
+            name: 'head',
+            tagName: 'HEAD',
+            texts: [],
+            type: 'scope',
+            values: {},
+            children: [],
+          },
+          {
+            id: '3',
+            name: 'body',
+            tagName: 'BODY',
+            texts: [],
+            type: 'scope',
+            values: {},
+            children: [],
           }
         ]
       }

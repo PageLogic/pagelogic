@@ -30,7 +30,12 @@ describe('logic/generator', () => {
             fn: function () { return this.v; },
             refs: [function () { return this.${SCOPE_VALUE_KEY}('v'); }]
           }
-        }
+        },
+        name: 'page',
+        children: [
+          { id: '1', values: {}, name: 'head' },
+          { id: '2', values: {}, name: 'body' }
+        ]
       }`)
     );
   });
@@ -50,13 +55,12 @@ describe('logic/generator', () => {
             refs: [function () { return this.scope2.$value('v'); }]
           }
         },
-        children: [{
-          id: '1',
-          values: {
-            v: { fn: function () { return '1'; } }
-          },
-          name: 'scope2'
-        }]
+        name: 'page',
+        children: [
+          { id: '1', values: { v: { fn: function () { return '1'; } } }, name: 'scope2' },
+          { id: '2', values: {}, name: 'head' },
+          { id: '3', values: {}, name: 'body' }
+        ]
       }`)
     );
   });
@@ -77,13 +81,12 @@ describe('logic/generator', () => {
             refs: [function () { return this.scope2.$value('v'); }]
           }
         },
-        children: [{
-          id: '1',
-          values: {
-            v: { fn: function () { return '1'; } }
-          },
-          name: 'scope2'
-        }]
+        name: 'page',
+        children: [
+          { id: '1', values: { v: { fn: function () { return '1'; } } }, name: 'scope2' },
+          { id: '2', values: {}, name: 'head' },
+          { id: '3', values: {}, name: 'body' }
+        ]
       }`)
     );
   });
@@ -103,13 +106,12 @@ describe('logic/generator', () => {
             refs: [function () { return this.scope2.$value('v'); }]
           }
         },
-        children: [{
-          id: '1',
-          values: {
-            v: { fn: function () { return { a: 1, b: 2 }; } }
-          },
-          name: 'scope2'
-        }]
+        name: 'page',
+        children: [
+          { id: '1', values: { v: { fn: function () { return { a: 1, b: 2 }; } } }, name: 'scope2' },
+          { id: '2', values: {}, name: 'head' },
+          { id: '3', values: {}, name: 'body' }
+        ]
       }`)
     );
   });

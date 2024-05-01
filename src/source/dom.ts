@@ -23,12 +23,17 @@ export abstract class Node {
     doc: Document | null,
     parent: Element | null,
     type: NodeType,
-    loc: SourceLocation
+    loc: SourceLocation,
+    ref?: Node
   ) {
     this.doc = doc;
     this.type = type;
     this.loc = loc;
-    parent && parent.children.push(this);
+    if (parent) {
+      ref
+        ? parent.children.splice(parent.children.indexOf(ref), 0, this)
+        : parent.children.push(this);
+    }
   }
 
   toJSON(): object {
@@ -178,9 +183,10 @@ export class Element extends Node {
     doc: Document | null,
     parent: Element | null,
     name: string,
-    loc: SourceLocation
+    loc: SourceLocation,
+    ref?: Node
   ) {
-    super(doc, parent, 'element', loc);
+    super(doc, parent, 'element', loc, ref);
     this.name = name.toUpperCase();
     this.children = [];
     this.attributes = [];
