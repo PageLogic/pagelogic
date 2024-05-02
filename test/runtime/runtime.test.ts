@@ -75,6 +75,7 @@ describe('runtime/core', () => {
                 const html = logic.source.doc?.toString() || '';
                 // console.log(html);
                 doc.write(html);
+                // console.log(js);
                 const root = eval(js);
                 await boot(
                   win as unknown as Window,

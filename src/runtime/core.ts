@@ -11,24 +11,6 @@ export class Context {
   pushLevel = 0;
   nextId = 0;
 
-  // newScope(
-  //   props: Props,
-  //   parent: Scope | null,
-  //   proto: object | null,
-  //   isolate = false
-  // ): Scope {
-  //   return newScope(this, props, parent, proto, isolate);
-  // }
-
-  // newValue(
-  //   scope: Scope,
-  //   key: string,
-  //   fn: ValueFunction,
-  //   refs?: RefFunction[]
-  // ): Value {
-  //   return new Value(scope, fn, refs);
-  // }
-
   refresh(scope: Scope, nextCycle = true) {
     this.refreshLevel++;
     try {
@@ -50,6 +32,7 @@ export class Context {
 
   protected linkValues(scope: Scope) {
     this.foreachValue(scope, v => {
+      const scope = v.scope;
       v.refs?.forEach(ref => {
         let o: Value | undefined;
         try {
@@ -168,7 +151,15 @@ export function newScope(
   (obj as Scope).$object = obj;
   (obj as Scope).$scope = ret;
   (obj as Scope).$values = values;
+  (obj as Scope).$name = props.$name;
   (obj as Scope)[SCOPE_PARENT_KEY] = parent;
+  if (parent && props.$name) {
+    // parent.$object[props.$name] = ret;
+    const v = new Value(() => ret);
+    v.scope = parent;
+    parent.$values.set(props.$name, v);
+    parent.$object[props.$name] = v;
+  }
   (obj as Scope).$children = [];
   (obj as Scope).$isolate = isolate;
 
@@ -184,8 +175,14 @@ export function newScope(
 
   (obj as Scope).$dispose = () => {
     ctx.unlinkValues(ret);
-    const i = (parent ? parent.$children.indexOf(ret) : -1);
-    i >= 0 && parent?.$children.splice(i, 1);
+    if (parent) {
+      const i = parent.$children.indexOf(ret);
+      parent.$children.splice(i, 1);
+      if (props.$name && parent.$object[props.$name] === ret) {
+        delete parent.$object[props.$name];
+        parent.$values.delete(props.$name);
+      }
+    }
   };
 
   if (parent) {

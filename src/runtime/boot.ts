@@ -78,7 +78,9 @@ export async function boot(
 
   function load(p: core.Scope | null, scope: Scope): core.Scope {
     const e = eMap.get(scope.id)!;
-    const props: core.Props = {};
+    const props: core.Props = {
+      $name: scope.name,
+    };
 
     Object.entries(scope.values).forEach((obj) => {
       const key: string = obj[0];
