@@ -76,7 +76,12 @@ describe('runtime/core', () => {
                 // console.log(html);
                 doc.write(html);
                 const root = eval(js);
-                await boot(win as unknown as Window, doc as unknown as Document, root);
+                await boot(
+                  win as unknown as Window,
+                  doc as unknown as Document,
+                  root,
+                  true
+                );
                 const actual = doc.documentElement.outerHTML;
                 const expected = (await fs.promises.readFile(pname)).toString().trim();
                 assert.equal(normalizeText(actual), normalizeText(expected));
