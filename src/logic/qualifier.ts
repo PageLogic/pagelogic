@@ -1,7 +1,7 @@
 import * as acorn from 'acorn';
 import estraverse from 'estraverse';
 import * as es from 'estree';
-import * as rt from '../runtime/types';
+import * as rt from '../runtime/boot';
 import { Logic, Scope } from './loader';
 
 // https://astexplorer.net

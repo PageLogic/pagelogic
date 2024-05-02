@@ -10,6 +10,8 @@ import { load } from '../../src/logic/loader';
 import { qualify } from '../../src/logic/qualifier';
 import { resolve } from '../../src/logic/resolver';
 import { Preprocessor } from '../../src/source/preprocessor';
+import { boot } from '../../src/runtime/boot';
+import * as web from '../../src/runtime/web';
 import { parse } from 'acorn';
 import * as happy from 'happy-dom';
 import { normalizeText } from 'trillo/preprocessor/util';
@@ -69,13 +71,16 @@ describe('runtime/core', () => {
               {
                 const fname = file.replace('-in.html', '-out.html');
                 const pname = path.join(dirPath, fname);
-                const window = new happy.Window();
+                const win = new happy.Window();
+                const doc = win.document;
                 const html = logic.source.doc?.toString() || '';
-                console.log(html);
-                window.document.write(html);
-                const descr = eval(js);
-                const actual = document.documentElement.outerHTML;
-                const expected = (await fs.promises.readFile(pname)).toString();
+                // console.log(html);
+                doc.write(html);
+                const ctx = new web.Context(win as unknown as Window, doc as unknown as Document);
+                const root = eval(js);
+                await boot(ctx, root);
+                const actual = doc.documentElement.outerHTML;
+                const expected = (await fs.promises.readFile(pname)).toString().trim();
                 assert.equal(normalizeText(actual), normalizeText(expected));
               }
             });

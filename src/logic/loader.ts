@@ -2,7 +2,7 @@ import * as dom from '../source/dom';
 import * as acorn from 'acorn';
 import * as utils from './utils';
 import { PageError, Source } from '../source/parser';
-import { ATTR_VALUE_PREFIX, SCOPE_NAME_KEY } from '../runtime/types';
+import { ATTR_VALUE_PREFIX, SCOPE_NAME_KEY } from '../runtime/boot';
 
 export const LOGIC_ID_ATTR = 'data-pl';
 export const LOGIC_TEXT_MARKER1 = '-t';

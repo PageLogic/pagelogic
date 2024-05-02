@@ -1,3 +1,4 @@
+import * as core from './core';
 
 export const LOGIC_VALUE_PREFIX = '';
 export const ATTR_VALUE_PREFIX = 'attr$';
@@ -27,3 +28,7 @@ export interface Value {
 
 export type ValueFunction = (this: Scope) => unknown;
 export type RefFunction = (this: Scope) => Value | undefined;
+
+export async function boot(ctx: core.Context, root: Scope) {
+
+}

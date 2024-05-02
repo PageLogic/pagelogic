@@ -9,7 +9,7 @@ import { qualify } from '../../src/logic/qualifier';
 import { generator } from '../../src/logic/generator';
 import { generate } from 'escodegen';
 import { normalizeSpace } from 'trillo/preprocessor/util';
-import { SCOPE_VALUE_KEY } from '../../src/runtime/types';
+import { SCOPE_VALUE_KEY } from '../../src/runtime/boot';
 
 describe('logic/generator', () => {
 

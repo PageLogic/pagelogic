@@ -1,5 +1,5 @@
 import * as acorn from 'acorn';
-import * as runtime from '../runtime/types';
+import * as runtime from '../runtime/boot';
 import * as loader from './loader';
 import { array, call, fnExpression, identifier, literal, object, property } from './utils';
 
