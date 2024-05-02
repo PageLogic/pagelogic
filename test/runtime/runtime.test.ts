@@ -42,15 +42,9 @@ describe('runtime/core', () => {
               if (logic.errors.length) {
                 const fname = file.replace('-in.html', '-err.json');
                 const pname = path.join(dirPath, fname);
-                const aerrs = source.errors.map(e => e.msg);
-                let eerrs = [];
-                try {
-                  const etext = (await fs.promises.readFile(pname)).toString();
-                  eerrs = JSON.parse(etext);
-                  assert.deepEqual(aerrs, eerrs);
-                } catch (e) {
-                  assert.deepEqual(aerrs, eerrs);
-                }
+                const text = (await fs.promises.readFile(pname)).toString();
+                const actual = JSON.parse(text);
+                assert.deepEqual(actual, logic.errors);
                 return;
               }
 
