@@ -11,22 +11,23 @@ export class Context {
   pushLevel = 0;
   nextId = 0;
 
-  newScope(
-    props: Props,
-    parent: Scope | null,
-    proto: object | null,
-    isolate = false
-  ): Scope {
-    return newScope(this, props, parent, proto, isolate);
-  }
+  // newScope(
+  //   props: Props,
+  //   parent: Scope | null,
+  //   proto: object | null,
+  //   isolate = false
+  // ): Scope {
+  //   return newScope(this, props, parent, proto, isolate);
+  // }
 
-  newValue(
-    scope: Scope,
-    fn: ValueFunction,
-    refs?: RefFunction[]
-  ): Value {
-    return new Value(scope, fn, refs);
-  }
+  // newValue(
+  //   scope: Scope,
+  //   key: string,
+  //   fn: ValueFunction,
+  //   refs?: RefFunction[]
+  // ): Value {
+  //   return new Value(scope, fn, refs);
+  // }
 
   refresh(scope: Scope, nextCycle = true) {
     this.refreshLevel++;
@@ -157,6 +158,7 @@ export function newScope(
     const val = obj[key];
     if (val instanceof Value) {
       values.set(key, val);
+      val.scope = ret;
     }
   }
 
@@ -199,14 +201,15 @@ export function newScope(
 
 export type ValueFunction = (this: Scope) => unknown;
 export type RefFunction = (this: Scope) => Value | undefined;
+export type ValueCallback = (scope: Scope, v: unknown) => unknown;
 
 const uninit = Symbol('uninit');
 
 export class Value {
-  scope: Scope;
+  scope!: Scope;
   fn: ValueFunction;
   refs?: RefFunction[];
-  cb: (scope: Scope, v: unknown) => unknown;
+  cb: ValueCallback;
   v1: unknown = uninit;
   v2: unknown;
   cycle = 0;
@@ -214,12 +217,10 @@ export class Value {
   dst = new Set<Value>();
 
   constructor(
-    scope: Scope,
     fn: ValueFunction,
     refs?: RefFunction[],
-    cb?: (scope: Scope, v: unknown) => unknown
+    cb?: ValueCallback
   ) {
-    this.scope = scope;
     this.fn = fn;
     this.refs = refs;
     this.cb = cb || ((_: Scope, v: unknown) => v);
