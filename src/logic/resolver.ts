@@ -94,6 +94,13 @@ export function resolve(logic: Logic): Logic {
             ));
             return;
           }
+          const target = chain[chain.length - 1] as Value;
+          if (
+            typeof target.val === 'object' &&
+            (target.val as acorn.Node).type === 'FunctionExpression'
+          ) {
+            return;
+          }
           let ref: es.MemberExpression | null = exp;
           for (let i = 0; i < (path.length - chain.length); i++) {
             ref = ref?.object.type === 'MemberExpression' ? ref.object : null;
