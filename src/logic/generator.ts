@@ -1,11 +1,12 @@
 import * as acorn from 'acorn';
 import * as runtime from '../runtime/boot';
 import * as loader from './loader';
-import { array, call, fnExpression, identifier, literal, object, property } from './utils';
+import { array, call, expressionStatement, fnExpression, identifier, literal, object, property } from './utils';
 
-export function generator(logic: loader.Logic): acorn.ObjectExpression {
+export function generator(logic: loader.Logic): acorn.ExpressionStatement {
+  const ref = logic.source.doc;
   if (logic.errors.length > 0) {
-    return object(logic.source.doc.documentElement!);
+    return expressionStatement(object(logic.source.doc.documentElement!), ref);
   }
 
   // ===========================================================================
@@ -80,5 +81,8 @@ export function generator(logic: loader.Logic): acorn.ObjectExpression {
   }
   const obj = genScope(logic.root);
 
-  return obj;
+  const exp = object(ref);
+  exp.properties.push(property('root', obj, ref));
+
+  return expressionStatement(exp, ref);
 }

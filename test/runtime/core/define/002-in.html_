@@ -1,0 +1,10 @@
+<html>
+  <head>
+    <:define tag="my-greeting">
+      hello
+    </:define>
+  </head>
+  <body>
+    <my-greeting/>
+  </body>
+</html>

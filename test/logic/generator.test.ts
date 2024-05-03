@@ -20,23 +20,25 @@ describe('logic/generator', () => {
     const ast = generator(logic);
     assert.equal(
       normalizeSpace(generate(ast)),
-      normalizeSpace(`{
-        id: '0',
-        values: {
-          v: {
-            fn: function () { return '1'; }
+      normalizeSpace(`({
+        root: {
+          id: '0',
+          values: {
+            v: {
+              fn: function () { return '1'; }
+            },
+            text$0: {
+              fn: function () { return this.v; },
+              refs: [function () { return this.${SCOPE_VALUE_KEY}('v'); }]
+            }
           },
-          text$0: {
-            fn: function () { return this.v; },
-            refs: [function () { return this.${SCOPE_VALUE_KEY}('v'); }]
-          }
-        },
-        name: 'page',
-        children: [
-          { id: '1', values: {}, name: 'head' },
-          { id: '2', values: {}, name: 'body' }
-        ]
-      }`)
+          name: 'page',
+          children: [
+            { id: '1', values: {}, name: 'head' },
+            { id: '2', values: {}, name: 'body' }
+          ]
+        }
+      });`)
     );
   });
 
@@ -47,21 +49,23 @@ describe('logic/generator', () => {
     const ast = generator(logic);
     assert.equal(
       normalizeSpace(generate(ast)),
-      normalizeSpace(`{
-        id: '0',
-        values: {
-          text$0: {
-            fn: function () { return this.scope2.v; },
-            refs: [function () { return this.scope2.$value('v'); }]
-          }
-        },
-        name: 'page',
-        children: [
-          { id: '1', values: { v: { fn: function () { return '1'; } } }, name: 'scope2' },
-          { id: '2', values: {}, name: 'head' },
-          { id: '3', values: {}, name: 'body' }
-        ]
-      }`)
+      normalizeSpace(`({
+        root: {
+          id: '0',
+          values: {
+            text$0: {
+              fn: function () { return this.scope2.v; },
+              refs: [function () { return this.scope2.$value('v'); }]
+            }
+          },
+          name: 'page',
+          children: [
+            { id: '1', values: { v: { fn: function () { return '1'; } } }, name: 'scope2' },
+            { id: '2', values: {}, name: 'head' },
+            { id: '3', values: {}, name: 'body' }
+          ]
+        }
+      });`)
     );
   });
 
@@ -73,21 +77,23 @@ describe('logic/generator', () => {
     const ast = generator(logic);
     assert.equal(
       normalizeSpace(generate(ast)),
-      normalizeSpace(`{
-        id: '0',
-        values: {
-          text$0: {
-            fn: function () { return this.scope2.v; },
-            refs: [function () { return this.scope2.$value('v'); }]
-          }
-        },
-        name: 'page',
-        children: [
-          { id: '1', values: { v: { fn: function () { return '1'; } } }, name: 'scope2' },
-          { id: '2', values: {}, name: 'head' },
-          { id: '3', values: {}, name: 'body' }
-        ]
-      }`)
+      normalizeSpace(`({
+        root: {
+          id: '0',
+          values: {
+            text$0: {
+              fn: function () { return this.scope2.v; },
+              refs: [function () { return this.scope2.$value('v'); }]
+            }
+          },
+          name: 'page',
+          children: [
+            { id: '1', values: { v: { fn: function () { return '1'; } } }, name: 'scope2' },
+            { id: '2', values: {}, name: 'head' },
+            { id: '3', values: {}, name: 'body' }
+          ]
+        }
+      });`)
     );
   });
 
@@ -98,21 +104,23 @@ describe('logic/generator', () => {
     const ast = generator(logic);
     assert.equal(
       normalizeSpace(generate(ast)),
-      normalizeSpace(`{
-        id: '0',
-        values: {
-          text$0: {
-            fn: function () { return this.scope2.v.a; },
-            refs: [function () { return this.scope2.$value('v'); }]
-          }
-        },
-        name: 'page',
-        children: [
-          { id: '1', values: { v: { fn: function () { return { a: 1, b: 2 }; } } }, name: 'scope2' },
-          { id: '2', values: {}, name: 'head' },
-          { id: '3', values: {}, name: 'body' }
-        ]
-      }`)
+      normalizeSpace(`({
+        root: {
+          id: '0',
+          values: {
+            text$0: {
+              fn: function () { return this.scope2.v.a; },
+              refs: [function () { return this.scope2.$value('v'); }]
+            }
+          },
+          name: 'page',
+          children: [
+            { id: '1', values: { v: { fn: function () { return { a: 1, b: 2 }; } } }, name: 'scope2' },
+            { id: '2', values: {}, name: 'head' },
+            { id: '3', values: {}, name: 'body' }
+          ]
+        }
+      });`)
     );
   });
 

@@ -49,7 +49,7 @@ describe('runtime/core', () => {
               }
 
               // check generated code
-              const js = `(${generate(generator(logic))});`;
+              const js = generate(generator(logic));
               {
                 const fname = file.replace('-in.html', '.js');
                 const pname = path.join(dirPath, fname);

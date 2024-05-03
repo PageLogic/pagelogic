@@ -32,6 +32,16 @@ export function esLoc(ref: es.Node) {
   return ret;
 }
 
+export function expressionStatement(
+  exp: acorn.Expression, ref: dom.Node
+): acorn.ExpressionStatement {
+  return {
+    type: 'ExpressionStatement',
+    expression: exp,
+    ...domLoc(ref)
+  };
+}
+
 export function object(ref: dom.Node): acorn.ObjectExpression {
   return {
     type: 'ObjectExpression',

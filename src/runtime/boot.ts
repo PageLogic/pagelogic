@@ -22,6 +22,10 @@ export interface Context {
   root: Scope;
 }
 
+export interface Descriptor {
+  root: Scope;
+}
+
 export interface Scope {
   id: string;
   values: { [key: string]: Value | string };
@@ -37,7 +41,7 @@ export interface Value {
 }
 
 export async function boot(
-  win: Window, doc: Document, descr: Scope, cleanup: boolean
+  win: Window, doc: Document, descr: Descriptor, cleanup: boolean
 ): Promise<core.Scope> {
   const ctx = new core.Context();
   const eMap = new Map<string, Element>();
@@ -119,7 +123,7 @@ export async function boot(
     scope.children?.forEach(child => load(s, child));
     return s;
   }
-  const root = load(null, descr);
+  const root = load(null, descr.root);
 
   cleanup && eMap.forEach((e) => e.removeAttribute(LOGIC_ID_ATTR));
 
