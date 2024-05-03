@@ -5,10 +5,6 @@ import { PageError } from '../source/parser';
 import { Logic, Scope, Value } from './loader';
 import { esIdentifier } from './utils';
 
-export interface ExpressionReference {
-
-}
-
 export function resolve(logic: Logic): Logic {
   if (logic.errors.length > 0) {
     return logic;
@@ -97,7 +93,7 @@ export function resolve(logic: Logic): Logic {
           const target = chain[chain.length - 1] as Value;
           if (
             typeof target.val === 'object' &&
-            (target.val as acorn.Node).type === 'FunctionExpression'
+            (target.val as acorn.Expression).type === 'FunctionExpression'
           ) {
             return;
           }
