@@ -3,18 +3,34 @@
 * [x] source/
   * [x] dom
   * [x] parser
-* [ ] logic/
+  * [x] preprocessor
+* [x] logic/
   * [x] loader
-  * [ ] importer
   * [x] qualifier
   * [x] resolver
   * [x] generator
-* [ ] runtime/
+* [x] runtime/ (base)
   * [x] types
-  * [ ] boot
-  * [ ] core
-  * [ ] web
+  * [x] boot
+  * [x] core
+* [ ] runtime/ (special attributes)
+  * [ ] :class-
+  * [ ] :style-
+  * [ ] :handle-(dot-reference)
+  * [ ] :on-(event)
+  * [ ] :did-
+  * [ ] :will-
+* [ ] runtime/ (directives)
+  * [ ] :define
+  * [ ] :foreach
+  * [ ] :select
+* [ ] compiler
+* [ ] server
+  * [ ] express middleware
+  * [ ] express server
+* [ ] CLI
 
 ## TODO
 
 * [ ] parser: doc sanitization should move current documentElement's content into newly created body tag (except for possible head tag)
+* [ ] preprocessor: doc sanitization in parser should move to preprocessor
