@@ -9,6 +9,7 @@ export const INCLUDE_DIRECTIVE_TAG = DIRECTIVE_TAG_PREFIX + 'INCLUDE';
 export const IMPORT_DIRECTIVE_TAG = DIRECTIVE_TAG_PREFIX + 'IMPORT';
 export const INCLUDE_SRC_ATTR = 'src';
 export const INCLUDE_AS_ATTR = 'as';
+export const GROUP_DIRECTIVE_TAG = DIRECTIVE_TAG_PREFIX + 'GROUP';
 
 export class Preprocessor {
   docroot: string;
@@ -41,6 +42,22 @@ export class Preprocessor {
       return;
     }
     const dir = path.dirname(loaded.relPath);
+
+    function flattenGroups(p: dom.Element) {
+      for (let i = 0; i < p.children.length;) {
+        if (p.children[i].type === 'element') {
+          const e = p.children[i] as dom.Element;
+          if (e.name === GROUP_DIRECTIVE_TAG) {
+            p.children.splice(i, 1, ...e.children);
+            continue;
+          }
+          flattenGroups(e);
+        }
+        i++;
+      }
+    }
+    flattenGroups(source.doc.documentElement!);
+
     await this.processIncludes(source.doc, dir, main, nesting);
     if (main.errors.length) {
       source.errors.push(...main.errors);
