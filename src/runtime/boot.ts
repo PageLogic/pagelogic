@@ -16,7 +16,6 @@ export const TEXT_NODE = 3;
 export const COMMENT_NODE = 8;
 export const DOCUMENT_NODE = 9;
 
-
 export interface Context {
   cycle: number;
   root: Scope;
@@ -115,7 +114,9 @@ export async function boot(
     });
 
     const s = core.newScope(ctx, props, p, null);
-    s.$object.$texts = collectScopeTexts(e, []);
+    if (e.tagName !== 'TEMPLATE') {
+      s.$object.$texts = collectScopeTexts(e, []);
+    }
     if (scope.name) {
       //TODO
     }

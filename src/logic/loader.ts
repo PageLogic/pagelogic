@@ -3,6 +3,7 @@ import * as acorn from 'acorn';
 import * as utils from './utils';
 import { PageError, Source } from '../source/parser';
 import { ATTR_VALUE_PREFIX, LOGIC_ID_ATTR, LOGIC_TEXT_MARKER1, LOGIC_TEXT_MARKER2, SCOPE_NAME_KEY } from '../runtime/boot';
+import { DIRECTIVE_TAG_PREFIX } from '../source/preprocessor';
 
 export const LOGIC_ATTR_NAME_PREFIX = ':';
 export const DEFAULT_TAG_SCOPES: { [key: string]: string } = {
@@ -10,6 +11,12 @@ export const DEFAULT_TAG_SCOPES: { [key: string]: string } = {
   HEAD: 'head',
   BODY: 'body'
 };
+export const DEFINE_DIRECTIVE_TAG = DIRECTIVE_TAG_PREFIX + 'DEFINE';
+export const FOREACH_DIRECTIVE_TAG = DIRECTIVE_TAG_PREFIX + 'FOREACH';
+export const SELECT_DIRECTIVE_TAG = DIRECTIVE_TAG_PREFIX + 'SELECT';
+export const DIRECTIVES = [
+  DEFINE_DIRECTIVE_TAG, FOREACH_DIRECTIVE_TAG, SELECT_DIRECTIVE_TAG
+];
 
 export interface Logic {
   source: Source;
@@ -58,6 +65,9 @@ export function load(source: Source, global: Scope | null, docroot?: string): Lo
       src: e
     };
     e.setAttribute(LOGIC_ID_ATTR, ret.id);
+    if (DIRECTIVES.includes(e.name)) {
+      e.name = 'TEMPLATE';
+    }
     const nameAttr = e.getAttributeNode(scopeNameAttrKey);
     if (nameAttr) {
       if (typeof nameAttr.value === 'string') {
@@ -130,7 +140,7 @@ export function load(source: Source, global: Scope | null, docroot?: string): Lo
 }
 
 function needsScope(e: dom.Element): boolean {
-  if (DEFAULT_TAG_SCOPES[e.name]) {
+  if (DIRECTIVES.includes(e.name) || DEFAULT_TAG_SCOPES[e.name]) {
     return true;
   }
   for (const attr of e.attributes) {
