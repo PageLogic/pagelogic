@@ -114,8 +114,8 @@ export async function boot(
       }
     });
 
-    if (e.tagName === 'define') {
-      const d = new core.Definition(ctx, props, e);
+    if (scope.define) {
+      const d = new core.Definition(ctx, scope.define, props, e);
     } else {
       const s = core.newScope(ctx, props, p, null);
       s.$object.$dom = e;

@@ -269,15 +269,16 @@ export class Value {
 }
 
 // =============================================================================
-// Define
+// Definition
 // =============================================================================
 
 export class Definition {
   props: Props;
   e: Element;
 
-  constructor(ctx: Context, props: Props, e: Element) {
+  constructor(ctx: Context, name: string, props: Props, e: Element) {
     this.props = props;
     this.e = e;
+    ctx.definitions.set(name, this);
   }
 }
