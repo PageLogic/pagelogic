@@ -40,16 +40,22 @@ describe('runtime/core', () => {
 
               // check errors
               if (logic.errors.length) {
-                const fname = file.replace('-in.html', '-err.json');
-                const pname = path.join(dirPath, fname);
-                const text = (await fs.promises.readFile(pname)).toString();
-                const actual = JSON.parse(text);
-                assert.deepEqual(actual, logic.errors);
-                return;
+                try {
+                  const fname = file.replace('-in.html', '-err.json');
+                  const pname = path.join(dirPath, fname);
+                  const text = (await fs.promises.readFile(pname)).toString();
+                  const actual = JSON.parse(text);
+                  assert.deepEqual(actual, logic.errors);
+                  return;
+                } catch (err) {
+                  console.log(logic.errors);
+                  throw err;
+                }
               }
 
               // check generated code
               const js = generate(generator(logic));
+              // console.log(js);
               {
                 const fname = file.replace('-in.html', '.js');
                 const pname = path.join(dirPath, fname);

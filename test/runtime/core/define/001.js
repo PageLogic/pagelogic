@@ -7,10 +7,15 @@
       {
         id: '1',
         values: {},
-        name: 'head'
+        name: 'head',
+        children: [{
+          id: '2',
+          values: {},
+          define: 'my-greeting'
+        }]
       },
       {
-        id: '2',
+        id: '3',
         values: {},
         name: 'body'
       }

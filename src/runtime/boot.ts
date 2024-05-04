@@ -32,6 +32,7 @@ export interface Scope {
   isolate?: boolean;
   parent?: Scope;
   children?: Scope[];
+  define?: string;
 }
 
 export interface Value {
@@ -79,7 +80,7 @@ export async function boot(
     return ret;
   }
 
-  function load(p: core.Scope | null, scope: Scope): core.Scope {
+  function load(p: core.Scope | null, scope: Scope): core.Scope | undefined {
     const e = eMap.get(scope.id)!;
     const props: core.Props = {
       $name: scope.name,
@@ -113,18 +114,20 @@ export async function boot(
       }
     });
 
-    const s = core.newScope(ctx, props, p, null);
-    if (e.tagName !== 'TEMPLATE') {
+    if (e.tagName === 'define') {
+      const d = new core.Definition(ctx, props, e);
+    } else {
+      const s = core.newScope(ctx, props, p, null);
+      s.$object.$dom = e;
       s.$object.$texts = collectScopeTexts(e, []);
+      if (scope.name) {
+        //TODO
+      }
+      scope.children?.forEach(child => load(s, child));
+      return s;
     }
-    if (scope.name) {
-      //TODO
-    }
-    s.$object.$dom = e;
-    scope.children?.forEach(child => load(s, child));
-    return s;
   }
-  const root = load(null, descr.root);
+  const root = load(null, descr.root)!;
 
   cleanup && eMap.forEach((e) => e.removeAttribute(LOGIC_ID_ATTR));
 

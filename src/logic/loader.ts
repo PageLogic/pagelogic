@@ -17,6 +17,7 @@ export const SELECT_DIRECTIVE_TAG = DIRECTIVE_TAG_PREFIX + 'SELECT';
 export const DIRECTIVES = [
   DEFINE_DIRECTIVE_TAG, FOREACH_DIRECTIVE_TAG, SELECT_DIRECTIVE_TAG
 ];
+export const DEFINE_TAG_ATTR = 'tag';
 
 export interface Logic {
   source: Source;
@@ -36,6 +37,7 @@ export interface Scope {
   parent: Scope | null;
   children: Scope[];
   src: dom.Node;
+  define?: string;
 }
 
 export interface Value {
@@ -65,8 +67,17 @@ export function load(source: Source, global: Scope | null, docroot?: string): Lo
       src: e
     };
     e.setAttribute(LOGIC_ID_ATTR, ret.id);
-    if (DIRECTIVES.includes(e.name)) {
+    if (e.name === DEFINE_DIRECTIVE_TAG) {
       e.name = 'TEMPLATE';
+      const tag = e.getAttribute(DEFINE_TAG_ATTR);
+      if (!tag || !/^\w+(-\w+)+$/.test(tag)) {
+        errors.push(new PageError(
+          'error', `Missing or invalid "${DEFINE_TAG_ATTR}" attribute`, e.loc
+        ));
+        return ret;
+      }
+      e.removeAttribute(DEFINE_DIRECTIVE_TAG);
+      ret.define = tag;
     }
     const nameAttr = e.getAttributeNode(scopeNameAttrKey);
     if (nameAttr) {

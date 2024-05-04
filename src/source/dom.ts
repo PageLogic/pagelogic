@@ -234,6 +234,11 @@ export class Element extends Node {
     a = new Attribute(this.doc, this, name, value, this.loc);
   }
 
+  removeAttribute(name: string) {
+    const attr = this.getAttributeNode(name);
+    attr && this.delAttributeNode(attr);
+  }
+
   toJSON(): object {
     return {
       type: this.type,

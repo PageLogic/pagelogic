@@ -10,6 +10,7 @@ export class Context {
   refreshLevel = 0;
   pushLevel = 0;
   nextId = 0;
+  definitions = new Map<string, Definition>();
 
   refresh(scope: Scope, nextCycle = true) {
     this.refreshLevel++;
@@ -264,5 +265,19 @@ export class Value {
       this.dst?.forEach(v => v.update());
     } catch (ignored) { /* nop */ }
     ctx.pushLevel--;
+  }
+}
+
+// =============================================================================
+// Define
+// =============================================================================
+
+export class Definition {
+  props: Props;
+  e: Element;
+
+  constructor(ctx: Context, props: Props, e: Element) {
+    this.props = props;
+    this.e = e;
   }
 }
