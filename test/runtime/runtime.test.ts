@@ -1,11 +1,10 @@
 /// <reference types="node" />
 
-import { GlobalRegistrator } from '@happy-dom/global-registrator';
 import { parse } from 'acorn';
 import { assert } from 'chai';
 import { generate } from 'escodegen';
 import fs from 'fs';
-import { GlobalWindow } from 'happy-dom';
+import * as happy from 'happy-dom';
 import { describe } from 'mocha';
 import path from 'path';
 import { normalizeText } from 'trillo/preprocessor/util';
@@ -17,19 +16,8 @@ import { boot } from '../../src/runtime/boot';
 import { Preprocessor } from '../../src/source/preprocessor';
 
 // https://github.com/capricorn86/happy-dom/tree/master/packages/global-registrator
-GlobalRegistrator.register({ url: 'about:blank', width: 1920, height: 1080 });
+// GlobalRegistrator.register({ url: 'about:blank', width: 1920, height: 1080 });
 const rootPath = path.join(__dirname, 'core');
-
-interface PageLogic {
-  connectedCallback: (e: Element) => void;
-}
-
-declare global {
-  interface Window {
-    pagelogic: PageLogic,
-    PageLogicElement: HTMLElement,
-  }
-}
 
 describe('runtime/core', () => {
   fs.readdirSync(rootPath).forEach(dir => {
@@ -84,11 +72,7 @@ describe('runtime/core', () => {
               {
                 const fname = file.replace('-in.html', '-out.html');
                 const pname = path.join(dirPath, fname);
-                // const win = window; //new happy.Window();
-                // https://github.com/capricorn86/happy-dom/wiki/GlobalWindow
-                const win = new GlobalWindow();
-                // win.location.href = 'about:blank';
-                // await new Promise(resolve => setTimeout(resolve, 500));
+                const win = new happy.Window();
                 const doc = win.document;
                 const html = logic.source.doc?.toString() || '';
                 // console.log(html);
@@ -96,36 +80,10 @@ describe('runtime/core', () => {
                 // console.log(js);
                 const root = eval(js);
 
-                window.pagelogic = {
-                  connectedCallback: (e: Element) => {
-                    console.log('window.pagelogic.connectedCallback()', e.tagName);
-                  }
-                };
-
-                const definitionClass = win.eval(`
-                  window.Definition = class extends HTMLElement {
-                    constructor() {
-                      super();
-                      console.log('---', 'constructor()');
-                    }
-
-                    connectedCallback() {
-                      console.log('---', 'connectedCallback()', this.tagName);
-                      window.pagelogic.connectedCallback(this);
-                    }
-                  }
-                `);
-
                 await boot(
-                  win as unknown as Window,
                   doc as unknown as Document,
                   root,
-                  true,
-                  (tagName: string) => {
-                    console.log('registerTagCB()', tagName);
-                    console.log(definitionClass);
-                    win.customElements.define(tagName, definitionClass);
-                  }
+                  true
                 );
                 const actual = doc.documentElement.outerHTML;
                 await win.happyDOM.close();

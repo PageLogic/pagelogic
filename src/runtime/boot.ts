@@ -1,3 +1,4 @@
+import { DEFINE_TAG_ATTR } from '../logic/loader';
 import * as core from './core';
 
 export const LOGIC_ID_ATTR = 'data-pl';
@@ -40,15 +41,29 @@ export interface Value {
   refs?: core.RefFunction[];
 }
 
+declare global {
+  interface Window {
+    pagelogic: {
+      connectedCallback: (e: Element) => void,
+      disconnectedCallback: (e: Element) => void,
+      customElementConstructor?: CustomElementConstructor,
+    }
+  }
+}
+
+// =============================================================================
+// boot
+// =============================================================================
+
 export async function boot(
-  win: Window, doc: Document, descr: Descriptor, cleanup: boolean,
-  registerTagCB: (tagName: string) => void
+  doc: Document, descr: Descriptor, cleanup: boolean
 ): Promise<core.Scope> {
   const ctx = new core.Context();
-  const eMap = new Map<string, Element>();
+  const customElementConstructor = initCustomTags(doc);
 
+  const scopeElements = new Map<string, Element>();
   doc.querySelectorAll(`[${LOGIC_ID_ATTR}]`).forEach(e => {
-    eMap.set(e.getAttribute(LOGIC_ID_ATTR)!, e);
+    scopeElements.set(e.getAttribute(LOGIC_ID_ATTR)!, e);
   });
 
   function collectScopeTexts(e: Element, ret: Node[]) {
@@ -82,7 +97,7 @@ export async function boot(
   }
 
   function load(p: core.Scope | null, scope: Scope): core.Scope | undefined {
-    const e = eMap.get(scope.id)!;
+    const e = scopeElements.get(scope.id)!;
     const props: core.Props = {
       $name: scope.name,
     };
@@ -118,7 +133,8 @@ export async function boot(
     if (scope.define) {
       // const d = core.newDefinition(win, scope.define, props, e);
       // win.customElements.define(scope.define, core.Definition);
-      registerTagCB(scope.define);
+      // registerTagCB(scope.define);
+      doc.defaultView?.customElements.define(scope.define, customElementConstructor);
     } else {
       const s = core.newScope(ctx, props, p, null);
       s.$object.$dom = e;
@@ -132,9 +148,42 @@ export async function boot(
   }
   const root = load(null, descr.root)!;
 
-  cleanup && eMap.forEach((e) => e.removeAttribute(LOGIC_ID_ATTR));
+  cleanup && scopeElements.forEach((e) => e.removeAttribute(LOGIC_ID_ATTR));
 
   ctx.refresh(root);
   return root;
 }
 
+function initCustomTags(doc: Document): CustomElementConstructor {
+  const win = doc.defaultView!;
+  const tagTemplates = new Map<string, Element>();
+
+  Array.from(doc.getElementsByTagName('template')).forEach(e => {
+    const tag = e.getAttribute(DEFINE_TAG_ATTR);
+    tag && tagTemplates.set(tag.toUpperCase(), e);
+  });
+
+  win.pagelogic = {
+    connectedCallback: e => {
+      const template = tagTemplates.get(e.tagName);
+      if (!template) {
+        return;
+      }
+      console.log('---------');
+    },
+    disconnectedCallback: e => {
+      //TODO
+    }
+  };
+
+  return win.eval(`
+    window.pagelogic.customElementConstructor = class extends HTMLElement {
+      connectedCallback() {
+        pagelogic.connectedCallback(this);
+      }
+      disconnectedCallback() {
+        pagelogic.disconnectedCallback(this);
+      }
+    }
+  `);
+}
