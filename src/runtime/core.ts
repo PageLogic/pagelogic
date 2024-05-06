@@ -10,7 +10,7 @@ export class Context {
   refreshLevel = 0;
   pushLevel = 0;
   nextId = 0;
-  definitions = new Map<string, Definition>();
+  // definitions = new Map<string, Definition>();
 
   refresh(scope: Scope, nextCycle = true) {
     this.refreshLevel++;
@@ -272,13 +272,27 @@ export class Value {
 // Definition
 // =============================================================================
 
-export class Definition {
-  props: Props;
-  e: Element;
-
-  constructor(ctx: Context, name: string, props: Props, e: Element) {
-    this.props = props;
-    this.e = e;
-    ctx.definitions.set(name, this);
-  }
+export function newDefinition(
+  win: Window, name: string, props: Props, template: Element
+) {
+  // const klass = class extends HTMLElement {
+  // };
+  // win.customElements.define(name, klass);
+  // console.log(win.HTMLElement);
 }
+
+// export class Definition extends global.HTMLElement {
+
+//   constructor() {
+//     console.log('core.Definition.constructor()');//tempdebug
+//     super();
+//   }
+
+//   connectedCallback() {
+//     console.log(this.tagName);//tempdebug
+//   }
+
+//   disconnectedCallback() {
+
+//   }
+// }

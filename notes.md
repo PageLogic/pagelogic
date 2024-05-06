@@ -34,3 +34,7 @@
 
 * [ ] parser: doc sanitization should move current documentElement's content into newly created body tag (except for possible head tag)
 * [ ] preprocessor: doc sanitization in parser should move to preprocessor
+
+## Notes
+
+* https://github.com/capricorn86/happy-dom/tree/master/packages/global-registrator

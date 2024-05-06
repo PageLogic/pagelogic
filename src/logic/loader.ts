@@ -76,7 +76,7 @@ export function load(source: Source, global: Scope | null, docroot?: string): Lo
         ));
         return ret;
       }
-      e.removeAttribute(DEFINE_TAG_ATTR);
+      // e.removeAttribute(DEFINE_TAG_ATTR);
       ret.define = tag;
     }
     const nameAttr = e.getAttributeNode(scopeNameAttrKey);

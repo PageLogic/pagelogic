@@ -41,7 +41,8 @@ export interface Value {
 }
 
 export async function boot(
-  win: Window, doc: Document, descr: Descriptor, cleanup: boolean
+  win: Window, doc: Document, descr: Descriptor, cleanup: boolean,
+  registerTagCB: (tagName: string) => void
 ): Promise<core.Scope> {
   const ctx = new core.Context();
   const eMap = new Map<string, Element>();
@@ -115,7 +116,9 @@ export async function boot(
     });
 
     if (scope.define) {
-      const d = new core.Definition(ctx, scope.define, props, e);
+      // const d = core.newDefinition(win, scope.define, props, e);
+      // win.customElements.define(scope.define, core.Definition);
+      registerTagCB(scope.define);
     } else {
       const s = core.newScope(ctx, props, p, null);
       s.$object.$dom = e;
@@ -134,3 +137,4 @@ export async function boot(
   ctx.refresh(root);
   return root;
 }
+
