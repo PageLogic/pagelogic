@@ -59,6 +59,7 @@ export async function boot(
   doc: Document, descr: Descriptor, cleanup: boolean
 ): Promise<core.Scope> {
   const ctx = new core.Context();
+  const scopes = new Array<core.Scope>();
   const customElementConstructor = initCustomTags(doc);
 
   const scopeElements = new Map<string, Element>();
@@ -131,9 +132,6 @@ export async function boot(
     });
 
     if (scope.define) {
-      // const d = core.newDefinition(win, scope.define, props, e);
-      // win.customElements.define(scope.define, core.Definition);
-      // registerTagCB(scope.define);
       doc.defaultView?.customElements.define(scope.define, customElementConstructor);
     } else {
       const s = core.newScope(ctx, props, p, null);
@@ -142,6 +140,7 @@ export async function boot(
       if (scope.name) {
         //TODO
       }
+      scopes.push(s);
       scope.children?.forEach(child => load(s, child));
       return s;
     }
@@ -169,7 +168,10 @@ function initCustomTags(doc: Document): CustomElementConstructor {
       if (!template) {
         return;
       }
-      console.log('---------');
+      const t = template.cloneNode(true);
+      while (t.firstChild) {
+        e.appendChild(t.firstChild);
+      }
     },
     disconnectedCallback: e => {
       //TODO

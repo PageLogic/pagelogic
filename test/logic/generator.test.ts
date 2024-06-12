@@ -8,7 +8,6 @@ import { resolve } from '../../src/logic/resolver';
 import { qualify } from '../../src/logic/qualifier';
 import { generator } from '../../src/logic/generator';
 import { generate } from 'escodegen';
-import { normalizeSpace } from 'trillo/preprocessor/util';
 import { SCOPE_VALUE_KEY } from '../../src/runtime/boot';
 
 describe('logic/generator', () => {
@@ -19,8 +18,8 @@ describe('logic/generator', () => {
     ), null)));
     const ast = generator(logic);
     assert.equal(
-      normalizeSpace(generate(ast)),
-      normalizeSpace(`({
+      parser.normalizeSpace(generate(ast)),
+      parser.normalizeSpace(`({
         root: {
           id: '0',
           values: {
@@ -48,8 +47,8 @@ describe('logic/generator', () => {
     ), null)));
     const ast = generator(logic);
     assert.equal(
-      normalizeSpace(generate(ast)),
-      normalizeSpace(`({
+      parser.normalizeSpace(generate(ast)),
+      parser.normalizeSpace(`({
         root: {
           id: '0',
           values: {
@@ -76,8 +75,8 @@ describe('logic/generator', () => {
     assert.equal(logic.errors.length, 0);
     const ast = generator(logic);
     assert.equal(
-      normalizeSpace(generate(ast)),
-      normalizeSpace(`({
+      parser.normalizeSpace(generate(ast)),
+      parser.normalizeSpace(`({
         root: {
           id: '0',
           values: {
@@ -103,8 +102,8 @@ describe('logic/generator', () => {
     ), null)));
     const ast = generator(logic);
     assert.equal(
-      normalizeSpace(generate(ast)),
-      normalizeSpace(`({
+      parser.normalizeSpace(generate(ast)),
+      parser.normalizeSpace(`({
         root: {
           id: '0',
           values: {

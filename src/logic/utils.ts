@@ -87,7 +87,7 @@ export function array(ref: dom.Node): acorn.ArrayExpression {
   };
 }
 
-export function literal(value: string | number, ref: dom.Node): acorn.Literal {
+export function literal(value: string | number | boolean, ref: dom.Node): acorn.Literal {
   return {
     type: 'Literal',
     value,

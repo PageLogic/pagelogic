@@ -2,7 +2,6 @@ import * as acorn from 'acorn';
 import * as runtime from '../runtime/boot';
 import * as loader from './loader';
 import { array, call, expressionStatement, fnExpression, identifier, literal, object, property } from './utils';
-import { DIRECTIVE_TAG_PREFIX } from '../source/preprocessor';
 
 export function generator(logic: loader.Logic): acorn.ExpressionStatement {
   const ref = logic.source.doc;
@@ -73,6 +72,7 @@ export function generator(logic: loader.Logic): acorn.ExpressionStatement {
     }
     if (scope.define) {
       ret.properties.push(property('define', literal(scope.define, src), src));
+      ret.properties.push(property('isolate', literal(true, src), src));
     }
     // if (scope.tagName.startsWith(DIRECTIVE_TAG_PREFIX)) {
     //   const directive = scope.tagName

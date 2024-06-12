@@ -52,6 +52,7 @@ export interface Value {
 export function load(source: Source, global: Scope | null, docroot?: string): Logic {
   const scopeNameAttrKey = attrName(SCOPE_NAME_KEY);
   const errors = [...source.errors];
+  const definitions = new Set<string>();
   let count = 0;
 
   function load(e: dom.Element, p: Scope | null): Scope {
@@ -67,6 +68,7 @@ export function load(source: Source, global: Scope | null, docroot?: string): Lo
       src: e
     };
     e.setAttribute(LOGIC_ID_ATTR, ret.id);
+    // define directive
     if (e.name === DEFINE_DIRECTIVE_TAG) {
       e.name = 'TEMPLATE';
       const tag = e.getAttribute(DEFINE_TAG_ATTR);
@@ -76,9 +78,10 @@ export function load(source: Source, global: Scope | null, docroot?: string): Lo
         ));
         return ret;
       }
-      // e.removeAttribute(DEFINE_TAG_ATTR);
       ret.define = tag;
+      definitions.add(tag.toUpperCase());
     }
+    // scope name
     const nameAttr = e.getAttributeNode(scopeNameAttrKey);
     if (nameAttr) {
       if (typeof nameAttr.value === 'string') {
@@ -111,7 +114,8 @@ export function load(source: Source, global: Scope | null, docroot?: string): Lo
         const child = p.children[i];
         if (child.type === 'element') {
           const e = child as dom.Element;
-          if (needsScope(e)) {
+          if (needsScope(e, definitions)) {
+            console.log(e.name);//tempdebug
             const scope = load(e, ret);
             ret.children.push(scope);
           } else {
@@ -150,8 +154,12 @@ export function load(source: Source, global: Scope | null, docroot?: string): Lo
   return { source, errors, docroot, root };
 }
 
-function needsScope(e: dom.Element): boolean {
-  if (DIRECTIVES.includes(e.name) || DEFAULT_TAG_SCOPES[e.name]) {
+function needsScope(e: dom.Element, definitions: Set<string>): boolean {
+  if (
+    DIRECTIVES.includes(e.name) ||
+    DEFAULT_TAG_SCOPES[e.name] ||
+    definitions.has(e.name)
+  ) {
     return true;
   }
   for (const attr of e.attributes) {

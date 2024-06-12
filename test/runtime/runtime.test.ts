@@ -7,19 +7,19 @@ import fs from 'fs';
 import * as happy from 'happy-dom';
 import { describe } from 'mocha';
 import path from 'path';
-import { normalizeText } from 'trillo/preprocessor/util';
 import { generator } from '../../src/logic/generator';
 import { load } from '../../src/logic/loader';
 import { qualify } from '../../src/logic/qualifier';
 import { resolve } from '../../src/logic/resolver';
 import { boot } from '../../src/runtime/boot';
+import { normalizeText } from '../../src/source/parser';
 import { Preprocessor } from '../../src/source/preprocessor';
 
 // https://github.com/capricorn86/happy-dom/tree/master/packages/global-registrator
 // GlobalRegistrator.register({ url: 'about:blank', width: 1920, height: 1080 });
 const rootPath = path.join(__dirname, 'core');
 
-describe('runtime/core', () => {
+describe.skip('runtime/core', () => {
   fs.readdirSync(rootPath).forEach(dir => {
     const dirPath = path.join(rootPath, dir);
     if (

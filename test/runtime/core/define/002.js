@@ -18,7 +18,11 @@
       {
         id: '3',
         values: {},
-        name: 'body'
+        name: 'body',
+        children: [{
+          id: '4',
+          values: {}
+        }]
       }
     ]
   }
