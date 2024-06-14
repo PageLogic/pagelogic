@@ -1,0 +1,14 @@
+<html>
+  <head>
+    <:macro tag="kit-page" class="kit-page">
+      <div><:slot name="header"/></div>
+    </:macro>
+    <:macro tag="kit-nav" class="kit-nav"/>
+  </head>
+  <body>
+    <kit-page>
+      <span :slot="header">Hi</span>
+      <kit-nav/>
+    </kit-page>
+  </body>
+</html>

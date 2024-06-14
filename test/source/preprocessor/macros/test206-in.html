@@ -1,0 +1,16 @@
+<html>
+  <head>
+    <:macro tag="boot-navbar:nav" class="navbar navbar-expand-lg bg-body-tertiary">
+      <div class="container">
+        <a class="navbar-brand" href="#">
+          <:slot name="brand"/>
+        </a>
+      </div>
+    </:macro>
+  </head>
+  <body>
+    <boot-navbar>
+      <span :slot="brand">Hi</span>
+    </boot-navbar>
+  </body>
+</html>

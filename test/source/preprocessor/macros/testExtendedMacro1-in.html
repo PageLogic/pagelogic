@@ -1,0 +1,22 @@
+<html>
+<head>
+  <:macro tag="kit-item" class="kit-item">
+    <:slot name="default"/>
+    <span class="badge rounded-pill">badge</span>
+  </:macro>
+  <:macro tag="kit-special-item:kit-item">
+    <label>
+      <input type="radio"/>
+      <:slot name="default"/>
+    </label>
+  </:macro>
+</head>
+<body>
+  <kit-special-item>
+    Item1
+  </kit-special-item>
+  <kit-special-item>
+    Item2
+  </kit-special-item>
+</body>
+</html>

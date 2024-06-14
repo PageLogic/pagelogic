@@ -1,0 +1,23 @@
+<html>
+  <head>
+    <:macro tag="boot-app">
+      <:slot name="default"/>
+      <script src="dummy1.js"></script>
+      <script src="dummy2.js"></script>
+    </:macro>
+    <:macro tag="boot-navbar:nav" class="navbar navbar-expand-lg bg-body-tertiary">
+      <div class="container">
+        <a class="navbar-brand" href="#">
+          <:slot name="brand2"/>
+        </a>
+      </div>
+    </:macro>
+  </head>
+  <body>
+    <boot-app>
+      <boot-navbar>
+        <span :slot="brand2">Hi</span>
+      </boot-navbar>
+    </boot-app>
+  </body>
+</html>
