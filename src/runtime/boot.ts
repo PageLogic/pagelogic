@@ -1,4 +1,3 @@
-import { DEFINE_TAG_ATTR } from '../logic/loader';
 import * as core from './core';
 
 export const LOGIC_ID_ATTR = 'data-pl';
@@ -33,7 +32,6 @@ export interface Scope {
   isolate?: boolean;
   parent?: Scope;
   children?: Scope[];
-  define?: string;
 }
 
 export interface Value {
@@ -60,7 +58,6 @@ export async function boot(
 ): Promise<core.Scope> {
   const ctx = new core.Context();
   const scopes = new Array<core.Scope>();
-  const customElementConstructor = initCustomTags(doc);
 
   const scopeElements = new Map<string, Element>();
   doc.querySelectorAll(`[${LOGIC_ID_ATTR}]`).forEach(e => {
@@ -131,19 +128,15 @@ export async function boot(
       }
     });
 
-    if (scope.define) {
-      doc.defaultView?.customElements.define(scope.define, customElementConstructor);
-    } else {
-      const s = core.newScope(ctx, props, p, null);
-      s.$object.$dom = e;
-      s.$object.$texts = collectScopeTexts(e, []);
-      if (scope.name) {
-        //TODO
-      }
-      scopes.push(s);
-      scope.children?.forEach(child => load(s, child));
-      return s;
+    const s = core.newScope(ctx, props, p, null);
+    s.$object.$dom = e;
+    s.$object.$texts = collectScopeTexts(e, []);
+    if (scope.name) {
+      //TODO
     }
+    scopes.push(s);
+    scope.children?.forEach(child => load(s, child));
+    return s;
   }
   const root = load(null, descr.root)!;
 
@@ -151,41 +144,4 @@ export async function boot(
 
   ctx.refresh(root);
   return root;
-}
-
-function initCustomTags(doc: Document): CustomElementConstructor {
-  const win = doc.defaultView!;
-  const tagTemplates = new Map<string, Element>();
-
-  Array.from(doc.getElementsByTagName('template')).forEach(e => {
-    const tag = e.getAttribute(DEFINE_TAG_ATTR);
-    tag && tagTemplates.set(tag.toUpperCase(), e);
-  });
-
-  win.pagelogic = {
-    connectedCallback: e => {
-      const template = tagTemplates.get(e.tagName);
-      if (!template) {
-        return;
-      }
-      const t = template.cloneNode(true);
-      while (t.firstChild) {
-        e.appendChild(t.firstChild);
-      }
-    },
-    disconnectedCallback: e => {
-      //TODO
-    }
-  };
-
-  return win.eval(`
-    window.pagelogic.customElementConstructor = class extends HTMLElement {
-      connectedCallback() {
-        pagelogic.connectedCallback(this);
-      }
-      disconnectedCallback() {
-        pagelogic.disconnectedCallback(this);
-      }
-    }
-  `);
 }
