@@ -14,7 +14,7 @@ const DOLLAR = '$'.charCodeAt(0);
 const LEXP = '${';
 const REXP = '}'.charCodeAt(0);
 
-export function parse(s: string, fname?: string, ret?: Source, sanitize = true): Source {
+export function parse(s: string, fname: string, ret?: Source, sanitize = true): Source {
   ret || (ret = new Source(s, fname));
   try {
     parseNodes(ret.doc, ret, 0, ret.errors);
@@ -527,13 +527,13 @@ export function normalizeSpace(s?: string): string | undefined {
 
 export class Source {
   s!: string;
-  fname?: string;
+  fname: string;
   files: string[];
   linestarts!: number[];
   errors!: PageError[];
   doc!: dom.Document;
 
-  constructor(s: string, fname?: string) {
+  constructor(s: string, fname: string) {
     this.reset(s);
     this.fname = fname;
     this.files = [];
