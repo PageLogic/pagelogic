@@ -13,42 +13,34 @@ export const SRC_CLIENT_CODE = 'runtime.min.js';
 export const DST_CLIENT_CODE = '/pagelogic-rt.js';
 
 export interface PageLogicConfig {
-  rootPath?: string;
+  rootPath: string;
+  runtimePath: string;
   ssr?: boolean;
   // virtualFiles?: Array<VirtualFile>;
 }
 
 const pages = new Map<string, Page>();
-let runtimeJs = '';
-
-try {
-  runtimeJs = fs.readFileSync(
-    path.join(__dirname, `../${SRC_CLIENT_CODE}`),
-    { encoding: 'utf8' }
-  );
-} catch (error: any) {
-  // console.log('runtimeJs', error);
-  // tempdebug
-  try {
-    runtimeJs = fs.readFileSync(
-      path.join(__dirname, `../../dist/${SRC_CLIENT_CODE}`),
-      { encoding: 'utf8' }
-    );
-  } catch (ignored: any) {
-    console.log('runtimeJs', error);
-  }
-}
-// add initial pseudo-page for runtime js delivery
-pages.set('/pagelogic-rt', {
-  fname: DST_CLIENT_CODE,
-  errors: [],
-  files: [],
-  markup: runtimeJs
-});
 
 export function pageLogic(config: PageLogicConfig) {
-  const rootPath = config.rootPath || process.cwd();
+  const rootPath = config.rootPath;
+  const runtimePath = config.runtimePath;
   const compiler = new Compiler(rootPath, { clientFile: DST_CLIENT_CODE });
+  let runtimeJs = '';
+
+  try {
+    runtimeJs = fs.readFileSync(
+      runtimePath,
+      { encoding: 'utf8' }
+    );
+  } catch (err: any) {
+    console.log('runtimeJs', err);
+  }
+  pages.set('/pagelogic-rt', {
+    fname: DST_CLIENT_CODE,
+    errors: [],
+    files: [],
+    markup: runtimeJs
+  });
 
   return async function (req: Request, res: Response, next: NextFunction) {
     const i = req.path.indexOf('.');

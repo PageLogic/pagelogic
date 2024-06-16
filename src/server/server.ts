@@ -27,8 +27,8 @@ export class Server {
   server?: http.Server;
   port?: number;
 
-  constructor(config?: ServerConfig) {
-    this.config = config || {};
+  constructor(config: ServerConfig) {
+    this.config = config;
   }
 
   start(cb?: (server: Server, app: Application, config: ServerConfig) => void): this {
