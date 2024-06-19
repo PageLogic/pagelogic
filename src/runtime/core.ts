@@ -267,32 +267,3 @@ export class Value {
     ctx.pushLevel--;
   }
 }
-
-// =============================================================================
-// Definition
-// =============================================================================
-
-export function newDefinition(
-  win: Window, name: string, props: Props, template: Element
-) {
-  // const klass = class extends HTMLElement {
-  // };
-  // win.customElements.define(name, klass);
-  // console.log(win.HTMLElement);
-}
-
-// export class Definition extends global.HTMLElement {
-
-//   constructor() {
-//     console.log('core.Definition.constructor()');//tempdebug
-//     super();
-//   }
-
-//   connectedCallback() {
-//     console.log(this.tagName);//tempdebug
-//   }
-
-//   disconnectedCallback() {
-
-//   }
-// }

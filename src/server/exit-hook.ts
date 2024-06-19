@@ -19,7 +19,7 @@ function exit(shouldManuallyExit:boolean, signal:number) {
   });
 
 	if (shouldManuallyExit === true) {
-		process.exit(128 + signal); // eslint-disable-line unicorn/no-process-exit
+		process.exit(128 + signal); // eslint-disable-line
 	}
 }
 

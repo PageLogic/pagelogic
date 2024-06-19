@@ -1,9 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
-import { Window } from 'happy-dom';
 import fs from "fs";
+import { Window } from 'happy-dom';
 import path from "path";
-import { Logic } from '../logic/loader';
-import { PageError } from '../source/parser';
 import { Compiler, Page } from '../compiler/compiler';
 
 // https://expressjs.com/en/guide/writing-middleware.html
@@ -32,7 +30,7 @@ export function pageLogic(config: PageLogicConfig) {
       runtimePath,
       { encoding: 'utf8' }
     );
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.log('runtimeJs', err);
   }
   pages.set('/pagelogic-rt', {
@@ -58,7 +56,9 @@ export function pageLogic(config: PageLogicConfig) {
           // it means the index.html inside
           pathname = path.join(pathname, 'index');
         }
-      } catch (ignored: any) {}
+      } catch (ignored: unknown) {
+        // nop
+      }
     }
     if (extname === '.html') {
       const page = await compiler.compile(pathname + extname);
@@ -88,7 +88,7 @@ export function pageLogic(config: PageLogicConfig) {
             res.header('Content-Type', 'text/html;charset=UTF-8');
             res.send(`<!DOCTYPE html>\n${out}`);
             return;
-          } catch (error: any) {
+          } catch (error: unknown) {
             //TODO: error status
             res.header('Content-Type', 'text/plain;charset=UTF-8');
             res.send(`${error}`);

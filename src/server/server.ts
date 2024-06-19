@@ -1,8 +1,9 @@
 import express, { Application } from "express";
 import rateLimit from "express-rate-limit";
 import * as http from 'http';
-import { PageLogicConfig, pageLogic } from "./middleware";
+import { AddressInfo } from 'net';
 import exitHook from "./exit-hook";
+import { PageLogicConfig, pageLogic } from "./middleware";
 
 interface ServerConfig extends PageLogicConfig {
   port?: number;
@@ -18,7 +19,7 @@ export interface TrafficLimit {
   maxRequests: number,
 }
 
-export type ServerLogger = (type: 'error' | 'warn' | 'info' | 'debug', msg: any) => void;
+export type ServerLogger = (type: 'error' | 'warn' | 'info' | 'debug', msg: string) => void;
 
 //TODO: prevent loading remote stuff in ssr environment
 //TODO: serialize compiler calls
@@ -50,7 +51,7 @@ export class Server {
     cb && cb(this, app, config);
     app.use(express.static(config.rootPath));
     this.server = app.listen(config.port);
-    this.port = (this.server?.address() as any).port;
+    this.port = (this.server?.address() as AddressInfo).port;
     this.log('info', `docroot ${config.rootPath}`);
     this.log('info', `address http://127.0.0.1:${this.port}/`);
     exitHook(() => this.log('info', 'will exit'));
@@ -67,7 +68,7 @@ export class Server {
     return this;
   }
 
-  log(type: 'error' | 'warn' | 'info' | 'debug', msg: any) {
+  log(type: 'error' | 'warn' | 'info' | 'debug', msg: string) {
     if (!this.config.mute) {
       if (this.config.logger) {
         this.config.logger(type, msg);

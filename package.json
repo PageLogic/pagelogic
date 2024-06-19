@@ -1,17 +1,37 @@
 {
-  "name": "pippo",
-  "version": "1.0.0",
-  "main": "index.js",
+  "name": "pagelogic",
+  "version": "1.2.1",
+  "description": "HTML-based isomorphic reactive web framework for Node.js and the browser",
+  "keywords": [
+    "reactive",
+    "web",
+    "framework",
+    "server",
+    "middleware",
+    "browser",
+    "runtime",
+    "isomorphic",
+    "HTML"
+  ],
+  "homepage": "https://github.com/fcapolini/pagelogic/blob/main/README.md",
+  "bugs": "https://github.com/fcapolini/pagelogic/issues",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:fcapolini/pagelogic.git"
+  },
+  "author": "Fabrizio Capolini",
+  "license": "MIT",
   "scripts": {
     "build": "rm -rf dist/* && tsc && npm run build-client",
     "build-client": "browserify dist/runtime/runtime.js -o dist/pagelogic-rt.js",
     "test": "mocha --exit -r ts-node/register test/**/*.test.ts",
+    "lint": "eslint ./src",
     "coverage": "nyc npm run test"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
+  "main": "index.js",
+  "engines": {
+    "node": ">=16.0.0"
+  },
   "devDependencies": {
     "@swc/core": "^1.5.28",
     "@types/chai": "^4.3.16",
@@ -21,11 +41,13 @@
     "@types/mocha": "^10.0.6",
     "browserify": "^17.0.0",
     "chai": "^4.3.4",
+    "eslint": "^8.56.0",
     "happy-dom": "^14.12.0",
     "mocha": "^10.1.0",
     "nyc": "^17.0.0",
     "ts-node": "^10.9.1",
-    "typescript": "^5.4.5"
+    "typescript": "^5.4.5",
+    "typescript-eslint": "^7.13.1"
   },
   "dependencies": {
     "escodegen": "^2.1.0",
