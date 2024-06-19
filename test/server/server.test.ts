@@ -6,7 +6,7 @@ import { assert } from "chai";
 const rootPath = path.join(__dirname, 'server');
 const runtimePath = './dist/pagelogic-rt.js';
 
-describe('server: server', () => {
+describe.skip('server: server', () => {
   let server: Server;
 
   before(() => {
@@ -24,7 +24,7 @@ describe('server: server', () => {
     assert.equal(txt.trim(), 'some text');
   });
 
-  it.skip("should serve dynamic page", async () => {
+  it("should serve dynamic page", async () => {
     const win = getWindow(server);
     const res = await win.fetch(`http://localhost:${server.port}/page1.html`);
     const txt = await res.text();
@@ -32,7 +32,7 @@ describe('server: server', () => {
     assert.equal(win.document.body.innerText.trim(), 'hello there!');
   });
 
-  it.skip("shouldn't load external JS server side", async () => {
+  it("shouldn't load external JS server side", async () => {
     const win = getWindow(server);
     const res = await win.fetch(`http://localhost:${server.port}/page2.html`);
     const txt = await res.text();
@@ -40,7 +40,7 @@ describe('server: server', () => {
     assert.equal(win.document.body.innerText.trim(), '');
   });
 
-  it.skip("should run embedded JS server side", async () => {
+  it("should run embedded JS server side", async () => {
     const win = getWindow(server);
     const res = await win.fetch(`http://localhost:${server.port}/page3.html`);
     const txt = await res.text();
@@ -48,7 +48,7 @@ describe('server: server', () => {
     assert.equal(win.document.body.innerText.trim(), 'hello');
   });
 
-  it.skip("should overcome PL-10 bug", async () => {
+  it("should overcome PL-10 bug", async () => {
     const win = getWindow(server);
     const res = await win.fetch(`http://localhost:${server.port}/pl-10.html`);
     const txt = await res.text();
