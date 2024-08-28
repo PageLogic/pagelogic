@@ -7,22 +7,27 @@
     "coverage": "nyc npm run test",
     "build": "npm run build-server && npm run build-client",
     "build-client": "mkdir -p dist && browserify src/client.ts -p tsify > dist/client.js",
-    "build-server": "tsc"
+    "build-server": "tsc",
+    "lint": "eslint ."
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "devDependencies": {
+    "@eslint/js": "^9.9.1",
     "@swc/core": "^1.7.21",
     "@types/chai": "^4.3.19",
     "@types/mocha": "^10.0.7",
     "browserify": "^17.0.0",
     "chai": "^4.3.4",
+    "eslint": "^9.9.1",
+    "globals": "^15.9.0",
     "mocha": "^10.1.0",
     "nyc": "^17.0.0",
     "ts-node": "^10.9.1",
-    "tsify": "^5.0.4"
+    "tsify": "^5.0.4",
+    "typescript-eslint": "^8.3.0"
   },
   "dependencies": {
     "acorn": "^8.12.1",
