@@ -1,73 +1,31 @@
 {
   "name": "pagelogic",
-  "version": "1.2.1",
-  "description": "HTML-based isomorphic reactive web framework for Node.js and the browser",
-  "keywords": [
-    "reactive",
-    "web",
-    "framework",
-    "server",
-    "middleware",
-    "browser",
-    "runtime",
-    "isomorphic",
-    "HTML"
-  ],
-  "homepage": "https://github.com/fcapolini/pagelogic/blob/main/README.md",
-  "bugs": "https://github.com/fcapolini/pagelogic/issues",
-  "repository": {
-    "type": "git",
-    "url": "git@github.com:fcapolini/pagelogic.git"
-  },
-  "author": "Fabrizio Capolini",
-  "license": "MIT",
+  "version": "1.5.0",
+  "main": "index.js",
   "scripts": {
-    "build": "rm -rf dist/* && tsc && npm run build-client && npm run build-mini-client && cp package.json dist && cp README.md dist && cp LICENSE dist && chmod a+x dist/command.js",
-    "build-client": "esbuild src/runtime/web/client.ts --bundle --outfile=dist/runtime.js",
-    "build-mini-client": "esbuild src/runtime/web/client.ts --bundle --minify --outfile=dist/runtime.min.js",
-    "test": "tsx --test test/**/*.test.ts",
-    "test-one": "tsx --test-name-pattern='003a-in.html' test/runtime/pages.test.ts",
-    "lint": "eslint ./src",
-    "pl-clean": "rm -rf www/*",
-    "pl-build": "node dist/command.js build -g page www-src www",
-    "pl-watch": "node dist/command.js build -g page -w www-src www",
-    "server": "node dist/command.js serve www-src",
-    "server-dev": "tsx src/command.ts serve www-src",
-    "bump-minor": "npm version $(semver $npm_package_version -i minor)",
-    "bump-patch": "npm version $(semver $npm_package_version -i patch)",
-    "release": "npm run build && npm publish ./dist --tag latest"
+    "test": "mocha --exit -r ts-node/register test/**/*.test.ts",
+    "coverage": "nyc npm run test",
+    "build": "npm run build-server && npm run build-client",
+    "build-client": "mkdir -p dist && browserify src/client.ts -p tsify > dist/client.js",
+    "build-server": "tsc"
   },
-  "main": "server.js",
-  "bin": {
-    "pagelogic": "./command.js"
-  },
-  "engines": {
-    "node": ">=16.0.0"
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@swc/core": "^1.7.21",
+    "@types/chai": "^4.3.19",
+    "@types/mocha": "^10.0.7",
+    "browserify": "^17.0.0",
+    "chai": "^4.3.4",
+    "mocha": "^10.1.0",
+    "nyc": "^17.0.0",
+    "ts-node": "^10.9.1",
+    "tsify": "^5.0.4"
   },
   "dependencies": {
-    "acorn": "^8.11.2",
-    "acorn-jsx-walk": "^2.0.0",
-    "acorn-walk": "^8.3.1",
-    "chokidar": "^3.5.3",
-    "commander": "^11.1.0",
-    "commander-version": "^3.0.0",
-    "debounce-promise": "^3.1.2",
-    "escodegen": "^2.1.0",
-    "express": "^4.18.2",
-    "express-rate-limit": "^7.1.5",
-    "happy-dom": "^12.10.3"
-  },
-  "devDependencies": {
-    "@types/debounce-promise": "^3.1.9",
-    "@types/escodegen": "^0.0.10",
-    "@types/estraverse": "^5.1.7",
-    "@types/express": "^4.17.21",
-    "@types/node": "^20.10.5",
-    "esbuild": "^0.19.11",
-    "eslint": "^8.56.0",
-    "semver": "^7.5.4",
-    "tsx": "^4.7.0",
-    "typescript": "^5.3.3",
-    "typescript-eslint": "^7.0.2"
+    "acorn": "^8.12.1",
+    "escodegen": "^2.1.0"
   }
 }

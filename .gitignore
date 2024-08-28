@@ -1,4 +1,6 @@
-/dist
-/node_modules
-/www
-/www-src
+node_modules
+.nyc_output
+coverage
+dist
+*.log
+.DS_Store

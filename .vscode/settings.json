@@ -1,4 +1,3 @@
 {
-  "liveServer.settings.root": "/www",
   "npm.exclude": ["**/dist"]
 }
