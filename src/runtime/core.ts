@@ -9,11 +9,12 @@ export interface ContextProps {
 
 export class Context {
   root: Scope;
-  cycle: number;
+  cycle = 0;
+  refreshLevel = 0;
+  pushLevel = 0;
 
   constructor(props: ContextProps) {
     this.root = new Scope(props.root, this);
-    this.cycle = 0;
   }
 }
 
@@ -59,43 +60,127 @@ export class Scope {
   dispose() {
     //TODO
   }
+
+  linkValues() {
+    Reflect.ownKeys(this.values).forEach(k => {
+      const v = this.values[k];
+      v.ref?.forEach(ref => {
+        let o: Value | undefined;
+        try {
+          o = ref.apply(this);
+          //TODO
+          // if (o === v) {
+          //   o = this[SCOPE_PARENT_KEY]
+          //     ? ref.apply(scope[SCOPE_PARENT_KEY])
+          //     : undefined;
+          // }
+        } catch (ignored) { /* nop */ }
+        if (o) {
+          v.src.add(o);
+          o.dst.add(v);
+        }
+      });
+    });
+  }
+
+  unlinkValues() {
+    Reflect.ownKeys(this.values).forEach(k => {
+      const v = this.values[k];
+      v.src.forEach(o => o.dst.delete(v));
+    });
+  }
+
+  refreshValues() {
+    Reflect.ownKeys(this.values).forEach(k => {
+      this.values[k].get();
+    });
+  }
 }
 
 // =============================================================================
 // Value
 // =============================================================================
 
-export type ValueExp = () => unknown;
-export type ValueRef = () => Value | undefined;
+export type ValueExp = (this: Scope) => unknown;
+export type ValueRef = (this: Scope) => Value | undefined;
+export type ValueCB = (scope: Scope, v: unknown) => unknown;
 
 export interface ValueProps {
-  key?: string;
   val?: unknown;
   exp?: ValueExp;
   ref?: ValueRef[];
+  cb?: ValueCB;
 }
+
+const uninited = Symbol('uninited');
 
 export class Value {
   ctx: Context;
   scope: Scope;
   cycle: number;
-  key?: string;
   exp?: () => unknown;
+  ref?: ValueRef[];
   val?: unknown;
+  cb?: ValueCB;
+  src = new Set<Value>();
+  dst = new Set<Value>();
 
   constructor(props: ValueProps, ctx: Context, scope: Scope) {
     this.ctx = ctx;
     this.scope = scope;
-    this.cycle = 0;
-    this.key = props.key;
+    this.cycle = -1;
     this.exp = props.exp;
+    this.ref = props.ref;
     this.val = props.val;
+    this.cb = props.cb;
+  }
+
+  set(v: unknown) {
+    delete this.exp;
+    //TODO: unlink from sources
+    delete this.ref;
+    if (this.val == null ? v != null : v !== this.val) {
+      this.val = (this.cb ? this.cb(this.scope, v) : v);
+      this.dst && this.propagate();
+    }
   }
 
   get(): unknown {
-    if (this.exp && this.cycle !== this.ctx.cycle) {
-      //TODO
+    if (this.cycle !== this.ctx.cycle) {
+      this.update();
     }
     return this.val;
+  }
+
+  protected update() {
+    const old = this.cycle < 0 ? uninited : this.val;
+    this.cycle = this.ctx.cycle;
+    if (this.exp) {
+      try {
+        this.val = this.exp.apply(this.scope);
+      } catch (err) {
+        //TODO: better logging
+        console.error(err);
+      }
+    }
+    if (old == null ? this.val != null : this.val !== old) {
+      if (this.cb) {
+        this.val = this.cb(this.scope, this.val);
+      }
+      if (this.dst.size && this.ctx.refreshLevel < 1) {
+        this.propagate();
+      }
+    }
+  }
+
+  protected propagate() {
+    if (this.ctx.pushLevel < 1) {
+      this.ctx.cycle++;
+    }
+    this.ctx.pushLevel++;
+    try {
+      this.dst?.forEach(v => v.get());
+    } catch (ignored) { /* nop */ }
+    this.ctx.pushLevel--;
   }
 }

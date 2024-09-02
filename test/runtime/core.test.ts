@@ -64,6 +64,53 @@ describe('runtime/core', function () {
   });
 
   describe('value', function() {
+
+    it("should create a static value", () => {
+      let cbValue: unknown;
+      const ctx = new Context({
+        root: {
+          id: '0',
+          name: 'app',
+          values: {
+            v1: {
+              val: 1,
+              cb: (_, v) => {
+                cbValue = v;
+                return (v as number) * 2;
+              }
+            }
+          }
+        }
+      });
+      const root = ctx.root;
+      assert.equal(root.values['v1'].get(), 2);
+      assert.equal(cbValue, 1);
+    });
+
+    it("should create a dynamic independent value", () => {
+      let cbValue: unknown;
+      const ctx = new Context({
+        root: {
+          id: '0',
+          name: 'app',
+          values: {
+            v2: {
+              exp: function() {
+                return 2;
+              },
+              cb: (_, v) => {
+                cbValue = v;
+                return (v as number) * 2;
+              }
+            }
+          }
+        }
+      });
+      const root = ctx.root;
+      assert.equal(root.values['v2'].get(), 4);
+      assert.equal(cbValue, 2);
+    });
+
   });
 
 });
