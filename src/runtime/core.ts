@@ -74,7 +74,7 @@ export class Scope {
           //     ? ref.apply(scope[SCOPE_PARENT_KEY])
           //     : undefined;
           // }
-        } catch (ignored) { /* nop */ }
+        } catch (_) { /* nop */ }
         if (o) {
           v.src.add(o);
           o.dst.add(v);
@@ -141,7 +141,9 @@ export class Value {
     delete this.ref;
     if (this.val == null ? v != null : v !== this.val) {
       this.val = (this.cb ? this.cb(this.scope, v) : v);
-      this.dst && this.propagate();
+      if (this.dst.size) {
+        this.propagate();
+      }
     }
   }
 
@@ -180,7 +182,7 @@ export class Value {
     this.ctx.pushLevel++;
     try {
       this.dst?.forEach(v => v.get());
-    } catch (ignored) { /* nop */ }
+    } catch (_) { /* nop */ }
     this.ctx.pushLevel--;
   }
 }
