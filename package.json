@@ -4,12 +4,15 @@
   "main": "server.js",
   "scripts": {
     "test": "mocha --exit -r ts-node/register test/**/*.test.ts",
+    "lint": "eslint .",
     "coverage": "nyc npm run test",
-    "lint": "eslint ."
+    "build": "npm run build-server && npm run build-client",
+    "build-client": "mkdir -p dist && browserify src/client.ts -p tsify > dist/client.js",
+    "build-server": "tsc"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "Fabrizio Capolini",
+  "license": "MIT",
   "description": "",
   "devDependencies": {
     "@swc/core": "^1.7.25",
@@ -19,11 +22,13 @@
     "@types/mocha": "^10.0.7",
     "@typescript-eslint/eslint-plugin": "7.1.0",
     "@typescript-eslint/parser": "7.1.0",
+    "browserify": "^17.0.0",
     "chai": "4.3.4",
     "eslint": "8.57.0",
     "mocha": "^10.7.3",
     "nyc": "^17.0.0",
     "ts-node": "^10.9.2",
+    "tsify": "^5.0.4",
     "typescript": "^4.9.5"
   },
   "dependencies": {

@@ -1,5 +1,3 @@
-/// <reference types="node" />
-
 import * as acorn from 'acorn';
 import { assert } from 'chai';
 import fs from 'fs';
