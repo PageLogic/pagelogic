@@ -1,7 +1,7 @@
-import * as acorn from 'acorn';
+import { ArrayExpression, BlockStatement, Expression, ObjectExpression } from 'acorn';
 import { Attribute, Element, SourceLocation, Text } from '../html/dom';
 import { PageError } from '../html/parser';
-import { Page, SRC_ATTR_NAME_REGEX, SRC_LOGIC_ATTR_PREFIX, SRC_NAME_ATTR, SRC_SYSTEM_ATTR_PREFIX } from '../page/page';
+import * as pg from '../page/page';
 import { DOM_ID_ATTR, Scope } from '../page/scope';
 import { astArrayExpression, astLiteral, astLocation, astObjectExpression, astProperty } from './utils';
 
@@ -11,12 +11,12 @@ const DEF_NAMES: { [key: string]: string } = {
   BODY: 'body'
 };
 
-export class CompilerPage extends Page {
-  ast!: acorn.ObjectExpression;
+export class CompilerPage extends pg.Page {
+  ast!: ObjectExpression;
   errors = new Array<PageError>();
 
   override init() {
-    const load = (e: Element, s: Scope, p: acorn.ArrayExpression) => {
+    const load = (e: Element, s: Scope, p: ArrayExpression) => {
       if (this.needsScope(e, true)) {
         const l = e.loc;
         const id = this.nextScopeId++;
@@ -60,7 +60,7 @@ export class CompilerPage extends Page {
     // 2) `:`-prefixed attributes & attribute expressions
     for (const attr of e.attributes) {
       if (
-        attr.name.startsWith(SRC_LOGIC_ATTR_PREFIX) ||
+        attr.name.startsWith(pg.SRC_LOGIC_ATTR_PREFIX) ||
         typeof attr.value !== 'string'
       ) {
         return true;
@@ -84,7 +84,7 @@ export class CompilerPage extends Page {
   }
 
   getName(e: Element) {
-    const attr = e.getAttributeNode(SRC_NAME_ATTR);
+    const attr = e.getAttributeNode(pg.SRC_NAME_ATTR);
     if (attr) {
       const name = typeof attr.value === 'string' ? attr.name : null;
       if (/^[a-zA-z_]\w*&/.test(name ?? '')) {
@@ -96,24 +96,24 @@ export class CompilerPage extends Page {
     return DEF_NAMES[e.name];
   }
 
-  collectAttributes(e: Element, ret: acorn.ObjectExpression) {
+  collectAttributes(e: Element, ret: ObjectExpression) {
     for (let i = 0; i < e.attributes.length;) {
       const a = e.attributes[i];
-      if (!SRC_ATTR_NAME_REGEX.test(a.name)) {
+      if (!pg.SRC_ATTR_NAME_REGEX.test(a.name)) {
         this.errors.push(new PageError('error', 'invalid attribute name', a.loc));
         i++;
         continue;
       }
       if (
-        !a.name.startsWith(SRC_LOGIC_ATTR_PREFIX) &&
+        !a.name.startsWith(pg.SRC_LOGIC_ATTR_PREFIX) &&
         typeof a.value === 'string'
       ) {
         i++;
         continue;
       }
-      if (a.name.startsWith(SRC_SYSTEM_ATTR_PREFIX)) {
+      if (a.name.startsWith(pg.SRC_SYSTEM_ATTR_PREFIX)) {
         this.collectSystemAttribute(a, ret);
-      } else if (a.name.startsWith(SRC_LOGIC_ATTR_PREFIX)) {
+      } else if (a.name.startsWith(pg.SRC_LOGIC_ATTR_PREFIX)) {
         this.collectValueAttribute(a, ret);
       } else {
         this.collectNativeAttribute(a, ret);
@@ -122,36 +122,38 @@ export class CompilerPage extends Page {
     }
   }
 
-  collectSystemAttribute(a: Attribute, ret: acorn.ObjectExpression) {
+  collectSystemAttribute(a: Attribute, ret: ObjectExpression) {
 
   }
 
-  collectValueAttribute(a: Attribute, ret: acorn.ObjectExpression) {
-    const name = a.name.substring(SRC_LOGIC_ATTR_PREFIX.length);
+  collectValueAttribute(a: Attribute, ret: ObjectExpression) {
+    const name = a.name.substring(pg.SRC_LOGIC_ATTR_PREFIX.length);
     const value = this.makeValue(name, a.value, a.valueLoc!);
     ret.properties.push(value);
   }
 
-  collectNativeAttribute(a: Attribute, ret: acorn.ObjectExpression) {
-    
+  collectNativeAttribute(a: Attribute, ret: ObjectExpression) {
+    const name = pg.RT_ATTR_VALUE_PREFIX + a.name;
+    const value = this.makeValue(name, a.value, a.valueLoc!);
+    ret.properties.push(value);    
   }
 
-  makeValue(name: string, value: string | acorn.Expression, l: SourceLocation) {
+  makeValue(name: string, value: string | Expression, l: SourceLocation) {
     const o = astObjectExpression(l);
     const p = astProperty('exp', this.makeValueFunction(value, l), l);
     o.properties.push(p);
     return astProperty(name, o, l);
   }
 
-  makeValueFunction(value: string | acorn.Expression, l: SourceLocation): acorn.FunctionExpression {
-    const body: acorn.BlockStatement = {
+  makeValueFunction(value: string | Expression, l: SourceLocation): Expression {
+    const body: BlockStatement = {
       type: 'BlockStatement',
       body: [
         {
           type: 'ReturnStatement',
           argument: typeof value === 'string'
             ? { type: 'Literal', value, ...astLocation(l) }
-            : value,
+            : this.adaptExpression(value),
           ...astLocation(l)
         }
       ],
@@ -167,5 +169,10 @@ export class CompilerPage extends Page {
       body,
       ...astLocation(l)
     };
+  }
+
+  adaptExpression(ast: Expression): Expression {
+    //TODO
+    return ast;
   }
 }

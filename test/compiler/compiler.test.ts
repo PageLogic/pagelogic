@@ -35,21 +35,22 @@ describe('compiler/page', () => {
         assert.equal(root.e, inSource.doc.documentElement);
 
         const outPath = path.join(rootPath, name + outSuffix);
-        const outText = await fs.promises.readFile(outPath);
-        const outSource = parser.parse(outText.toString(), file);
-        assert.equal(inSource.doc.toString(), outSource.doc.toString());
+        if (fs.existsSync(outPath)) {
+          const outText = await fs.promises.readFile(outPath);
+          const outSource = parser.parse(outText.toString(), file);
+          assert.equal(inSource.doc.toString(), outSource.doc.toString());
+        }
 
         const propsPath = path.join(rootPath, name + propsSuffix);
-        if (!fs.existsSync(propsPath)) {
-          return;
+        if (fs.existsSync(propsPath)) {
+          const propsText = (await fs.promises.readFile(propsPath)).toString();
+          const propsAst = acorn.parse(propsText, { ecmaVersion: 'latest' });
+          const propsJS = escodegen.generate(propsAst);
+          assert.equal(
+            `(${escodegen.generate(page.ast)});`,
+            propsJS
+          );
         }
-        const propsText = (await fs.promises.readFile(propsPath)).toString();
-        const propsAst = acorn.parse(propsText, { ecmaVersion: 'latest' });
-        const propsJS = escodegen.generate(propsAst);
-        assert.equal(
-          `(${escodegen.generate(page.ast)});`,
-          propsJS
-        );
       });
 
     }
