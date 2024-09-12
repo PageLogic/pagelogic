@@ -1,7 +1,7 @@
 {
-  "name": "pl2408",
-  "version": "0.1.0",
-  "main": "server.js",
+  "name": "pagelogic",
+  "version": "1.9.0",
+  "main": "index.js",
   "scripts": {
     "test": "mocha --exit -r ts-node/register test/**/*.test.ts",
     "lint": "eslint .",

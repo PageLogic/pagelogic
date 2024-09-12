@@ -16,4 +16,4 @@ export interface ValueProps {
 }
 
 export type ValueExp = (this: unknown) => unknown;
-export type ValueDep = () => unknown;
+export type ValueDep = (this: unknown) => unknown;

@@ -1,55 +1,55 @@
-import * as acorn from 'acorn';
-import { Node } from '../html/dom';
+import { ArrayExpression, Expression, Identifier, Literal, ObjectExpression, Property } from 'acorn';
+import { SourceLocation } from '../html/dom';
 
-export function astLocation(n: Node) {
+export function astLocation(l: SourceLocation) {
   return {
-    start: n.loc.i1,
-    end: n.loc.i2,
-    loc: n.loc
+    start: l.i1,
+    end: l.i2,
+    loc: l
   };
 }
 
-export function astIdentifier(name: string, n: Node): acorn.Identifier {
+export function astIdentifier(name: string, l: SourceLocation): Identifier {
   return {
     type: 'Identifier',
     name,
-    ...astLocation(n)
+    ...astLocation(l)
   };
 }
 
-export function astProperty(key: string, e: acorn.Expression, n: Node): acorn.Property {
+export function astProperty(key: string, e: Expression, l: SourceLocation): Property {
   return {
     type: 'Property',
-    key: astIdentifier(key, n),
+    key: astIdentifier(key, l),
     value: e,
     kind: 'init',
     method: false,
     computed: false,
     shorthand: false,
-    ...astLocation(n)
+    ...astLocation(l)
   };
 }
 
-export function astArrayExpression(n: Node): acorn.ArrayExpression {
+export function astArrayExpression(l: SourceLocation): ArrayExpression {
   return {
     type: 'ArrayExpression',
     elements: [],
-    ...astLocation(n)
+    ...astLocation(l)
   };
 }
 
-export function astObjectExpression(n: Node): acorn.ObjectExpression {
+export function astObjectExpression(l: SourceLocation): ObjectExpression {
   return {
     type: 'ObjectExpression',
     properties: [],
-    ...astLocation(n)
+    ...astLocation(l)
   };
 }
 
-export function astLiteral(value: string | number, n: Node): acorn.Literal {
+export function astLiteral(value: string | number, l: SourceLocation): Literal {
   return {
     type: 'Literal',
     value,
-    ...astLocation(n)
+    ...astLocation(l)
   };
 }

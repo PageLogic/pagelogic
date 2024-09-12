@@ -5,7 +5,7 @@
       name: 'page',
       values: {
         title: {
-          exp: () => 'Title'
+          exp: function() { return 'Title'; }
         }
       },
       children: [

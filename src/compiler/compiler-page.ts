@@ -1,15 +1,15 @@
 import * as acorn from 'acorn';
-import { Attribute, Element, Node, Text } from '../html/dom';
+import { Attribute, Element, SourceLocation, Text } from '../html/dom';
+import { PageError } from '../html/parser';
 import { Page, SRC_ATTR_NAME_REGEX, SRC_LOGIC_ATTR_PREFIX, SRC_NAME_ATTR, SRC_SYSTEM_ATTR_PREFIX } from '../page/page';
 import { DOM_ID_ATTR, Scope } from '../page/scope';
-import { astArrayExpression, astLiteral, astObjectExpression, astProperty } from './utils';
-import { PageError } from '../html/parser';
+import { astArrayExpression, astLiteral, astLocation, astObjectExpression, astProperty } from './utils';
 
 const DEF_NAMES: { [key: string]: string } = {
   HTML: 'page',
   HEAD: 'head',
   BODY: 'body'
-}
+};
 
 export class CompilerPage extends Page {
   ast!: acorn.ObjectExpression;
@@ -18,23 +18,24 @@ export class CompilerPage extends Page {
   override init() {
     const load = (e: Element, s: Scope, p: acorn.ArrayExpression) => {
       if (this.needsScope(e, true)) {
+        const l = e.loc;
         const id = this.nextScopeId++;
         e.setAttribute(DOM_ID_ATTR, `${id}`);
 
         s = new Scope(e).linkTo(s);
-        const o = astObjectExpression(e);
+        const o = astObjectExpression(l);
 
-        o.properties.push(astProperty('dom', astLiteral(id, e), e));
+        o.properties.push(astProperty('dom', astLiteral(id, l), l));
         const name = this.getName(e);
-        name && o.properties.push(astProperty('name', astLiteral(name, e), e));
+        name && o.properties.push(astProperty('name', astLiteral(name, l), l));
 
-        const v = astObjectExpression(e);
+        const v = astObjectExpression(l);
         this.collectAttributes(e, v);
-        v.properties.length && o.properties.push(astProperty('values', v, e));
+        v.properties.length && o.properties.push(astProperty('values', v, l));
 
         p.elements.push(o);
-        p = astArrayExpression(e);
-        o.properties.push(astProperty('children', p, e));
+        p = astArrayExpression(l);
+        o.properties.push(astProperty('children', p, l));
       }
       e.children.forEach(n => {
         if (n.type === 'element') {
@@ -44,9 +45,9 @@ export class CompilerPage extends Page {
       return s;
     };
 
-    this.ast = astObjectExpression(this.glob.doc);
-    const p = astArrayExpression(this.glob.doc);
-    this.ast.properties.push(astProperty('root', p, this.glob.doc));
+    this.ast = astObjectExpression(this.glob.doc.loc);
+    const p = astArrayExpression(this.glob.doc.loc);
+    this.ast.properties.push(astProperty('root', p, this.glob.doc.loc));
 
     this.root = load(this.glob.doc.documentElement!, this.glob, p);
   }
@@ -83,12 +84,13 @@ export class CompilerPage extends Page {
   }
 
   getName(e: Element) {
-    let name = e.getAttribute(SRC_NAME_ATTR);
-    if (name) {
-      if (/^[a-zA-z_]\w*&/.test(name)) {
+    const attr = e.getAttributeNode(SRC_NAME_ATTR);
+    if (attr) {
+      const name = typeof attr.value === 'string' ? attr.name : null;
+      if (/^[a-zA-z_]\w*&/.test(name ?? '')) {
         return name;
       } else {
-        //TODO error
+        this.errors.push(new PageError('error', 'invalid name', attr.valueLoc));
       }
     }
     return DEF_NAMES[e.name];
@@ -98,7 +100,7 @@ export class CompilerPage extends Page {
     for (let i = 0; i < e.attributes.length;) {
       const a = e.attributes[i];
       if (!SRC_ATTR_NAME_REGEX.test(a.name)) {
-        this.errors.push(new PageError('error', `invalid attribute name`, a.loc));
+        this.errors.push(new PageError('error', 'invalid attribute name', a.loc));
         i++;
         continue;
       }
@@ -126,25 +128,44 @@ export class CompilerPage extends Page {
 
   collectValueAttribute(a: Attribute, ret: acorn.ObjectExpression) {
     const name = a.name.substring(SRC_LOGIC_ATTR_PREFIX.length);
+    const value = this.makeValue(name, a.value, a.valueLoc!);
+    ret.properties.push(value);
   }
 
   collectNativeAttribute(a: Attribute, ret: acorn.ObjectExpression) {
     
   }
 
-  // makeValue(name: string, value: string | acorn.Expression, n: Node) {
-  //   const o = astObjectExpression(n);
-  //   const exp = typeof value === 'string' ?
-  //     {
-  //       type: ''
-  //     }
-  //   return astProperty(name, o, n);
-  // }
+  makeValue(name: string, value: string | acorn.Expression, l: SourceLocation) {
+    const o = astObjectExpression(l);
+    const p = astProperty('exp', this.makeValueFunction(value, l), l);
+    o.properties.push(p);
+    return astProperty(name, o, l);
+  }
 
-  // makeValueFunction() {
-  //   const ret: acorn.FunctionExpression = {
-  //     type: 'FunctionExpression',
-  //   }
-  //   return ret;
-  // }
+  makeValueFunction(value: string | acorn.Expression, l: SourceLocation): acorn.FunctionExpression {
+    const body: acorn.BlockStatement = {
+      type: 'BlockStatement',
+      body: [
+        {
+          type: 'ReturnStatement',
+          argument: typeof value === 'string'
+            ? { type: 'Literal', value, ...astLocation(l) }
+            : value,
+          ...astLocation(l)
+        }
+      ],
+      ...astLocation(l)
+    };
+    return {
+      type: 'FunctionExpression',
+      id: null,
+      expression: false,
+      generator: false,
+      async: false,
+      params: [],
+      body,
+      ...astLocation(l)
+    };
+  }
 }
