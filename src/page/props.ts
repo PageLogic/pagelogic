@@ -5,6 +5,7 @@ export interface PageProps {
 
 export interface ScopeProps {
   dom: number;
+  name?: string;
   children?: ScopeProps[];
   values?: { [key: string]: ValueProps };
 }

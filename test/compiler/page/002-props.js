@@ -3,6 +3,11 @@
     {
       dom: 0,
       name: 'page',
+      values: {
+        title: {
+          exp: () => 'Title'
+        }
+      },
       children: [
         {
           dom: 1,

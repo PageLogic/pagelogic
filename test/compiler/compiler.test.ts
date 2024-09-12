@@ -29,6 +29,7 @@ describe('compiler/page', () => {
 
         const glob = new CompilerGlob(inSource.doc);
         const page = new CompilerPage(glob);
+        assert.equal(page.errors.length, 0);
         const root = page.root;
         assert.exists(root);
         assert.equal(root.e, inSource.doc.documentElement);
@@ -39,6 +40,9 @@ describe('compiler/page', () => {
         assert.equal(inSource.doc.toString(), outSource.doc.toString());
 
         const propsPath = path.join(rootPath, name + propsSuffix);
+        if (!fs.existsSync(propsPath)) {
+          return;
+        }
         const propsText = (await fs.promises.readFile(propsPath)).toString();
         const propsAst = acorn.parse(propsText, { ecmaVersion: 'latest' });
         const propsJS = escodegen.generate(propsAst);
