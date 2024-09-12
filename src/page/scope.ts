@@ -4,10 +4,12 @@ export const DOM_ID_ATTR = 'data-lid';
 
 export class Scope {
   p?: Scope;
+  id: number;
   e: Element;
   children: Scope[];
 
-  constructor(e: Element) {
+  constructor(id: number, e: Element) {
+    this.id = id;
     this.e = e;
     this.children = [];
   }

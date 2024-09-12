@@ -12,7 +12,6 @@ export const RT_ATTR_VALUE_PREFIX = 'attr$';
 export abstract class Page {
   glob: Glob;
   root!: Scope;
-  nextScopeId = 0;
 
   constructor(glob: Glob) {
     this.glob = glob;

@@ -4,7 +4,7 @@ import { Scope } from './scope';
 export abstract class Glob extends Scope {
 
   constructor(doc: Document) {
-    super(doc);
+    super(-1, doc);
     this.init();
   }
 

@@ -1,5 +1,5 @@
 import { ArrayExpression, Expression, Identifier, Literal, ObjectExpression, Property } from 'acorn';
-import { SourceLocation } from '../html/dom';
+import { SourceLocation } from '../../html/dom';
 
 export function astLocation(l: SourceLocation) {
   return {
@@ -52,4 +52,18 @@ export function astLiteral(value: string | number, l: SourceLocation): Literal {
     value,
     ...astLocation(l)
   };
+}
+
+export function getProperty(
+  o: ObjectExpression,
+  name: string
+): Expression | null {
+  for (const i in o.properties) {
+    const p = o.properties[i] as Property;
+    const id = p.key as Identifier;
+    if (id.name === name) {
+      return p.value;
+    }
+  }
+  return null;
 }
