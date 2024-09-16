@@ -5,10 +5,10 @@ import { Attribute, Element, SourceLocation, Text } from '../html/dom';
 import { PageError } from '../html/parser';
 import * as pg from '../page/page';
 import { DOM_ID_ATTR, Scope } from '../page/scope';
-import { qualifyPageIdentifiers } from './ast/qualifier';
 import {
   astArrayExpression, astLiteral, astLocation, astObjectExpression, astProperty
-} from './ast/utils';
+} from './ast/acorn-utils';
+import { qualifyPageIdentifiers } from './ast/qualifier';
 
 const DEF_NAMES: { [key: string]: string } = {
   HTML: 'page',
@@ -128,9 +128,9 @@ export class CompilerPage extends pg.Page {
     const name = pg.RT_SYS_VALUE_PREFIX
       + a.name.substring(pg.SRC_SYSTEM_ATTR_PREFIX.length);
     switch (name) {
-      case '$name':
-        this.checkLiteralAttribute(a) && (scope.name = a.value as string);
-        break;
+    case '$name':
+      this.checkLiteralAttribute(a) && (scope.name = a.value as string);
+      break;
     }
     const value = this.makeValue(name, a.value, a.valueLoc!);
     ret.properties.push(value);

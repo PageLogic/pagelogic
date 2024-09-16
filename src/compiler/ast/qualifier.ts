@@ -3,7 +3,7 @@ import estraverse from 'estraverse';
 import * as es from 'estree';
 import { RT_SCOPE_PARENT_KEY } from '../../page/page';
 import { CompilerPage } from '../compiler-page';
-import { getProperty } from './utils';
+import { getProperty } from './acorn-utils';
 
 export function qualifyPageIdentifiers(page: CompilerPage): CompilerPage {
   for (const i in page.scopes) {

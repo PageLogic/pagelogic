@@ -4,24 +4,26 @@ import * as es from 'estree';
 import { CompilerPage } from '../compiler-page';
 import { Scope } from '../../page/scope';
 import { Value } from '../../page/value';
+import { esIdentifier } from './estree-utils';
 
+//FIXME
 export function resolve(page: CompilerPage): CompilerPage {
   if (page.errors.length > 0) {
     return page;
   }
 
-  function lookupKey(scope: Scope, key: string, ascend: boolean): Scope | Value | null {
-    const value = scope.values[key];
+  function lookupName(scope: Scope, name: string, ascend: boolean): Scope | Value | null {
+    const value = scope.values[name];
     if (value) {
       return value;
     }
     for (const child of scope.children) {
-      if (child.name === key) {
+      if (child.name === name) {
         return child;
       }
     }
-    if (ascend && scope.parent) {
-      return lookupKey(scope.parent, key, true);
+    if (ascend && scope.p) {
+      return lookupName(scope.p, name, true);
     }
     return null;
   }
@@ -29,12 +31,12 @@ export function resolve(page: CompilerPage): CompilerPage {
   function lookupPath(scope: Scope, path: string[]): Array<Scope | Value>{
     const ret = new Array<Scope | Value>();
     for (let i = 0; i < path.length; i++) {
-      const item = lookupKey(scope, path[i], i === 0);
+      const item = lookupName(scope, path[i], i === 0);
       if (!item) {
         break;
       }
       ret.push(item);
-      if (item.type === 'value') {
+      if (item instanceof Value) {
         break;
       }
       scope = item;
