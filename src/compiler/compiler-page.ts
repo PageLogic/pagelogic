@@ -19,24 +19,18 @@ const DEF_NAMES: { [key: string]: string } = {
 export class CompilerPage extends pg.Page {
   ast!: ObjectExpression;
   scopes!: Array<Scope>;
-  names!: Array<Set<string>>;
   objects!: Array<ObjectExpression>;
   errors = new Array<PageError>();
 
   override init() {
-    const textCounts = new Array<number>();
-
     const load = (e: Element, s: Scope, p: ArrayExpression, v?: ObjectExpression) => {
       if (this.needsScope(e)) {
         const l = e.loc;
         const id = this.scopes.length;
         e.setAttribute(DOM_ID_ATTR, `${id}`);
-        textCounts.push(0);
 
         s = new Scope(id, e).linkTo(s);
         this.scopes.push(s);
-        const names = new Set<string>();
-        this.names.push(names);
         const o = astObjectExpression(l);
         this.objects.push(o);
 
@@ -45,7 +39,7 @@ export class CompilerPage extends pg.Page {
         name && o.properties.push(astProperty('name', astLiteral(name, l), l));
 
         v = astObjectExpression(l);
-        this.collectAttributes(e, v, names);
+        this.collectAttributes(e, v);
         this.collectTexts(e, v);
         v.properties.length && o.properties.push(astProperty('values', v, l));
 
@@ -65,7 +59,6 @@ export class CompilerPage extends pg.Page {
     const p = astArrayExpression(this.glob.doc.loc);
     this.ast.properties.push(astProperty('root', p, this.glob.doc.loc));
     this.scopes = [];
-    this.names = [];
     this.objects = [];
     this.root = load(this.glob.doc.documentElement!, this.glob, p);
     qualifyPageIdentifiers(this);
@@ -102,7 +95,7 @@ export class CompilerPage extends pg.Page {
     return DEF_NAMES[e.name];
   }
 
-  collectAttributes(e: Element, ret: ObjectExpression, names: Set<string>) {
+  collectAttributes(e: Element, ret: ObjectExpression) {
     for (let i = 0; i < e.attributes.length;) {
       const a = e.attributes[i];
       if (!pg.SRC_ATTR_NAME_REGEX.test(a.name)) {
@@ -119,41 +112,29 @@ export class CompilerPage extends pg.Page {
         continue;
       }
       if (a.name.startsWith(pg.SRC_SYSTEM_ATTR_PREFIX)) {
-        this.collectSystemAttribute(a, ret, names);
+        this.collectSystemAttribute(a, ret);
       } else if (a.name.startsWith(pg.SRC_LOGIC_ATTR_PREFIX)) {
-        this.collectValueAttribute(a, ret, names);
+        this.collectValueAttribute(a, ret);
       } else {
-        this.collectNativeAttribute(a, ret, names);
+        this.collectNativeAttribute(a, ret);
       }
       e.attributes.splice(i, 1);
     }
   }
 
-  collectSystemAttribute(
-    a: Attribute,
-    ret: ObjectExpression,
-    names: Set<string>
-  ) {
+  collectSystemAttribute(a: Attribute, ret: ObjectExpression) {
     //TODO
   }
 
-  collectValueAttribute(
-    a: Attribute,
-    ret: ObjectExpression,
-    names: Set<string>
-  ) {
+  collectValueAttribute(a: Attribute, ret: ObjectExpression) {
     const name = a.name.substring(pg.SRC_LOGIC_ATTR_PREFIX.length);
-    const value = this.makeValue(name, a.value, a.valueLoc!, names);
+    const value = this.makeValue(name, a.value, a.valueLoc!);
     ret.properties.push(value);
   }
 
-  collectNativeAttribute(
-    a: Attribute,
-    ret: ObjectExpression,
-    names: Set<string>
-  ) {
+  collectNativeAttribute(a: Attribute, ret: ObjectExpression) {
     const name = pg.RT_ATTR_VALUE_PREFIX + a.name;
-    const value = this.makeValue(name, a.value, a.valueLoc!, names);
+    const value = this.makeValue(name, a.value, a.valueLoc!);
     ret.properties.push(value);    
   }
 
@@ -173,16 +154,10 @@ export class CompilerPage extends pg.Page {
     f(e);
   }
 
-  makeValue(
-    name: string,
-    value: string | Expression,
-    l: SourceLocation,
-    names?: Set<string>
-  ) {
+  makeValue(name: string, value: string | Expression, l: SourceLocation) {
     const o = astObjectExpression(l);
     const p = astProperty('exp', this.makeValueFunction(value, l), l);
     o.properties.push(p);
-    names?.add(name);
     return astProperty(name, o, l);
   }
 
