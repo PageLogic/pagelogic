@@ -4,11 +4,11 @@
       dom: 0,
       name: 'page',
       values: {
-        x: {
-          exp: function() { return 1; }
+        y: {
+          exp: function() { return 2; }
         },
         v: {
-          exp: function() { return this.x + 1; }
+          exp: function() { return (y) => y; }
         },
       },
       children: [
