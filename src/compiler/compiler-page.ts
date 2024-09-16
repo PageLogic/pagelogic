@@ -142,7 +142,7 @@ export class CompilerPage extends pg.Page {
     let count = 0;
     const f = (e: Element) => {
       for (const n of e.children) {
-        if (n.type === 'element' && !this.needsScope(e)) {
+        if (n.type === 'element' && !this.needsScope(n as Element)) {
           f(n as Element);
         } else if (n.type === 'text' && typeof (n as Text).value !== 'string') {
           const name = pg.RT_TEXT_VALUE_PREFIX + (count++);

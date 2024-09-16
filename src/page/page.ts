@@ -8,8 +8,11 @@ export const SRC_ATTR_NAME_REGEX = /^:{0,2}[a-zA-Z_][a-zA-Z0-9_$-]*$/;
 export const SRC_NAME_ATTR = SRC_SYSTEM_ATTR_PREFIX + 'name';
 
 export const RT_ATTR_VALUE_PREFIX = 'attr$';
-export const RT_TEXT_VALUE_PREFIX = 'text$';
+export const RT_TEXT_VALUE_PREFIX = 't$';
 export const RT_SCOPE_PARENT_KEY = '$parent';
+
+export const HTML_TEXT_MARKER1 = '-t';
+export const HTML_TEXT_MARKER2 = '-/t';
 
 export abstract class Page {
   glob: Glob;
