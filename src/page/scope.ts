@@ -1,4 +1,5 @@
 import { Element } from '../html/dom';
+import { Value } from './value';
 
 export const DOM_ID_ATTR = 'data-lid';
 
@@ -6,11 +7,14 @@ export class Scope {
   p?: Scope;
   id: number;
   e: Element;
+  name?: string;
+  values: { [key: string]: Value };
   children: Scope[];
 
   constructor(id: number, e: Element) {
     this.id = id;
     this.e = e;
+    this.values = {};
     this.children = [];
   }
 

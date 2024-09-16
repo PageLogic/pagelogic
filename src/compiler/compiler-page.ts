@@ -20,7 +20,7 @@ export class CompilerPage extends pg.Page {
   ast!: ObjectExpression;
   scopes!: Array<Scope>;
   objects!: Array<ObjectExpression>;
-  errors = new Array<PageError>();
+  errors!: PageError[];
 
   override init() {
     const load = (e: Element, s: Scope, p: ArrayExpression, v?: ObjectExpression) => {
@@ -30,6 +30,7 @@ export class CompilerPage extends pg.Page {
         e.setAttribute(DOM_ID_ATTR, `${id}`);
 
         s = new Scope(id, e).linkTo(s);
+        s.name = DEF_NAMES[e.name];
         this.scopes.push(s);
         const o = astObjectExpression(l);
         this.objects.push(o);
@@ -39,7 +40,7 @@ export class CompilerPage extends pg.Page {
         name && o.properties.push(astProperty('name', astLiteral(name, l), l));
 
         v = astObjectExpression(l);
-        this.collectAttributes(e, v);
+        this.collectAttributes(s, e, v);
         this.collectTexts(e, v);
         v.properties.length && o.properties.push(astProperty('values', v, l));
 
@@ -60,6 +61,7 @@ export class CompilerPage extends pg.Page {
     this.ast.properties.push(astProperty('root', p, this.glob.doc.loc));
     this.scopes = [];
     this.objects = [];
+    this.errors = [];
     this.root = load(this.glob.doc.documentElement!, this.glob, p);
     qualifyPageIdentifiers(this);
   }
@@ -84,8 +86,8 @@ export class CompilerPage extends pg.Page {
   getName(e: Element) {
     const attr = e.getAttributeNode(pg.SRC_NAME_ATTR);
     if (attr) {
-      const name = typeof attr.value === 'string' ? attr.name : null;
-      if (/^[a-zA-z_]\w*&/.test(name ?? '')) {
+      const name = typeof attr.value === 'string' ? attr.value : null;
+      if (/^[a-zA-z_]\w*$/.test(name ?? '')) {
         return name;
       } else {
         const err = new PageError('error', 'invalid name', attr.valueLoc);
@@ -95,7 +97,7 @@ export class CompilerPage extends pg.Page {
     return DEF_NAMES[e.name];
   }
 
-  collectAttributes(e: Element, ret: ObjectExpression) {
+  collectAttributes(scope: Scope, e: Element, ret: ObjectExpression) {
     for (let i = 0; i < e.attributes.length;) {
       const a = e.attributes[i];
       if (!pg.SRC_ATTR_NAME_REGEX.test(a.name)) {
@@ -112,7 +114,7 @@ export class CompilerPage extends pg.Page {
         continue;
       }
       if (a.name.startsWith(pg.SRC_SYSTEM_ATTR_PREFIX)) {
-        this.collectSystemAttribute(a, ret);
+        this.collectSystemAttribute(scope, a, ret);
       } else if (a.name.startsWith(pg.SRC_LOGIC_ATTR_PREFIX)) {
         this.collectValueAttribute(a, ret);
       } else {
@@ -122,8 +124,28 @@ export class CompilerPage extends pg.Page {
     }
   }
 
-  collectSystemAttribute(a: Attribute, ret: ObjectExpression) {
-    //TODO
+  collectSystemAttribute(scope: Scope, a: Attribute, ret: ObjectExpression) {
+    const name = pg.RT_SYS_VALUE_PREFIX
+      + a.name.substring(pg.SRC_SYSTEM_ATTR_PREFIX.length);
+    switch (name) {
+      case '$name':
+        this.checkLiteralAttribute(a) && (scope.name = a.value as string);
+        break;
+    }
+    const value = this.makeValue(name, a.value, a.valueLoc!);
+    ret.properties.push(value);
+  }
+
+  checkLiteralAttribute(a: Attribute): boolean {
+    const ret = typeof a.value === 'string';
+    if (!ret) {
+      this.errors.push(new PageError(
+        'error',
+        `invalid ${a.name} attribute`,
+        a.valueLoc
+      ));
+    }
+    return ret;
   }
 
   collectValueAttribute(a: Attribute, ret: ObjectExpression) {
