@@ -24,11 +24,14 @@ export class CompilerPage extends pg.Page {
   errors = new Array<PageError>();
 
   override init() {
-    const load = (e: Element, s: Scope, p: ArrayExpression) => {
-      if (this.needsScope(e, true)) {
+    const textCounts = new Array<number>();
+
+    const load = (e: Element, s: Scope, p: ArrayExpression, v?: ObjectExpression) => {
+      if (this.needsScope(e)) {
         const l = e.loc;
         const id = this.scopes.length;
         e.setAttribute(DOM_ID_ATTR, `${id}`);
+        textCounts.push(0);
 
         s = new Scope(id, e).linkTo(s);
         this.scopes.push(s);
@@ -41,8 +44,9 @@ export class CompilerPage extends pg.Page {
         const name = this.getName(e);
         name && o.properties.push(astProperty('name', astLiteral(name, l), l));
 
-        const v = astObjectExpression(l);
+        v = astObjectExpression(l);
         this.collectAttributes(e, v, names);
+        this.collectTexts(e, v);
         v.properties.length && o.properties.push(astProperty('values', v, l));
 
         p.elements.push(o);
@@ -51,7 +55,7 @@ export class CompilerPage extends pg.Page {
       }
       e.children.forEach(n => {
         if (n.type === 'element') {
-          load(n as Element, s, p);
+          load(n as Element, s, p, v);
         }
       });
       return s;
@@ -67,7 +71,7 @@ export class CompilerPage extends pg.Page {
     qualifyPageIdentifiers(this);
   }
 
-  needsScope(e: Element, checkTexts = false) {
+  needsScope(e: Element) {
     // 1) special tagnames
     if (DEF_NAMES[e.name]) {
       return true;
@@ -80,26 +84,6 @@ export class CompilerPage extends pg.Page {
       ) {
         return true;
       }
-    }
-    // 3) text expressions
-    const f = (e: Element): boolean => {
-      for (const n of e.children) {
-        if (
-          n.type === 'element' &&
-          !this.needsScope(e) && f(e)
-        ) {
-          return true;
-        } else if (
-          n.type === 'text' &&
-          typeof (n as Text).value !== 'string'
-        ) {
-          return true;
-        }
-      }
-      return false;
-    };
-    if (checkTexts && f(e)) {
-      return true;
     }
     return false;
   }
@@ -150,7 +134,7 @@ export class CompilerPage extends pg.Page {
     ret: ObjectExpression,
     names: Set<string>
   ) {
-
+    //TODO
   }
 
   collectValueAttribute(
@@ -173,16 +157,32 @@ export class CompilerPage extends pg.Page {
     ret.properties.push(value);    
   }
 
+  collectTexts(e: Element, v: ObjectExpression) {
+    let count = 0;
+    const f = (e: Element) => {
+      for (const n of e.children) {
+        if (n.type === 'element' && !this.needsScope(e)) {
+          f(n as Element);
+        } else if (n.type === 'text' && typeof (n as Text).value !== 'string') {
+          const name = pg.RT_TEXT_VALUE_PREFIX + (count++);
+          const value = this.makeValue(name, (n as Text).value, n.loc);
+          v.properties.push(value);
+        }
+      }
+    };
+    f(e);
+  }
+
   makeValue(
     name: string,
     value: string | Expression,
     l: SourceLocation,
-    names: Set<string>
+    names?: Set<string>
   ) {
     const o = astObjectExpression(l);
     const p = astProperty('exp', this.makeValueFunction(value, l), l);
     o.properties.push(p);
-    names.add(name);
+    names?.add(name);
     return astProperty(name, o, l);
   }
 
