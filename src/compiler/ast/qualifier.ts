@@ -15,8 +15,14 @@ export function qualifyPageIdentifiers(page: CompilerPage): CompilerPage {
       values.properties.forEach(p => {
         const property = p as acorn.Property;
         const id = property.key as acorn.Identifier;
-        const value = property.value;
-        qualifyReferences(scope, id.name, value as es.Expression);
+        const o = property.value as acorn.ObjectExpression;
+        const exp = getProperty(o, 'exp') as acorn.FunctionExpression;
+        qualifyReferences(scope, id.name, exp.body as es.Node);
+        const deps = getProperty(o, 'deps') as acorn.ArrayExpression;
+        if (!deps) {
+          return;
+        }
+        //TODO: qualify dependency functions
       });
     }
   }
@@ -25,8 +31,8 @@ export function qualifyPageIdentifiers(page: CompilerPage): CompilerPage {
 
 function qualifyReferences(
   scope: Scope,
-  key: string | null, exp: es.Expression
-): acorn.Expression {
+  key: string | null, exp: es.Node
+) {
   if (exp.type === 'Literal') {
     return exp as acorn.Expression;
   }
