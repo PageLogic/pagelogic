@@ -1,14 +1,12 @@
 import * as acorn from 'acorn';
-import * as es from 'estree';
 import estraverse from 'estraverse';
-import { Scope } from '../../page/scope';
+import * as es from 'estree';
+import { RT_SCOPE_PARENT_KEY } from '../../page/page';
 import { CompilerPage } from '../compiler-page';
 import { getProperty } from './utils';
-import { RT_SCOPE_PARENT_KEY } from '../../page/page';
 
 export function qualifyPageIdentifiers(page: CompilerPage): CompilerPage {
   for (const i in page.scopes) {
-    const scope = page.scopes[i];
     const object = page.objects[i];
     const values = getProperty(object, 'values') as acorn.ObjectExpression;
     if (values) {
@@ -17,7 +15,7 @@ export function qualifyPageIdentifiers(page: CompilerPage): CompilerPage {
         const id = property.key as acorn.Identifier;
         const o = property.value as acorn.ObjectExpression;
         const exp = getProperty(o, 'exp') as acorn.FunctionExpression;
-        qualifyReferences(scope, id.name, exp.body as es.Node);
+        qualifyReferences(id.name, exp.body as es.Node);
         const deps = getProperty(o, 'deps') as acorn.ArrayExpression;
         if (!deps) {
           return;
@@ -29,10 +27,7 @@ export function qualifyPageIdentifiers(page: CompilerPage): CompilerPage {
   return page;
 }
 
-function qualifyReferences(
-  scope: Scope,
-  key: string | null, exp: es.Node
-) {
+function qualifyReferences(key: string | null, exp: es.Node) {
   if (exp.type === 'Literal') {
     return exp as acorn.Expression;
   }
@@ -49,10 +44,11 @@ function qualifyReferences(
             let object: unknown = { type: 'ThisExpression', ...loc(node) };
             if (node.name === key && !inFunctionBody(stack)) {
               // reference to itself -> $parent.<itself>
+              const id = RT_SCOPE_PARENT_KEY;
               object = {
                 type: 'MemberExpression',
                 object:  { type: 'ThisExpression', ...loc(node) },
-                property: { type: 'Identifier', name: RT_SCOPE_PARENT_KEY, ...loc(node) },
+                property: { type: 'Identifier', name: id, ...loc(node) },
                 computed: false,
                 optional: false,
                 ...loc(node)
