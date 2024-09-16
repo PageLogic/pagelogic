@@ -7,7 +7,7 @@ import { getProperty } from './utils';
 import { RT_SCOPE_PARENT_KEY } from '../../page/page';
 
 export function qualifyPageIdentifiers(page: CompilerPage): CompilerPage {
-  for (let i in page.scopes) {
+  for (const i in page.scopes) {
     const scope = page.scopes[i];
     const object = page.objects[i];
     const values = getProperty(object, 'values') as acorn.ObjectExpression;
