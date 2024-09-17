@@ -23,7 +23,8 @@ export class Scope {
     let i = ref ? p.children.indexOf(ref) : -1;
     i = i < 0 ? p.children.length : i;
     p.children.splice(i, 0, this);
-    !p.e.parent && this.e.linkTo(p.e, ref?.e);
+    this.p = p;
+    !this.e.parent && this.e.linkTo(p.e, ref?.e);
     return this;
   }
 

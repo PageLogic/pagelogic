@@ -1,13 +1,15 @@
 import estraverse from 'estraverse';
 import { CompilerPage } from '../compiler-page';
-import { Path, Stack } from '../util';
-import { getProperty, getPropertyName } from './estree-utils';
+import { Stack } from '../util';
+import { esLoc, getProperty, getPropertyName, memberExpression, Path, PathItem } from './estree-utils';
 import {
-  ArrayExpression, FunctionExpression, Literal, Node,
-  MemberExpression, ObjectExpression
+  ArrayExpression, Expression, FunctionExpression, Literal, Node,
+  MemberExpression, ObjectExpression, SimpleCallExpression
 } from 'estree';
-import { RT_SCOPE_PARENT_KEY } from '../../page/page';
+import { RT_SCOPE_PARENT_KEY, RT_SCOPE_VALUE_KEY } from '../../page/page';
 import { PageError } from '../../html/parser';
+import { astLiteral } from './acorn-utils';
+import { generate } from 'escodegen';
 
 interface Target {
   obj: ObjectExpression;
@@ -15,11 +17,11 @@ interface Target {
 }
 
 /**
- * Resolves a value dependencies and adds dependency functions to it.
+ * Resolves value dependencies and adds dependency functions to them.
  * See page/props.ts -> ValueDep
  * @param page 
  */
-export function resolveValueDependencies(page: CompilerPage) {
+export function resolveValueDependencies(page: CompilerPage): void {
   if (page.errors.length > 0) {
     return;
   }
@@ -30,34 +32,42 @@ export function resolveValueDependencies(page: CompilerPage) {
       if (e.object.type === 'MemberExpression') {
         f(e.object);
       } else if (e.object.type === 'ThisExpression') {
-        p.push('this');
+        p.push({ name: 'this', node: e });
       }
       const name = getPropertyName(e);
-      p.length && p.push(name ?? '');
+      p.length && p.push({ name: name ?? '', node: e });
     }
     f(exp);
-    return p.length > 1 && p[0] === 'this' ? p : null;
+    return p.length > 1 && p[0].name === 'this' ? p : null;
   }
 
   function getParentScope(obj: ObjectExpression): ObjectExpression | null {
     const scopeId = (getProperty(obj, 'dom') as Literal).value as number;
-    const parentId = page.scopes[scopeId].p?.id;
-    return parentId != null ? page.objects[parentId] as ObjectExpression : null;
+    const scope = page.scopes[scopeId];
+    const parent = scope.p;
+    const parentId = parent?.id;
+    const ret = parentId != null && parentId >= 0
+      ? page.objects[parentId] as ObjectExpression
+      : null;
+    return ret;
   }
 
   function resolveName(
-    obj: ObjectExpression | null, name: string
+    obj: ObjectExpression | null, item: PathItem
   ): Target | null {
     while (obj) {
       // 1. system values
-      switch (name) {
+      switch (item.name) {
       case RT_SCOPE_PARENT_KEY:
         obj = getParentScope(obj);
-        continue;
+        if (obj) {
+          return { obj, type: 'scope' }
+        }
+        return null;
       }
       // 2. values
       const values = getProperty(obj, 'values') as ObjectExpression;
-      const value = values ? getProperty(values, name) : null;
+      const value = values ? getProperty(values, item.name) : null;
       if (value) {
         return {
           obj: value as ObjectExpression,
@@ -85,7 +95,7 @@ export function resolveValueDependencies(page: CompilerPage) {
     return null;
   }
 
-  function limitPath(
+  function refinePath(
     stack: Stack<ObjectExpression>,
     name: string,
     path: Path
@@ -102,16 +112,68 @@ export function resolveValueDependencies(page: CompilerPage) {
       } else if (t?.type === 'value') {
         break;
       } else {
-        // page.errors.push(new PageError(
-        //   'error',
-        //   `invalid reference: ${path.toString()}`,
-
-        // ));
+        while (path.length > (i + 1)) {
+          path.pop();
+        }
+        page.errors.push(new PageError(
+          'error',
+          `invalid reference: ${path.toString()}`,
+          path[i].node.loc
+        ));
+        break;
       }
     }
-    while (i < path.length) {
+    while ((i + 1) < path.length) {
       path.pop();
     }
+  }
+
+  function removeSpuriousPaths(paths: Path[]) {
+    for (let i = 0; i < paths.length;) {
+      if (paths[i].length < 2) {
+        paths.splice(i, 1);
+        continue;
+      }
+      i++;
+    }
+  }
+
+  function makeValueDep(path: Path): FunctionExpression {
+    const name = path.pop()!.name;
+    path.shift(); // remove initial 'this' item
+    path.push({ name: RT_SCOPE_VALUE_KEY, node: {} as Node });
+    let callee: Expression = { type: 'ThisExpression' }
+    path.forEach(item => {
+      callee = {
+        type: 'MemberExpression',
+        object: callee,
+        property: { type: 'Identifier', name: item.name },
+        computed: false,
+        optional: false
+      }
+    });
+    const ret: FunctionExpression = {
+      type: 'FunctionExpression',
+      params: [],
+      body: {
+        type: 'BlockStatement',
+        body: [
+          {
+            type: 'ReturnStatement',
+            argument: {
+              type: 'CallExpression',
+              callee: callee,
+              arguments: [{ type: 'Literal', value: name }],
+              optional: false
+            }
+          }
+        ]
+      },
+      generator: false,
+      async: false
+    }
+    console.log('makeValueDep', generate(ret));//tempdebug
+    return ret;
   }
 
   function resolveValueExpression(
@@ -130,10 +192,10 @@ export function resolveValueDependencies(page: CompilerPage) {
         if (!path) {
           return;
         }
-        for (const start of paths) {
-          if (path.startsWith(start)) {
-            for (let i = start.length; i < path.length; i++) {
-              start.push(path[i]);
+        for (const other of paths) {
+          if (path.startsWith(other)) {
+            for (let i = other.length; i < path.length; i++) {
+              other.push(path[i]);
             }
             return;
           }
@@ -142,12 +204,17 @@ export function resolveValueDependencies(page: CompilerPage) {
       }
     });
     // 2. refine dependencies
-    // 2.1 limit paths
-    paths.forEach(path => limitPath(stack, name, path));
-    // 2.2 remove redundancies
-    //TODO
-    // 3. add dependency functions
-    //TODO
+    removeSpuriousPaths(paths);
+    paths.forEach(path => refinePath(stack, name, path));
+    removeSpuriousPaths(paths);
+    // 3. remove duplicates
+    const map = new Map<string, Path>();
+    paths.forEach(path => map.set(path.toString(), path));
+    // 4. add dependency functions
+    map.forEach(path => {
+      const valueDep = makeValueDep(path);
+      //TODO
+    });
   }
 
   function resolveScope(stack: Stack<ObjectExpression>) {

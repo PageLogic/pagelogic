@@ -29,6 +29,9 @@ describe('compiler/page', () => {
 
         const glob = new CompilerGlob(inSource.doc);
         const page = new CompilerPage(glob);
+        if (page.errors.length) {
+          page.errors.forEach(e => console.error(e));
+        }
         assert.equal(page.errors.length, 0);
         const root = page.root;
         assert.exists(root);

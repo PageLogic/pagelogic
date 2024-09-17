@@ -46,7 +46,9 @@ export function astObjectExpression(l: SourceLocation): ObjectExpression {
   };
 }
 
-export function astLiteral(value: string | number, l: SourceLocation): Literal {
+export function astLiteral(
+  value: string | number | boolean, l: SourceLocation
+): Literal {
   return {
     type: 'Literal',
     value,

@@ -40,3 +40,34 @@ export function getPropertyName(e: es.MemberExpression): string | undefined {
   }
   return undefined;
 }
+
+export function memberExpression(
+  obj: es.Expression, prop: es.Expression
+): es.MemberExpression {
+  return {
+    type: 'MemberExpression',
+    object: obj,
+    property: prop,
+    computed: false,
+    optional: false
+  };
+}
+
+export type PathItem = { name: string, node: es.Node }
+
+export class Path extends Array<PathItem> {
+
+  startsWith(other: Path): boolean {
+    const len = Math.min(this.length, other.length);
+    for (let i = 0; i < len; i++) {
+      if (this[i].name !== other[i].name) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  toString() {
+    return this.map(v => v.name).join('.');
+  }
+}

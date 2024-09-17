@@ -9,17 +9,3 @@ export class Stack<T> extends Array<T> {
   }
 
 }
-
-export class Path extends Array<string> {
-
-  startsWith(other: string[]): boolean {
-    const len = Math.min(this.length, other.length);
-    for (let i = 0; i < len; i++) {
-      if (this[i] !== other[i]) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-}
