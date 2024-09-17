@@ -20,7 +20,10 @@
                   exp: function() { return 'hi'; }
                 },
                 t$0: {
-                  exp: function() { return this.v; }
+                  exp: function() { return this.v; },
+                  deps: [
+                    function() { return this.$value('v'); }
+                  ]
                 }
               },
               children: []

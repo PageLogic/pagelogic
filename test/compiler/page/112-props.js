@@ -19,7 +19,10 @@
           name: 'body',
           values: {
             v: {
-              exp: function() { return this.$parent.v + 1; }
+              exp: function() { return this.$parent.v + 1; },
+              deps: [
+                function() { return this.$parent.$value('v'); }
+              ]
             },
           },
           children: []

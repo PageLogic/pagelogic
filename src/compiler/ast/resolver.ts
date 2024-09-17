@@ -1,15 +1,13 @@
 import estraverse from 'estraverse';
+import {
+  ArrayExpression, Expression, FunctionExpression, Literal,
+  MemberExpression, Node, ObjectExpression, Property
+} from 'estree';
+import { PageError } from '../../html/parser';
+import { RT_SCOPE_PARENT_KEY, RT_SCOPE_VALUE_KEY } from '../../page/page';
 import { CompilerPage } from '../compiler-page';
 import { Stack } from '../util';
-import { esLoc, getProperty, getPropertyName, memberExpression, Path, PathItem } from './estree-utils';
-import {
-  ArrayExpression, Expression, FunctionExpression, Literal, Node,
-  MemberExpression, ObjectExpression, SimpleCallExpression
-} from 'estree';
-import { RT_SCOPE_PARENT_KEY, RT_SCOPE_VALUE_KEY } from '../../page/page';
-import { PageError } from '../../html/parser';
-import { astLiteral } from './acorn-utils';
-import { generate } from 'escodegen';
+import { getProperty, getPropertyName, Path, PathItem } from './estree-utils';
 
 interface Target {
   obj: ObjectExpression;
@@ -61,7 +59,7 @@ export function resolveValueDependencies(page: CompilerPage): void {
       case RT_SCOPE_PARENT_KEY:
         obj = getParentScope(obj);
         if (obj) {
-          return { obj, type: 'scope' }
+          return { obj, type: 'scope' };
         }
         return null;
       }
@@ -130,7 +128,8 @@ export function resolveValueDependencies(page: CompilerPage): void {
 
   function removeSpuriousPaths(paths: Path[]) {
     for (let i = 0; i < paths.length;) {
-      if (paths[i].length < 2) {
+      const path = paths[i];
+      if (path.length < 2 || (path.length > 0 && path[0].name !== 'this')) {
         paths.splice(i, 1);
         continue;
       }
@@ -142,7 +141,7 @@ export function resolveValueDependencies(page: CompilerPage): void {
     const name = path.pop()!.name;
     path.shift(); // remove initial 'this' item
     path.push({ name: RT_SCOPE_VALUE_KEY, node: {} as Node });
-    let callee: Expression = { type: 'ThisExpression' }
+    let callee: Expression = { type: 'ThisExpression' };
     path.forEach(item => {
       callee = {
         type: 'MemberExpression',
@@ -150,9 +149,9 @@ export function resolveValueDependencies(page: CompilerPage): void {
         property: { type: 'Identifier', name: item.name },
         computed: false,
         optional: false
-      }
+      };
     });
-    const ret: FunctionExpression = {
+    return {
       type: 'FunctionExpression',
       params: [],
       body: {
@@ -171,16 +170,14 @@ export function resolveValueDependencies(page: CompilerPage): void {
       },
       generator: false,
       async: false
-    }
-    console.log('makeValueDep', generate(ret));//tempdebug
-    return ret;
+    };
   }
 
-  function resolveValueExpression(
+  function makeValueDeps(
     stack: Stack<ObjectExpression>,
     name: string,
     exp: FunctionExpression
-  ) {
+  ): Property | null {
     // 1. collect dependencies
     const paths = new Array<Path>();
     estraverse.traverse(exp as Node, {
@@ -210,11 +207,26 @@ export function resolveValueDependencies(page: CompilerPage): void {
     // 3. remove duplicates
     const map = new Map<string, Path>();
     paths.forEach(path => map.set(path.toString(), path));
-    // 4. add dependency functions
+    if (map.size < 1) {
+      return null;
+    }
+    // 4. return dependency functions
+    const elements: Expression[] = [];
     map.forEach(path => {
-      const valueDep = makeValueDep(path);
-      //TODO
+      elements.push(makeValueDep(path));
     });
+    return {
+      type: 'Property',
+      key: { type: 'Identifier', name: 'deps' },
+      value: {
+        type: 'ArrayExpression',
+        elements
+      },
+      kind: 'init',
+      computed: false,
+      method: false,
+      shorthand: false
+    };
   }
 
   function resolveScope(stack: Stack<ObjectExpression>) {
@@ -224,7 +236,8 @@ export function resolveValueDependencies(page: CompilerPage): void {
       if (p.type === 'Property' && p.key.type === 'Identifier') {
         const value = p.value as ObjectExpression;
         const exp = getProperty(value, 'exp') as FunctionExpression;
-        resolveValueExpression(stack, p.key.name, exp);
+        const deps = makeValueDeps(stack, p.key.name, exp);
+        deps && value.properties.push(deps);
       }
     });
     const children = getProperty(scope, 'children') as ArrayExpression;

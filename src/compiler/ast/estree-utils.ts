@@ -41,18 +41,6 @@ export function getPropertyName(e: es.MemberExpression): string | undefined {
   return undefined;
 }
 
-export function memberExpression(
-  obj: es.Expression, prop: es.Expression
-): es.MemberExpression {
-  return {
-    type: 'MemberExpression',
-    object: obj,
-    property: prop,
-    computed: false,
-    optional: false
-  };
-}
-
 export type PathItem = { name: string, node: es.Node }
 
 export class Path extends Array<PathItem> {
