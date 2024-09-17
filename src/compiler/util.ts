@@ -12,12 +12,10 @@ export class Stack<T> extends Array<T> {
 
 export class Path extends Array<string> {
 
-  startsWith(start: string[]): boolean {
-    if (this.length < start.length) {
-      return false;
-    }
-    for (const i in start) {
-      if (this[i] !== start[i]) {
+  startsWith(other: string[]): boolean {
+    const len = Math.min(this.length, other.length);
+    for (let i = 0; i < len; i++) {
+      if (this[i] !== other[i]) {
         return false;
       }
     }

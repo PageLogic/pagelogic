@@ -5,7 +5,6 @@ import { RT_SCOPE_PARENT_KEY } from '../../page/page';
 import { CompilerPage } from '../compiler-page';
 import { getProperty } from './acorn-utils';
 
-//TODO: remove dependency from estraverse, switch to acorn-walk
 export function qualifyPageIdentifiers(page: CompilerPage): CompilerPage {
   for (const i in page.scopes) {
     const object = page.objects[i];

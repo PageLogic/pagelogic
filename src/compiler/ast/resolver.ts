@@ -1,15 +1,16 @@
-import { ArrayExpression, FunctionExpression, MemberExpression, ObjectExpression, Property } from 'acorn';
+import { ArrayExpression, FunctionExpression, ObjectExpression } from 'acorn';
+import estraverse from 'estraverse';
+import * as es from 'estree';
 import { CompilerPage } from '../compiler-page';
-import { getProperty } from './acorn-utils';
 import { Path, Stack } from '../util';
-import { simple } from 'acorn-walk';
+import { getProperty } from './acorn-utils';
 
 export function resolveValueDependencies(page: CompilerPage): CompilerPage {
   if (page.errors.length > 0) {
     return page;
   }
 
-  function getPropertyName(e: MemberExpression): string | undefined {
+  function getPropertyName(e: es.MemberExpression): string | undefined {
     const p = e.property;
     if (p.type === 'Identifier') {
       return p.name;
@@ -20,9 +21,9 @@ export function resolveValueDependencies(page: CompilerPage): CompilerPage {
     return undefined;
   }
 
-  function makePath(exp: MemberExpression) {
+  function makePath(exp: es.MemberExpression) {
     const p = new Path();
-    function f(e: MemberExpression) {
+    function f(e: es.MemberExpression) {
       if (e.object.type === 'MemberExpression') {
         f(e.object);
       } else if (e.object.type === 'ThisExpression') {
@@ -41,9 +42,12 @@ export function resolveValueDependencies(page: CompilerPage): CompilerPage {
     exp: FunctionExpression
   ) {
     const paths = new Array<Path>();
-    simple(exp, {
-      MemberExpression(exp) {
-        const path = makePath(exp);
+    estraverse.traverse(exp as es.Node, {
+      enter(node) {
+        if (node.type !== 'MemberExpression') {
+          return;
+        }
+        const path = makePath(node);
         if (!path) {
           return;
         }
@@ -58,9 +62,6 @@ export function resolveValueDependencies(page: CompilerPage): CompilerPage {
         paths.push(path);
       }
     });
-    // for (const p of paths) {
-    //   console.log(p.join('.'));//tempdebug
-    // }
   }
 
   function resolveScope(stack: Stack<ObjectExpression>) {
