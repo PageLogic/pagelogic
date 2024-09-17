@@ -1,12 +1,13 @@
 import estraverse from 'estraverse';
 import { CompilerPage } from '../compiler-page';
 import { Path, Stack } from '../util';
-import { getProperty } from './estree-utils';
+import { getProperty, getPropertyName } from './estree-utils';
 import {
   ArrayExpression, FunctionExpression, Literal, Node,
   MemberExpression, ObjectExpression
 } from 'estree';
 import { RT_SCOPE_PARENT_KEY } from '../../page/page';
+import { PageError } from '../../html/parser';
 
 interface Target {
   obj: ObjectExpression;
@@ -21,17 +22,6 @@ interface Target {
 export function resolveValueDependencies(page: CompilerPage) {
   if (page.errors.length > 0) {
     return;
-  }
-
-  function getPropertyName(e: MemberExpression): string | undefined {
-    const p = e.property;
-    if (p.type === 'Identifier') {
-      return p.name;
-    }
-    if (p.type === 'Literal' && typeof p.value === 'string') {
-      return p.value;
-    }
-    return undefined;
   }
 
   function makePath(exp: MemberExpression) {
@@ -112,7 +102,11 @@ export function resolveValueDependencies(page: CompilerPage) {
       } else if (t?.type === 'value') {
         break;
       } else {
-        //TODO: reference error
+        // page.errors.push(new PageError(
+        //   'error',
+        //   `invalid reference: ${path.toString()}`,
+
+        // ));
       }
     }
     while (i < path.length) {

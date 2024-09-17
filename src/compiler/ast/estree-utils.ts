@@ -29,3 +29,14 @@ export function getProperty(
   }
   return null;
 }
+
+export function getPropertyName(e: es.MemberExpression): string | undefined {
+  const p = e.property;
+  if (p.type === 'Identifier') {
+    return p.name;
+  }
+  if (p.type === 'Literal' && typeof p.value === 'string') {
+    return p.value;
+  }
+  return undefined;
+}
