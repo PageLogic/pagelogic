@@ -1,9 +1,8 @@
-import { ArrayExpression, FunctionExpression, ObjectExpression } from 'acorn';
 import estraverse from 'estraverse';
 import * as es from 'estree';
 import { CompilerPage } from '../compiler-page';
 import { Path, Stack } from '../util';
-import { getProperty } from './acorn-utils';
+import { getProperty } from './estree-utils';
 
 export function resolveValueDependencies(page: CompilerPage): CompilerPage {
   if (page.errors.length > 0) {
@@ -37,9 +36,9 @@ export function resolveValueDependencies(page: CompilerPage): CompilerPage {
   }
 
   function resolveValueExpression(
-    stack: Stack<ObjectExpression>,
+    stack: Stack<es.ObjectExpression>,
     name: string,
-    exp: FunctionExpression
+    exp: es.FunctionExpression
   ) {
     const paths = new Array<Path>();
     estraverse.traverse(exp as es.Node, {
@@ -64,24 +63,25 @@ export function resolveValueDependencies(page: CompilerPage): CompilerPage {
     });
   }
 
-  function resolveScope(stack: Stack<ObjectExpression>) {
+  function resolveScope(stack: Stack<es.ObjectExpression>) {
     const scope = stack.peek()!;
-    const values = getProperty(scope, 'values') as ObjectExpression;
+    const values = getProperty(scope, 'values') as es.ObjectExpression;
     values?.properties.forEach(p => {
       if (p.type === 'Property' && p.key.type === 'Identifier') {
-        const value = p.value as ObjectExpression;
-        const exp = getProperty(value, 'exp') as FunctionExpression;
+        const value = p.value as es.ObjectExpression;
+        const exp = getProperty(value, 'exp') as es.FunctionExpression;
         resolveValueExpression(stack, p.key.name, exp);
       }
     });
-    const children = getProperty(scope, 'children') as ArrayExpression;
+    const children = getProperty(scope, 'children') as es.ArrayExpression;
     children?.elements.forEach(e => {
-      resolveScope(new Stack(...stack, e as ObjectExpression));
+      resolveScope(new Stack(...stack, e as es.ObjectExpression));
     });
   }
 
-  const rootScopes = getProperty(page.ast, 'root') as ArrayExpression;
-  const rootScope = rootScopes.elements[0] as ObjectExpression;
+  const props = page.ast as es.ObjectExpression;
+  const rootScopes = getProperty(props, 'root') as es.ArrayExpression;
+  const rootScope = rootScopes.elements[0] as es.ObjectExpression;
   resolveScope(new Stack(rootScope));
   return page;
 }
