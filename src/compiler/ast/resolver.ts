@@ -76,7 +76,7 @@ export function resolveValueDependencies(page: CompilerPage): void {
       const children = getProperty(obj, 'children') as ArrayExpression;
       for (const child of children?.elements ?? []) {
         const p = getProperty(child as ObjectExpression, 'name');
-        if ((p as Literal)?.value === name) {
+        if ((p as Literal)?.value === item.name) {
           return {
             obj: child as ObjectExpression,
             type: 'scope'

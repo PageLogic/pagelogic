@@ -1,3 +1,4 @@
+import { Value } from './value';
 
 export interface PageProps {
   root: ScopeProps[];
@@ -17,4 +18,4 @@ export interface ValueProps {
 }
 
 export type ValueExp = (this: unknown) => unknown;
-export type ValueDep = (this: unknown) => unknown;
+export type ValueDep = (this: unknown) => Value;
