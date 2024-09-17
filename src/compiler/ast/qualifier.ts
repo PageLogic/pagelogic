@@ -5,7 +5,7 @@ import { RT_SCOPE_PARENT_KEY } from '../../page/page';
 import { CompilerPage } from '../compiler-page';
 import { getProperty } from './acorn-utils';
 
-export function qualifyPageIdentifiers(page: CompilerPage): CompilerPage {
+export function qualifyPageIdentifiers(page: CompilerPage) {
   for (const i in page.scopes) {
     const object = page.objects[i];
     const values = getProperty(object, 'values') as acorn.ObjectExpression;
@@ -23,7 +23,6 @@ export function qualifyPageIdentifiers(page: CompilerPage): CompilerPage {
       });
     }
   }
-  return page;
 }
 
 function qualifyReferences(key: string | null, exp: es.Node) {

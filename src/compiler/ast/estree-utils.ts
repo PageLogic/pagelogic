@@ -1,5 +1,4 @@
 import * as es from 'estree';
-import { SourceLocation } from '../../html/dom';
 
 export function esLoc(ref: es.Node) {
   const ret = {

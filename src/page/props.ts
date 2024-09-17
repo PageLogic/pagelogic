@@ -6,7 +6,7 @@ export interface PageProps {
 export interface ScopeProps {
   dom: number;
   name?: string;
-  isolated?: boolean;
+  isolated?: boolean; // only present if true
   children?: ScopeProps[];
   values?: { [key: string]: ValueProps };
 }
