@@ -12,6 +12,7 @@ const rootPath = path.join(__dirname, 'page');
 const inSuffix = '-in.html';
 const outSuffix = '-out.html';
 const propsSuffix = '-props.js';
+const errSuffix = '-err.json';
 
 describe('compiler/page', () => {
   fs.readdirSync(rootPath).forEach(file => {
@@ -29,10 +30,17 @@ describe('compiler/page', () => {
 
         const glob = new CompilerGlob(inSource.doc);
         const page = new CompilerPage(glob);
-        if (page.errors.length) {
+
+        const errPath = path.join(rootPath, name + errSuffix);
+        if (fs.existsSync(errPath)) {
+          const errText = await fs.promises.readFile(errPath);
+          const expected = JSON.parse(errText.toString());
+          const actual = page.errors.map(e => e.msg);
+          assert.deepEqual(actual, expected);
+        } else if (page.errors.length) {
           page.errors.forEach(e => console.error(e));
+          assert.equal(page.errors.length, 0);
         }
-        assert.equal(page.errors.length, 0);
         const root = page.root;
         assert.exists(root);
         assert.equal(root.e, inSource.doc.documentElement);

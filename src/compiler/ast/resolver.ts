@@ -115,7 +115,7 @@ export function resolveValueDependencies(page: CompilerPage): void {
         }
         page.errors.push(new PageError(
           'error',
-          `invalid reference: ${path.toString()}`,
+          `invalid reference: ${path.toString().replace(/^this\./, '')}`,
           path[i].node.loc
         ));
         break;
