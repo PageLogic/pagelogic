@@ -1,130 +1,86 @@
-import estraverse from 'estraverse';
-import * as acorn from 'acorn';
-import * as es from 'estree';
+import { ArrayExpression, FunctionExpression, MemberExpression, ObjectExpression, Property } from 'acorn';
 import { CompilerPage } from '../compiler-page';
-import { Scope } from '../../page/scope';
-import { Value } from '../../page/value';
-import { esIdentifier } from './estree-utils';
+import { getProperty } from './acorn-utils';
+import { Path, Stack } from '../util';
+import { simple } from 'acorn-walk';
 
-//FIXME
-export function resolve(page: CompilerPage): CompilerPage {
+export function resolveValueDependencies(page: CompilerPage): CompilerPage {
   if (page.errors.length > 0) {
     return page;
   }
 
-  function lookupName(scope: Scope, name: string, ascend: boolean): Scope | Value | null {
-    const value = scope.values[name];
-    if (value) {
-      return value;
+  function getPropertyName(e: MemberExpression): string | undefined {
+    const p = e.property;
+    if (p.type === 'Identifier') {
+      return p.name;
     }
-    for (const child of scope.children) {
-      if (child.name === name) {
-        return child;
-      }
+    if (p.type === 'Literal' && typeof p.value === 'string') {
+      return p.value;
     }
-    if (ascend && scope.p) {
-      return lookupName(scope.p, name, true);
-    }
-    return null;
+    return undefined;
   }
 
-  function lookupPath(scope: Scope, path: string[]): Array<Scope | Value>{
-    const ret = new Array<Scope | Value>();
-    for (let i = 0; i < path.length; i++) {
-      const item = lookupName(scope, path[i], i === 0);
-      if (!item) {
-        break;
+  function makePath(exp: MemberExpression) {
+    const p = new Path();
+    function f(e: MemberExpression) {
+      if (e.object.type === 'MemberExpression') {
+        f(e.object);
+      } else if (e.object.type === 'ThisExpression') {
+        p.push('this');
       }
-      ret.push(item);
-      if (item instanceof Value) {
-        break;
-      }
-      scope = item;
+      const name = getPropertyName(e);
+      p.length && p.push(name ?? '');
     }
-    return ret;
+    f(exp);
+    return p.length > 1 && p[0] === 'this' ? p : null;
   }
 
-  function getReference(
-    stack: es.Node[]
-  ): { path: string[], exp: es.MemberExpression | null } {
-    const path: string[] = [];
-    let exp: es.MemberExpression | null = null;
-    for (let i = stack.length - 1; i >= 0; i--) {
-      const node = stack[i];
-      if (node.type !== 'MemberExpression') {
-        break;
-      }
-      if (node.property.type === 'Literal') {
-        if (typeof node.property.value !== 'string') {
-          break;
+  function resolveValueExpression(
+    stack: Stack<ObjectExpression>,
+    name: string,
+    exp: FunctionExpression
+  ) {
+    const paths = new Array<Path>();
+    simple(exp, {
+      MemberExpression(exp) {
+        const path = makePath(exp);
+        if (!path) {
+          return;
         }
-        const key = node.property.value;
-        node.property = esIdentifier(key, node.property);
-        node.computed = false;
-      }
-      if (node.property.type !== 'Identifier') {
-        break;
-      }
-      path.push(node.property.name);
-      exp = node;
-    }
-    return { path, exp };
-  }
-
-  function resolveValue(scope: Scope, value: Value) {
-    if (typeof value.val !== 'object') {
-      return;
-    }
-    const stack: es.Node[] = [];
-    estraverse.traverse(value.val as es.Expression, {
-      enter: (node: es.Node) => {
-        stack.push(node);
-        if (
-          node.type === 'MemberExpression' &&
-          node.object.type === 'ThisExpression' &&
-          node.property.type === 'Identifier'
-        ) {
-          const { path, exp } = getReference(stack);
-          const chain = lookupPath(scope, path);
-          if (chain.length < 1 || chain[chain.length - 1].type !== 'value') {
-            page.errors.push(new PageError(
-              'error', `Reference not found: ${path.join('.')}`, value.src.loc
-            ));
+        for (const start of paths) {
+          if (path.startsWith(start)) {
+            for (let i = start.length; i < path.length; i++) {
+              start.push(path[i]);
+            }
             return;
           }
-          const target = chain[chain.length - 1] as Value;
-          if (
-            typeof target.val === 'object' &&
-            (target.val as acorn.Expression).type === 'FunctionExpression'
-          ) {
-            return;
-          }
-          let ref: es.MemberExpression | null = exp;
-          for (let i = 0; i < (path.length - chain.length); i++) {
-            ref = ref?.object.type === 'MemberExpression' ? ref.object : null;
-          }
-          ref && value.refs.push(ref as acorn.MemberExpression);
         }
-      },
-
-      leave: () => {
-        stack.pop();
+        paths.push(path);
       }
     });
+    // for (const p of paths) {
+    //   console.log(p.join('.'));//tempdebug
+    // }
   }
 
-  function resolveScope(scope: Scope) {
-    (Reflect.ownKeys(scope.values) as string[]).forEach(key => {
-      resolveValue(scope, scope.values[key]);
+  function resolveScope(stack: Stack<ObjectExpression>) {
+    const scope = stack.peek()!;
+    const values = getProperty(scope, 'values') as ObjectExpression;
+    values?.properties.forEach(p => {
+      if (p.type === 'Property' && p.key.type === 'Identifier') {
+        const value = p.value as ObjectExpression;
+        const exp = getProperty(value, 'exp') as FunctionExpression;
+        resolveValueExpression(stack, p.key.name, exp);
+      }
     });
-    scope.texts.forEach(value => {
-      resolveValue(scope, value);
-    });
-    scope.children.forEach(child => {
-      resolveScope(child);
+    const children = getProperty(scope, 'children') as ArrayExpression;
+    children?.elements.forEach(e => {
+      resolveScope(new Stack(...stack, e as ObjectExpression));
     });
   }
-  resolveScope(page.root);
 
+  const rootScopes = getProperty(page.ast, 'root') as ArrayExpression;
+  const rootScope = rootScopes.elements[0] as ObjectExpression;
+  resolveScope(new Stack(rootScope));
   return page;
 }

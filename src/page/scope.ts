@@ -8,6 +8,7 @@ export class Scope {
   id: number;
   e: Element;
   name?: string;
+  isolated?: boolean;
   values: { [key: string]: Value };
   children: Scope[];
 

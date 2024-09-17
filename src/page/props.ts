@@ -1,11 +1,12 @@
 
 export interface PageProps {
-  root: ScopeProps;
+  root: ScopeProps[];
 }
 
 export interface ScopeProps {
   dom: number;
   name?: string;
+  isolated?: boolean;
   children?: ScopeProps[];
   values?: { [key: string]: ValueProps };
 }

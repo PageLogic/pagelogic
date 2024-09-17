@@ -9,6 +9,7 @@ import {
   astArrayExpression, astLiteral, astLocation, astObjectExpression, astProperty
 } from './ast/acorn-utils';
 import { qualifyPageIdentifiers } from './ast/qualifier';
+import { resolveValueDependencies } from './ast/resolver';
 
 const DEF_NAMES: { [key: string]: string } = {
   HTML: 'page',
@@ -63,7 +64,17 @@ export class CompilerPage extends pg.Page {
     this.objects = [];
     this.errors = [];
     this.root = load(this.glob.doc.documentElement!, this.glob, p);
-    qualifyPageIdentifiers(this);
+    !this.hasErrors() && qualifyPageIdentifiers(this);
+    !this.hasErrors() && resolveValueDependencies(this);
+  }
+
+  hasErrors() {
+    for (const e of this.errors) {
+      if (e.type === 'error') {
+        return true;
+      }
+    }
+    return false;
   }
 
   needsScope(e: Element) {
