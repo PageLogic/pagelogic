@@ -17,6 +17,7 @@ const DEF_NAMES: { [key: string]: string } = {
   BODY: 'body'
 };
 
+//TODO: check that no classic functions are used in ${} expressions (error if they are)
 export class CompilerPage extends pg.Page {
   ast!: ObjectExpression;
   scopes!: Array<Scope>;
@@ -168,7 +169,7 @@ export class CompilerPage extends pg.Page {
   collectNativeAttribute(a: Attribute, ret: ObjectExpression) {
     const name = pg.RT_ATTR_VALUE_PREFIX + a.name;
     const value = this.makeValue(name, a.value, a.valueLoc!);
-    ret.properties.push(value);    
+    ret.properties.push(value);
   }
 
   collectTexts(e: Element, v: ObjectExpression) {
