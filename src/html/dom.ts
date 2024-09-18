@@ -1,5 +1,6 @@
 import * as acorn from 'acorn';
-import { DIRECTIVE_TAG_PREFIX } from './const';
+
+export const DIRECTIVE_TAG_PREFIX = ':';
 
 export const VOID_ELEMENTS = new Set([
   'AREA', 'BASE', 'BR', 'COL', 'EMBED', 'HR', 'IMG', 'INPUT',

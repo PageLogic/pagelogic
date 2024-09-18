@@ -2,13 +2,14 @@ import { parse, Source } from './parser';
 import * as dom from './dom';
 import fs from 'fs';
 import path from 'path';
-import { DIRECTIVE_TAG_PREFIX, MAX_NESTING } from './const';
 
-export const INCLUDE_DIRECTIVE_TAG = DIRECTIVE_TAG_PREFIX + 'INCLUDE';
+export const INCLUDE_DIRECTIVE_TAG = dom.DIRECTIVE_TAG_PREFIX + 'INCLUDE';
 export const INCLUDE_SRC_ATTR = 'src';
 export const INCLUDE_AS_ATTR = 'as';
 export const INCLUDE_ALWAYS_ATTR = 'always';
-export const GROUP_DIRECTIVE_TAG = DIRECTIVE_TAG_PREFIX + 'GROUP';
+export const GROUP_DIRECTIVE_TAG = dom.DIRECTIVE_TAG_PREFIX + 'GROUP';
+
+export const MAX_NESTING = 100;
 
 export class Preprocessor {
   docroot: string;
