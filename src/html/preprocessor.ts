@@ -4,10 +4,12 @@ import fs from 'fs';
 import path from 'path';
 import { DIRECTIVE_TAG_PREFIX, MAX_NESTING } from './const';
 
+//TODO: remove <:import>, add `always` with default `false` to <:include>
+
 export const INCLUDE_DIRECTIVE_TAG = DIRECTIVE_TAG_PREFIX + 'INCLUDE';
-export const IMPORT_DIRECTIVE_TAG = DIRECTIVE_TAG_PREFIX + 'IMPORT';
 export const INCLUDE_SRC_ATTR = 'src';
 export const INCLUDE_AS_ATTR = 'as';
+export const INCLUDE_ALWAYS_ATTR = 'always';
 export const GROUP_DIRECTIVE_TAG = DIRECTIVE_TAG_PREFIX + 'GROUP';
 
 export class Preprocessor {
@@ -105,7 +107,7 @@ export class Preprocessor {
       for (const n of p.children) {
         if (n.type === 'element') {
           const e = n as dom.Element;
-          if (e.name === INCLUDE_DIRECTIVE_TAG || e.name === IMPORT_DIRECTIVE_TAG) {
+          if (e.name === INCLUDE_DIRECTIVE_TAG) {
             includes.push({ name: e.name, parent: p, node: e });
           } else {
             collectIncludes(e);
@@ -162,8 +164,10 @@ export class Preprocessor {
     d: Include, i: number, src: string,
     currDir: string, source: Source, nesting: number
   ) {
+    const a = d.node.getAttributeNode(INCLUDE_ALWAYS_ATTR)
+    const once = !a || a.value === 'false';
     const s = await this.loadSource(
-      src, currDir, source, nesting + 1, (d.name === IMPORT_DIRECTIVE_TAG), d.node
+      src, currDir, source, nesting + 1, once, d.node
     );
     const rootElement = s?.doc?.documentElement;
     if (!rootElement) {

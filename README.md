@@ -1,5 +1,5 @@
 
-PageLogic augments stardard HTML with embedded reactive logic, making it ideal for expressing presentation logic.
+PageLogic turns HTML into a reactive language ideal for expressing presentation logic.
 
 ```html
 <html>
