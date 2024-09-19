@@ -4,9 +4,9 @@ import { Scope } from './scope';
 import { Value } from './value';
 
 export abstract class Glob extends Scope {
-  props?: PageProps;
+  props: PageProps;
 
-  constructor(doc: Document, props?: PageProps) {
+  constructor(doc: Document, props: PageProps) {
     super(-1, doc);
     this.props = props;
     this.init();
@@ -17,6 +17,7 @@ export abstract class Glob extends Scope {
   }
 
   abstract init(): void;
+  abstract getElement(dom: number): Element;
   abstract newScope(id: number, e: Element): Scope;
   abstract newValue(): Value;
 }

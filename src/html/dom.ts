@@ -1,6 +1,5 @@
 import * as acorn from 'acorn';
-
-export const DIRECTIVE_TAG_PREFIX = ':';
+import { DIRECTIVE_TAG_PREFIX } from './parser';
 
 export const VOID_ELEMENTS = new Set([
   'AREA', 'BASE', 'BR', 'COL', 'EMBED', 'HR', 'IMG', 'INPUT',
@@ -302,6 +301,7 @@ export class Element extends Node {
 
 export class Document extends Element {
   jsonLoc = true;
+  domIdElements: Element[] = [];
 
   constructor(loc: string | SourceLocation) {
     super(null, '#document',

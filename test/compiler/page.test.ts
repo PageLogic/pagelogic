@@ -28,7 +28,7 @@ describe('compiler/page', () => {
         const inSource = parser.parse(inText.toString(), file);
         assert.equal(inSource.errors.length, 0);
 
-        const glob = new ServerGlob(inSource.doc);
+        const glob = new ServerGlob(inSource.doc, { root: [] });
         const page = new CompilerPage(glob);
 
         const errPath = path.join(rootPath, name + errSuffix);

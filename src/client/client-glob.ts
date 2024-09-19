@@ -11,6 +11,11 @@ export class ClientGlob extends Glob {
     //TODO
   }
 
+  override getElement(_: number): Element {
+    //TODO
+    return this.doc.documentElement!;
+  }
+
   override newScope(id: number, e: Element): Scope {
     return new ClientScope(id, e);
   }

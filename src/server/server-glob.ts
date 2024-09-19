@@ -11,6 +11,10 @@ export class ServerGlob extends Glob {
     //TODO
   }
 
+  override getElement(dom: number): Element {
+    return this.doc.domIdElements[dom];
+  }
+
   override newScope(id: number, e: Element): Scope {
     return new ServerScope(id, e);
   }

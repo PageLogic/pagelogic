@@ -1,5 +1,8 @@
 import * as acorn from 'acorn';
 import * as dom from './dom';
+import { DOM_ID_ATTR } from '../page/scope';
+
+export const DIRECTIVE_TAG_PREFIX = ':';
 
 const SKIP_CONTENT_TAGS = new Set(['SCRIPT', 'CODE']);
 const ATOMIC_TEXT_TAGS = new Set(['STYLE', 'TITLE']);
@@ -35,7 +38,10 @@ export function parse(s: string, fname: string, ret?: Source, sanitize = true): 
       }
     });
     body || (body = new dom.Element(doc, 'BODY', doc.loc).linkTo(doc.documentElement!));
-    head || new dom.Element(doc, 'HEAD', doc.loc).linkTo(doc.documentElement!, body);
+    head || (head = new dom.Element(doc, 'HEAD', doc.loc).linkTo(doc.documentElement!, body));
+    !doc.domIdElements[0] && (doc.domIdElements[0] = doc.documentElement!);
+    !doc.domIdElements[1] && (doc.domIdElements[1] = head);
+    !doc.domIdElements[2] && (doc.domIdElements[2] = body);
     doc.documentElement!.name = 'HTML';
   }
   return ret;
@@ -179,6 +185,9 @@ function parseAttributes(e: dom.Element, src: Source, i2: number, errors: PageEr
       a.valueLoc = src.loc(i1, i1);
       if (a && (quote === QUOT || quote === APOS)) {
         i1 = parseValue(e, a, src, i1 + 1, quote, String.fromCharCode(quote), errors);
+        if (name === DOM_ID_ATTR) {
+          src.doc.domIdElements[parseInt(a.value as string)] = e;
+        }
       } else if (
         a &&
         s.startsWith(LEXP, i1)
