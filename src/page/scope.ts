@@ -3,7 +3,7 @@ import { Value } from './value';
 
 export const DOM_ID_ATTR = 'data-lid';
 
-export class Scope {
+export abstract class Scope {
   p?: Scope;
   id: number;
   e: Element;

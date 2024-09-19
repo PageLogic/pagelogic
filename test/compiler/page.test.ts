@@ -1,12 +1,12 @@
 import * as acorn from 'acorn';
-import escodegen from 'escodegen';
 import { assert } from 'chai';
+import escodegen from 'escodegen';
 import fs from 'fs';
 import { describe } from 'mocha';
 import path from 'path';
-import * as parser from '../../src/html/parser';
-import { CompilerGlob } from '../../src/compiler/compiler-glob';
 import { CompilerPage } from '../../src/compiler/compiler-page';
+import * as parser from '../../src/html/parser';
+import { ServerGlob } from '../../src/server/server-glob';
 
 const rootPath = path.join(__dirname, 'page');
 const inSuffix = '-in.html';
@@ -28,7 +28,7 @@ describe('compiler/page', () => {
         const inSource = parser.parse(inText.toString(), file);
         assert.equal(inSource.errors.length, 0);
 
-        const glob = new CompilerGlob(inSource.doc);
+        const glob = new ServerGlob(inSource.doc);
         const page = new CompilerPage(glob);
 
         const errPath = path.join(rootPath, name + errSuffix);

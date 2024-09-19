@@ -31,7 +31,7 @@ export class CompilerPage extends pg.Page {
         const id = this.scopes.length;
         e.setAttribute(DOM_ID_ATTR, `${id}`);
 
-        s = new Scope(id, e).linkTo(s);
+        s = this.glob.newScope(id, e).linkTo(s);
         s.name = DEF_NAMES[e.name];
         this.scopes.push(s);
         const o = astObjectExpression(l);

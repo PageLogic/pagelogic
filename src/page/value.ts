@@ -1,4 +1,4 @@
 
-export class Value {
+export abstract class Value {
 
 }
