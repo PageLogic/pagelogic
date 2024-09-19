@@ -1,5 +1,5 @@
 import { Document, Element } from '../html/dom';
-import { PageProps } from './props';
+import { PageProps, ValueProps } from './props';
 import { Scope } from './scope';
 import { Value } from './value';
 
@@ -19,5 +19,5 @@ export abstract class Glob extends Scope {
   abstract init(): void;
   abstract getElement(dom: number): Element;
   abstract newScope(id: number, e: Element): Scope;
-  abstract newValue(): Value;
+  abstract newValue(scope: Scope, props: ValueProps): Value;
 }

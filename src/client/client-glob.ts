@@ -1,5 +1,6 @@
 import { Element } from '../html/dom';
 import { Glob } from '../page/glob';
+import { ValueProps } from '../page/props';
 import { Scope } from '../page/scope';
 import { Value } from '../page/value';
 import { ClientScope } from './client-scope';
@@ -20,7 +21,7 @@ export class ClientGlob extends Glob {
     return new ClientScope(id, e);
   }
 
-  override newValue(): Value {
-    return new ClientValue();
+  override newValue(scope: Scope, props: ValueProps): Value {
+    return new ClientValue(scope, props);
   }
 }

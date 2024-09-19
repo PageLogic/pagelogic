@@ -3,6 +3,8 @@ import { Value } from './value';
 
 export const DOM_ID_ATTR = 'data-lid';
 
+export type ScopeObj = { [key: string]: unknown };
+
 export abstract class Scope {
   p?: Scope;
   id: number;
@@ -10,12 +12,14 @@ export abstract class Scope {
   name?: string;
   isolated?: boolean;
   values: { [key: string]: Value };
+  obj: ScopeObj;
   children: Scope[];
 
   constructor(id: number, e: Element) {
     this.id = id;
     this.e = e;
     this.values = {};
+    this.obj = {};
     this.children = [];
   }
 
