@@ -1,5 +1,6 @@
 import { Element } from '../html/dom';
 import { Glob } from '../page/glob';
+import { Page } from '../page/page';
 import { ValueProps } from '../page/props';
 import { Scope } from '../page/scope';
 import { Value } from '../page/value';
@@ -20,7 +21,7 @@ export class ServerGlob extends Glob {
     return new ServerScope(id, e);
   }
 
-  override newValue(scope: Scope, props: ValueProps): Value {
-    return new ServerValue(scope, props);
+  override newValue(page: Page, scope: Scope, props: ValueProps): Value {
+    return new ServerValue(page, scope, props);
   }
 }

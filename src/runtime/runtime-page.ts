@@ -11,5 +11,10 @@ export class RuntimePage extends Page {
       return p;
     };
     this.root = load(this.glob.props!.root[0], this.glob);
+    const activate = (scope: Scope) => {
+      scope.activate(this.glob, this);
+      scope.children.forEach(child => activate(child));
+    };
+    activate(this.root);
   }
 }

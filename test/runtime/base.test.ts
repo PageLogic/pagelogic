@@ -1,6 +1,5 @@
 import { assert } from 'chai';
-import { generate } from 'escodegen';
-import { CompilerPage } from '../../src/compiler/compiler-page';
+import { compile } from '../../src/compiler/compiler';
 import { parse } from '../../src/html/parser';
 import { Page } from '../../src/page/page';
 import { RuntimePage } from '../../src/runtime/runtime-page';
@@ -11,21 +10,21 @@ describe('runtime/base', () => {
   it('001', () => {
     const page = load('<html></html>');
     console.log(page.glob.doc.toString());//tempdebug
-    console.log(page.glob.props);//tempdebug
+    console.log(JSON.stringify(page.glob.props));//tempdebug
     //TODO
   });
 
 });
 
 function load(html: string): Page {
+  // compile
   const src = parse(html, 'test');
   assert.equal(src.errors.length, 0);
-  const compilerGlob = new ServerGlob(src.doc);
-  const compilerPage = new CompilerPage(compilerGlob);
-  assert.equal(compilerPage.errors.length, 0);
-  const js = generate(compilerPage.ast);
-  const props = eval(`(${js})`);
-  const serverGlob = new ServerGlob(src.doc, props);
-  const runtimePage = new RuntimePage(serverGlob);
-  return runtimePage;
+  const comp = compile(src);
+  assert.equal(comp.errors.length, 0);
+  // load
+  const glob = new ServerGlob(comp.glob.doc, comp.glob.props);
+  const page = new RuntimePage(glob);
+  page.refresh(page.root);
+  return page;
 }

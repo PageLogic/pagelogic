@@ -17,7 +17,7 @@ interface Target {
 /**
  * Resolves value dependencies and adds dependency functions to them.
  * See page/props.ts -> ValueDep
- * @param page 
+ * @param page
  */
 export function resolveValueDependencies(page: CompilerPage): void {
   if (page.errors.length > 0) {
@@ -42,7 +42,7 @@ export function resolveValueDependencies(page: CompilerPage): void {
   function getParentScope(obj: ObjectExpression): ObjectExpression | null {
     const scopeId = (getProperty(obj, 'dom') as Literal).value as number;
     const scope = page.scopes[scopeId];
-    const parent = scope.p;
+    const parent = scope.parent;
     const parentId = parent?.id;
     const ret = parentId != null && parentId >= 0
       ? page.objects[parentId] as ObjectExpression

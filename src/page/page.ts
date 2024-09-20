@@ -10,9 +10,12 @@ export const SRC_NAME_ATTR = SRC_SYSTEM_ATTR_PREFIX + 'name';
 
 export const RT_ATTR_VALUE_PREFIX = 'attr$';
 export const RT_TEXT_VALUE_PREFIX = 't$';
+export const RT_SYS_VALUE_PREFIX = '$';
+
+export const RT_SCOPE_NAME_KEY = '$name';
+export const RT_SCOPE_ISOLATED_KEY = '$isolated';
 export const RT_SCOPE_PARENT_KEY = '$parent';
 export const RT_SCOPE_VALUE_KEY = '$value';
-export const RT_SYS_VALUE_PREFIX = '$';
 
 export const HTML_TEXT_MARKER1 = '-t';
 export const HTML_TEXT_MARKER2 = '-/t';
@@ -60,7 +63,7 @@ export abstract class Page {
       v.props.deps?.forEach(dep => {
         let o: Value | undefined;
         try {
-          o = dep.apply(scope.obj);
+          o = dep.apply(scope.proxy);
         } catch (ignored) { /* nop */ }
         if (o) {
           v.src.add(o);
