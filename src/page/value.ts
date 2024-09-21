@@ -4,7 +4,7 @@ import { Scope } from './scope';
 
 export type ValueCallback = (s: Scope, v: unknown) => unknown;
 
-export abstract class Value {
+export class Value {
   page: Page;
   scope: Scope;
   props: ValueProps;

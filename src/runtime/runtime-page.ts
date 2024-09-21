@@ -1,10 +1,8 @@
 import { Element } from '../html/dom';
-import { HTML_TEXT_MARKER1, Page, RT_ATTR_VALUE_PREFIX, RT_TEXT_VALUE_PREFIX } from '../page/page';
+import { Page, RT_ATTR_VALUE_PREFIX, RT_TEXT_VALUE_PREFIX } from '../page/page';
 import { ScopeProps, ValueProps } from '../page/props';
 import { Scope } from '../page/scope';
 import { Value } from '../page/value';
-import { ServerScope } from '../server/server-scope';
-import { ServerValue } from '../server/server-value';
 
 //TODO: add values to parent scope for named scopes, if they don't conflict
 export class RuntimePage extends Page {
@@ -25,13 +23,13 @@ export class RuntimePage extends Page {
   }
 
   override newScope(id: number, e: Element): Scope {
-    return new ServerScope(id, e);
+    return new Scope(id, e);
   }
 
   override newValue(
     page: Page, scope: Scope, name: string, props: ValueProps
   ): Value {
-    const ret = new ServerValue(page, scope, props);
+    const ret = new Value(page, scope, props);
     if (name.startsWith(RT_ATTR_VALUE_PREFIX)) {
       const key = name.substring(RT_ATTR_VALUE_PREFIX.length);
       ret.cb = (scope, v) => {

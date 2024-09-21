@@ -11,7 +11,7 @@ import { Value } from './value';
 export type ScopeValues = { [key: string]: Value };
 export type ScopeObj = { [key: string]: unknown };
 
-export abstract class Scope {
+export class Scope {
   parent?: Scope;
   id: number;
   e: Element;

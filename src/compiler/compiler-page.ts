@@ -4,16 +4,14 @@ import {
 import { Attribute, Comment, Element, SourceLocation, Text } from '../html/dom';
 import { PageError } from '../html/parser';
 import * as pg from '../page/page';
-import { Scope } from '../page/scope';
 import {
   astArrayExpression, astLiteral, astLocation, astObjectExpression, astProperty
 } from './ast/acorn-utils';
 import { qualifyPageIdentifiers } from './ast/qualifier';
 import { resolveValueDependencies } from './ast/resolver';
-import { ServerScope } from '../server/server-scope';
 import { ValueProps } from '../page/props';
 import { Value } from '../page/value';
-import { ServerValue } from '../server/server-value';
+import { Scope } from '../page/scope';
 
 const DEF_NAMES: { [key: string]: string } = {
   HTML: 'page',
@@ -74,11 +72,11 @@ export class CompilerPage extends pg.Page {
   }
 
   override newScope(id: number, e: Element): Scope {
-    return new ServerScope(id, e);
+    return new Scope(id, e);
   }
 
   override newValue(page: pg.Page, scope: Scope, name: string, props: ValueProps): Value {
-    return new ServerValue(page, scope, props);
+    return new Value(page, scope, props);
   }
 
   hasErrors() {
