@@ -28,11 +28,14 @@ export class RuntimePage extends Page {
     return new ServerScope(id, e);
   }
 
-  override newValue(page: Page, scope: Scope, name: string, props: ValueProps): Value {
+  override newValue(
+    page: Page, scope: Scope, name: string, props: ValueProps
+  ): Value {
     const ret = new ServerValue(page, scope, props);
     if (name.startsWith(RT_ATTR_VALUE_PREFIX)) {
       const key = name.substring(RT_ATTR_VALUE_PREFIX.length);
       ret.cb = (scope, v) => {
+        //TODO: batch DOM changes
         scope.e.setAttribute(key, `${v}`);
         return v;
       };
