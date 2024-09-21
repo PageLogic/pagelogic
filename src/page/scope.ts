@@ -98,7 +98,24 @@ export abstract class Scope {
         return undefined;
       },
 
-      //TODO: set()
+      set: (target: { [key: string]: Value }, key: string | symbol, val: unknown) => {
+        const v = target[key as string];
+        if (v) {
+          v.set(val);
+          return true;
+        }
+        const isolated = target[RT_SCOPE_ISOLATED_KEY];
+        const parent = isolated ? null : target[RT_SCOPE_PARENT_KEY];
+        if (parent) {
+          try {
+            (parent.get() as ScopeObj)[key as string] = val;
+            return true;
+          } catch (err) {
+            return false;
+          }
+        }
+        return false;
+      },
 
     });
 

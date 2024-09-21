@@ -41,6 +41,8 @@ describe('runtime/base', () => {
     const page = load('<html :x=${1} :y=${x * 2}></html>');
     assert.equal(page.x, 1);
     assert.equal(page.y, 2);
+    page.x = 3;
+    assert.equal(page.y, 6);
   });
 
 });
