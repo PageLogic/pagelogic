@@ -100,4 +100,37 @@ describe('runtime/base', () => {
     );
   });
 
+  it('104', () => {
+    const page = load('<html><body>${"hi"} </body></html>');
+    assert.equal(
+      (page.$dom as Element).toString(),
+      '<html data-lid="0">'
+        + '<head data-lid="1"></head>'
+        + '<body data-lid="2"><!---t0-->hi<!----> </body>'
+        + '</html>'
+    );
+  });
+
+  it('105', () => {
+    const page = load('<html><body> ${"hi"}</body></html>');
+    assert.equal(
+      (page.$dom as Element).toString(),
+      '<html data-lid="0">'
+        + '<head data-lid="1"></head>'
+        + '<body data-lid="2"> <!---t0-->hi<!----></body>'
+        + '</html>'
+    );
+  });
+
+  it('106', () => {
+    const page = load('<html><body>${"hi"}</body></html>');
+    assert.equal(
+      (page.$dom as Element).toString(),
+      '<html data-lid="0">'
+        + '<head data-lid="1"></head>'
+        + '<body data-lid="2"><!---t0-->hi<!----></body>'
+        + '</html>'
+    );
+  });
+
 });
