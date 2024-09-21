@@ -43,7 +43,7 @@ export abstract class Value {
       this.cycle = this.page.cycle;
       const old = this.val;
       try {
-        this.val = this.exp.apply(this.scope.proxy);
+        this.val = this.exp.apply(this.scope.obj);
       } catch (err) {
         //TODO
         console.error(err);

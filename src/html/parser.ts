@@ -1,6 +1,6 @@
 import * as acorn from 'acorn';
 import * as dom from './dom';
-import { DOM_ID_ATTR } from '../page/scope';
+import { DOM_ID_ATTR } from '../page/page';
 
 export const DIRECTIVE_TAG_PREFIX = ':';
 

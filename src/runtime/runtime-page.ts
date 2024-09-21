@@ -7,14 +7,16 @@ export class RuntimePage extends Page {
 
   override init() {
     const load = (props: ScopeProps, p: Scope) => {
-      // const e = this.glob.doc.domIdElements[props.dom];
-      return p;
+      const e = this.glob.doc.domIdElements[props.dom];
+      const s = this.glob.newScope(props.dom, e)
+        .setName(props.name)
+        .setValues(this, props.values)
+        .linkTo(p)
+        .activate(this);
+      props.children?.forEach(child => load(child, s));
+      return s;
     };
     this.root = load(this.glob.props!.root[0], this.glob);
-    const activate = (scope: Scope) => {
-      scope.activate(this.glob, this);
-      scope.children.forEach(child => activate(child));
-    };
-    activate(this.root);
+    this.refresh(this.root);
   }
 }

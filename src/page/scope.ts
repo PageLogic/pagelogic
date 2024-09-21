@@ -1,9 +1,11 @@
 import { Element } from '../html/dom';
 import { Glob } from './glob';
-import { Page, RT_SCOPE_ISOLATED_KEY, RT_SCOPE_NAME_KEY, RT_SCOPE_PARENT_KEY, RT_SCOPE_VALUE_KEY } from './page';
+import { Page, RT_SCOPE_CHILDREN_KEY, RT_SCOPE_DOM_KEY, RT_SCOPE_ID_KEY, RT_SCOPE_ISOLATED_KEY, RT_SCOPE_NAME_KEY, RT_SCOPE_PARENT_KEY, RT_SCOPE_VALUE_KEY } from './page';
+import { ValueProps } from './props';
 import { Value } from './value';
 
-export const DOM_ID_ATTR = 'data-lid';
+export type ScopeValues = { [key: string]: Value };
+export type ScopeObj = { [key: string]: unknown };
 
 export abstract class Scope {
   parent?: Scope;
@@ -11,8 +13,8 @@ export abstract class Scope {
   e: Element;
   name?: string;
   isolated?: boolean;
-  values: { [key: string]: Value };
-  proxy!: { [key: string]: unknown };
+  values: ScopeValues;
+  obj!: ScopeObj;
   children: Scope[];
 
   constructor(id: number, e: Element) {
@@ -22,6 +24,22 @@ export abstract class Scope {
     this.children = [];
   }
 
+  setName(name?: string): this {
+    this.name = name;
+    return this;
+  }
+
+  setValues(page: Page, values?: { [key: string]: ValueProps }): this {
+    if (values) {
+      Reflect.ownKeys(values).forEach(key => {
+        const v = page.glob.newValue(page, this, values![key as string]);
+        this.values[key as string] = v;
+      });
+    }
+    return this;
+  }
+
+  //TODO: add name to parent if not conflicting
   linkTo(p: Scope, ref?: Scope): this {
     let i = ref ? p.children.indexOf(ref) : -1;
     i = i < 0 ? p.children.length : i;
@@ -31,6 +49,7 @@ export abstract class Scope {
     return this;
   }
 
+  //TODO: remove name from parent if it points to this
   unlink(): this {
     this.e.unlink();
     const i = this.parent ? this.parent.children.indexOf(this) : -1;
@@ -39,23 +58,33 @@ export abstract class Scope {
     return this;
   }
 
-  activate(glob: Glob, page: Page) {
+  activate(page: Page): this {
     const that = this;
+    const glob = page.glob;
 
+    this.values[RT_SCOPE_ID_KEY] = glob.newValue(page, this, {
+      exp: function() { return that.id; }
+    });
     this.values[RT_SCOPE_NAME_KEY] = glob.newValue(page, this, {
       exp: function() { return that.name; }
     });
+    this.values[RT_SCOPE_DOM_KEY] = glob.newValue(page, this, {
+      exp: function() { return that.e; }
+    });
     this.values[RT_SCOPE_ISOLATED_KEY] = glob.newValue(page, this, {
-      exp: function() { return that.isolated; }
+      exp: function() { return !!that.isolated; }
     });
     this.values[RT_SCOPE_PARENT_KEY] = glob.newValue(page, this, {
-      exp: function() { return that.parent?.proxy; }
+      exp: function() { return that.parent?.obj; }
+    });
+    this.values[RT_SCOPE_CHILDREN_KEY] = glob.newValue(page, this, {
+      exp: function() { return that.children.map(child => child.obj); }
     });
     this.values[RT_SCOPE_VALUE_KEY] = glob.newValue(page, this, {
       exp: function() { return (key: string) => that.values[key]; }
     });
 
-    return new Proxy(this.values, {
+    this.obj = new Proxy(this.values, {
 
       get: (target: { [key: string]: Value }, key: string | symbol) => {
         const v = target[key as string];
@@ -73,5 +102,7 @@ export abstract class Scope {
       //TODO: set()
 
     });
+
+    return this;
   }
 }

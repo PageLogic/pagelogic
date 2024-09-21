@@ -4,7 +4,7 @@ import {
 import { Attribute, Element, SourceLocation, Text } from '../html/dom';
 import { PageError } from '../html/parser';
 import * as pg from '../page/page';
-import { DOM_ID_ATTR, Scope } from '../page/scope';
+import { Scope } from '../page/scope';
 import {
   astArrayExpression, astLiteral, astLocation, astObjectExpression, astProperty
 } from './ast/acorn-utils';
@@ -29,7 +29,7 @@ export class CompilerPage extends pg.Page {
       if (this.needsScope(e)) {
         const l = e.loc;
         const id = this.scopes.length;
-        e.setAttribute(DOM_ID_ATTR, `${id}`);
+        e.setAttribute(pg.DOM_ID_ATTR, `${id}`);
 
         s = this.glob.newScope(id, e).linkTo(s);
         s.name = DEF_NAMES[e.name];
