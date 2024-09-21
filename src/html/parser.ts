@@ -498,8 +498,7 @@ function skipName(src: Source, i: number, acceptsDots = false) {
       (code < '0'.charCodeAt(0) || code > '9'.charCodeAt(0)) &&
       code != DASH && code != '_'.charCodeAt(0) &&
       (!acceptsDots || code != '.'.charCodeAt(0)) &&
-      code != ':'.charCodeAt(0) &&
-      code != '$'.charCodeAt(0)
+      code != ':'.charCodeAt(0)
     ) {
       break;
     }

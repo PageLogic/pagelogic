@@ -1,11 +1,10 @@
 import { assert } from 'chai';
 import { compile } from '../../src/compiler/compiler';
+import { Element } from '../../src/html/dom';
 import { parse } from '../../src/html/parser';
-import { Page } from '../../src/page/page';
+import { ScopeObj } from '../../src/page/scope';
 import { RuntimePage } from '../../src/runtime/runtime-page';
 import { ServerGlob } from '../../src/server/server-glob';
-import { ScopeObj } from '../../src/page/scope';
-import { Element } from '../../src/html/dom';
 
 describe('runtime/base', () => {
 

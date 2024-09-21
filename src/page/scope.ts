@@ -1,5 +1,4 @@
 import { Element } from '../html/dom';
-import { Glob } from './glob';
 import { Page, RT_SCOPE_CHILDREN_KEY, RT_SCOPE_DOM_KEY, RT_SCOPE_ID_KEY, RT_SCOPE_ISOLATED_KEY, RT_SCOPE_NAME_KEY, RT_SCOPE_PARENT_KEY, RT_SCOPE_VALUE_KEY } from './page';
 import { ValueProps } from './props';
 import { Value } from './value';
