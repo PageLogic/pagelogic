@@ -1,4 +1,6 @@
+import { Element } from '../html/dom';
 import { Glob } from './glob';
+import { ValueProps } from './props';
 import { Scope } from './scope';
 import { Value } from './value';
 
@@ -35,6 +37,8 @@ export abstract class Page {
   }
 
   abstract init(): void;
+  abstract newScope(id: number, e: Element): Scope;
+  abstract newValue(page: Page, scope: Scope, props: ValueProps): Value;
 
   // ===========================================================================
   // reactivity

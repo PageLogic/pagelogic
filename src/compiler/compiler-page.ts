@@ -10,6 +10,10 @@ import {
 } from './ast/acorn-utils';
 import { qualifyPageIdentifiers } from './ast/qualifier';
 import { resolveValueDependencies } from './ast/resolver';
+import { ServerScope } from '../server/server-scope';
+import { ValueProps } from '../page/props';
+import { Value } from '../page/value';
+import { ServerValue } from '../server/server-value';
 
 const DEF_NAMES: { [key: string]: string } = {
   HTML: 'page',
@@ -31,7 +35,7 @@ export class CompilerPage extends pg.Page {
         const id = this.scopes.length;
         e.setAttribute(pg.DOM_ID_ATTR, `${id}`);
 
-        s = this.glob.newScope(id, e).linkTo(s);
+        s = this.newScope(id, e).linkTo(s);
         s.name = DEF_NAMES[e.name];
         this.scopes.push(s);
         const o = astObjectExpression(l);
@@ -67,6 +71,14 @@ export class CompilerPage extends pg.Page {
     this.root = load(this.glob.doc.documentElement!, this.glob, p);
     !this.hasErrors() && qualifyPageIdentifiers(this);
     !this.hasErrors() && resolveValueDependencies(this);
+  }
+
+  override newScope(id: number, e: Element): Scope {
+    return new ServerScope(id, e);
+  }
+
+  override newValue(page: pg.Page, scope: Scope, props: ValueProps): Value {
+    return new ServerValue(page, scope, props);
   }
 
   hasErrors() {

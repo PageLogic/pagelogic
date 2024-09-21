@@ -16,12 +16,4 @@ export class ServerGlob extends Glob {
   override getElement(dom: number): Element {
     return this.doc.domIdElements[dom];
   }
-
-  override newScope(id: number, e: Element): Scope {
-    return new ServerScope(id, e);
-  }
-
-  override newValue(page: Page, scope: Scope, props: ValueProps): Value {
-    return new ServerValue(page, scope, props);
-  }
 }

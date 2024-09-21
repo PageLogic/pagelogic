@@ -6,6 +6,18 @@ import { ScopeObj } from '../../src/page/scope';
 import { RuntimePage } from '../../src/runtime/runtime-page';
 import { ServerGlob } from '../../src/server/server-glob';
 
+function load(html: string): ScopeObj {
+  // compile
+  const src = parse(html, 'test');
+  assert.equal(src.errors.length, 0);
+  const comp = compile(src);
+  assert.equal(comp.errors.length, 0);
+  // load
+  const glob = new ServerGlob(comp.glob.doc, comp.glob.props);
+  const page = new RuntimePage(glob);
+  return page.root.obj;
+}
+
 describe('runtime/base', () => {
 
   it('001', () => {
@@ -45,16 +57,36 @@ describe('runtime/base', () => {
     assert.equal(page.y, 6);
   });
 
-});
+  it('004', () => {
+    const page = load('<html :x=${1} :y=${() => x * 2}></html>');
+    assert.equal(page.x, 1);
+    assert.equal((page.y as () => unknown)(), 2);
+    page.x = 3;
+    assert.equal((page.y as () => unknown)(), 6);
+  });
 
-function load(html: string): ScopeObj {
-  // compile
-  const src = parse(html, 'test');
-  assert.equal(src.errors.length, 0);
-  const comp = compile(src);
-  assert.equal(comp.errors.length, 0);
-  // load
-  const glob = new ServerGlob(comp.glob.doc, comp.glob.props);
-  const page = new RuntimePage(glob);
-  return page.root.obj;
-}
+  it('101', () => {
+    const page = load('<html lang="en"></html>');
+    assert.notExists(page.attr$lang);
+    assert.equal(
+      (page.$dom as Element).toString(),
+      '<html lang="en" data-lid="0">'
+        + '<head data-lid="1"></head>'
+        + '<body data-lid="2"></body>'
+        + '</html>'
+    );
+  });
+
+  // it('102', () => {
+  //   const page = load('<html lang=${"en"}></html>');
+  //   assert.equal(page.attr$lang, 'en');
+  //   assert.equal(
+  //     (page.$dom as Element).toString(),
+  //     '<html lang="en" data-lid="0">'
+  //       + '<head data-lid="1"></head>'
+  //       + '<body data-lid="2"></body>'
+  //       + '</html>'
+  //   );
+  // });
+
+});

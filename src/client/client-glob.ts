@@ -17,12 +17,4 @@ export class ClientGlob extends Glob {
     //TODO
     return this.doc.documentElement!;
   }
-
-  override newScope(id: number, e: Element): Scope {
-    return new ClientScope(id, e);
-  }
-
-  override newValue(page: Page, scope: Scope, props: ValueProps): Value {
-    return new ClientValue(page, scope, props);
-  }
 }
