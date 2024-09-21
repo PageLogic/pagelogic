@@ -1,11 +1,5 @@
 import { Element } from '../html/dom';
 import { Glob } from '../page/glob';
-import { Page } from '../page/page';
-import { ValueProps } from '../page/props';
-import { Scope } from '../page/scope';
-import { Value } from '../page/value';
-import { ClientScope } from './client-scope';
-import { ClientValue } from './client-value';
 
 export class ClientGlob extends Glob {
 

@@ -1,8 +1,6 @@
 import { Document, Element } from '../html/dom';
-import { Page } from './page';
-import { PageProps, ValueProps } from './props';
+import { PageProps } from './props';
 import { Scope } from './scope';
-import { Value } from './value';
 
 export abstract class Glob extends Scope {
   props: PageProps;
