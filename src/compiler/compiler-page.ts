@@ -77,7 +77,7 @@ export class CompilerPage extends pg.Page {
     return new ServerScope(id, e);
   }
 
-  override newValue(page: pg.Page, scope: Scope, props: ValueProps): Value {
+  override newValue(page: pg.Page, scope: Scope, name: string, props: ValueProps): Value {
     return new ServerValue(page, scope, props);
   }
 

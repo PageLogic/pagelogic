@@ -38,7 +38,7 @@ export abstract class Page {
 
   abstract init(): void;
   abstract newScope(id: number, e: Element): Scope;
-  abstract newValue(page: Page, scope: Scope, props: ValueProps): Value;
+  abstract newValue(page: Page, scope: Scope, name: string, props: ValueProps): Value;
 
   // ===========================================================================
   // reactivity

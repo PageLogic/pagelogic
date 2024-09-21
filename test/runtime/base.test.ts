@@ -77,16 +77,16 @@ describe('runtime/base', () => {
     );
   });
 
-  // it('102', () => {
-  //   const page = load('<html lang=${"en"}></html>');
-  //   assert.equal(page.attr$lang, 'en');
-  //   assert.equal(
-  //     (page.$dom as Element).toString(),
-  //     '<html lang="en" data-lid="0">'
-  //       + '<head data-lid="1"></head>'
-  //       + '<body data-lid="2"></body>'
-  //       + '</html>'
-  //   );
-  // });
+  it('102', () => {
+    const page = load('<html lang=${"en"}></html>');
+    assert.equal(page.attr$lang, 'en');
+    assert.equal(
+      (page.$dom as Element).toString(),
+      '<html data-lid="0" lang="en">'
+        + '<head data-lid="1"></head>'
+        + '<body data-lid="2"></body>'
+        + '</html>'
+    );
+  });
 
 });

@@ -1,5 +1,5 @@
 import { Element } from '../html/dom';
-import { Page } from '../page/page';
+import { Page, RT_ATTR_VALUE_PREFIX } from '../page/page';
 import { ScopeProps, ValueProps } from '../page/props';
 import { Scope } from '../page/scope';
 import { Value } from '../page/value';
@@ -28,9 +28,15 @@ export class RuntimePage extends Page {
     return new ServerScope(id, e);
   }
 
-  override newValue(page: Page, scope: Scope, props: ValueProps): Value {
+  override newValue(page: Page, scope: Scope, name: string, props: ValueProps): Value {
     const ret = new ServerValue(page, scope, props);
-    // console.log('RuntimePage.newValue()', props.)
+    if (name.startsWith(RT_ATTR_VALUE_PREFIX)) {
+      const key = name.substring(RT_ATTR_VALUE_PREFIX.length);
+      ret.cb = (scope, v) => {
+        scope.e.setAttribute(key, `${v}`);
+        return v;
+      };
+    }
     return ret;
   }
 }
