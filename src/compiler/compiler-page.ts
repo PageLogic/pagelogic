@@ -1,7 +1,7 @@
 import {
   ArrayExpression, BlockStatement, Expression, ObjectExpression
 } from 'acorn';
-import { Attribute, Element, SourceLocation, Text } from '../html/dom';
+import { Attribute, Comment, Element, SourceLocation, Text } from '../html/dom';
 import { PageError } from '../html/parser';
 import * as pg from '../page/page';
 import { Scope } from '../page/scope';
@@ -187,14 +187,19 @@ export class CompilerPage extends pg.Page {
   collectTexts(e: Element, v: ObjectExpression) {
     let count = 0;
     const f = (e: Element) => {
-      for (const n of e.children) {
+      for (let i = 0; i < e.children.length;) {
+        const n = e.children[i];
         if (n.type === 'element' && !this.needsScope(n as Element)) {
           f(n as Element);
         } else if (n.type === 'text' && typeof (n as Text).value !== 'string') {
-          const name = pg.RT_TEXT_VALUE_PREFIX + (count++);
+          const name = pg.RT_TEXT_VALUE_PREFIX + count;
           const value = this.makeValue(name, (n as Text).value, n.loc);
           v.properties.push(value);
+          new Comment(e.doc, pg.HTML_TEXT_MARKER1 + (count++), n.loc).linkTo(e, n);
+          new Comment(e.doc, pg.HTML_TEXT_MARKER2, n.loc).linkTo(e, n.nextSibling ?? undefined);
+          i += 2;
         }
+        i++;
       }
     };
     f(e);

@@ -1,5 +1,5 @@
 import { Element } from '../html/dom';
-import { Page, RT_ATTR_VALUE_PREFIX } from '../page/page';
+import { HTML_TEXT_MARKER1, Page, RT_ATTR_VALUE_PREFIX, RT_TEXT_VALUE_PREFIX } from '../page/page';
 import { ScopeProps, ValueProps } from '../page/props';
 import { Scope } from '../page/scope';
 import { Value } from '../page/value';
@@ -39,6 +39,9 @@ export class RuntimePage extends Page {
         scope.e.setAttribute(key, `${v}`);
         return v;
       };
+    } else if (name.startsWith(RT_TEXT_VALUE_PREFIX)) {
+      const key = HTML_TEXT_MARKER1
+        + name.substring(RT_TEXT_VALUE_PREFIX.length);
     }
     return ret;
   }

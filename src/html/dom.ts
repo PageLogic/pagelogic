@@ -41,6 +41,15 @@ export abstract class Node {
     return this;
   }
 
+  get nextSibling(): Node | null {
+    const nn = this.parent?.children;
+    const i = nn ? nn.indexOf(this) : -1;
+    if (i >= 0 && (i + 1) < (nn ? nn.length : 0)) {
+      return nn![i + 1];
+    }
+    return null;
+  }
+
   toJSON(): object {
     return {
       type: this.type,

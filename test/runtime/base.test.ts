@@ -95,7 +95,7 @@ describe('runtime/base', () => {
   //     (page.$dom as Element).toString(),
   //     '<html data-lid="0">'
   //       + '<head data-lid="1"></head>'
-  //       + '<body data-lid="2"> <!---t0-->hi<!---/t--> </body>'
+  //       + '<body data-lid="2"> <!---t0-->hi<!----> </body>'
   //       + '</html>'
   //   );
   // });

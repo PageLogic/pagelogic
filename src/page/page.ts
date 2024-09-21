@@ -23,7 +23,7 @@ export const RT_SCOPE_CHILDREN_KEY = '$children';
 export const RT_SCOPE_VALUE_KEY = '$value';
 
 export const HTML_TEXT_MARKER1 = '-t';
-export const HTML_TEXT_MARKER2 = '-/t';
+export const HTML_TEXT_MARKER2 = '';
 
 export const DOM_ID_ATTR = 'data-lid';
 
