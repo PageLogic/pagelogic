@@ -36,12 +36,16 @@ export class RuntimePage extends Page {
       const key = name.substring(RT_ATTR_VALUE_PREFIX.length);
       ret.cb = (scope, v) => {
         //TODO: batch DOM changes
-        scope.e.setAttribute(key, `${v}`);
+        scope.e.setAttribute(key, `${v != null ? v : ''}`);
         return v;
       };
     } else if (name.startsWith(RT_TEXT_VALUE_PREFIX)) {
-      const key = HTML_TEXT_MARKER1
-        + name.substring(RT_TEXT_VALUE_PREFIX.length);
+      const key = name.substring(RT_TEXT_VALUE_PREFIX.length);
+      const t = scope.domText(key)!;
+      ret.cb = (scope, v) => {
+        t.value = `${v != null ? v : ''}`;
+        return v;
+      };
     }
     return ret;
   }

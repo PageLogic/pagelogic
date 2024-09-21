@@ -89,15 +89,15 @@ describe('runtime/base', () => {
     );
   });
 
-  // it('103', () => {
-  //   const page = load('<html><body> ${"hi"} </body></html>');
-  //   assert.equal(
-  //     (page.$dom as Element).toString(),
-  //     '<html data-lid="0">'
-  //       + '<head data-lid="1"></head>'
-  //       + '<body data-lid="2"> <!---t0-->hi<!----> </body>'
-  //       + '</html>'
-  //   );
-  // });
+  it('103', () => {
+    const page = load('<html><body> ${"hi"} </body></html>');
+    assert.equal(
+      (page.$dom as Element).toString(),
+      '<html data-lid="0">'
+        + '<head data-lid="1"></head>'
+        + '<body data-lid="2"> <!---t0-->hi<!----> </body>'
+        + '</html>'
+    );
+  });
 
 });

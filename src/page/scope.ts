@@ -1,5 +1,6 @@
-import { Element } from '../html/dom';
+import { Comment, Element, Text } from '../html/dom';
 import {
+  HTML_TEXT_MARKER1,
   Page, RT_SCOPE_CHILDREN_KEY, RT_SCOPE_DOM_KEY, RT_SCOPE_ID_KEY,
   RT_SCOPE_ISOLATED_KEY, RT_SCOPE_NAME_KEY, RT_SCOPE_PARENT_KEY,
   RT_SCOPE_VALUE_KEY
@@ -60,6 +61,24 @@ export abstract class Scope {
     i >= 0 && this.parent!.children.splice(i, 1);
     delete this.parent;
     return this;
+  }
+
+  domText(id: string): Text | undefined {
+    const key = HTML_TEXT_MARKER1 + id;
+    const f = (e: Element): Text | undefined => {
+      for (let i = 0; i < e.children.length; i++) {
+        const n = e.children[i];
+        if (n.type === 'element') {
+          const ret = f(n as Element);
+          if (ret) {
+            return ret;
+          }
+        } else if (n.type === 'comment' && (n as Comment).value === key) {
+          return e.children[i + 1] as Text;
+        }
+      }
+    };
+    return f(this.e);
   }
 
   activate(page: Page): this {
