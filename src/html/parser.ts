@@ -91,14 +91,14 @@ function parseNodes(p: dom.Element, src: Source, i: number, errors: PageError[])
       if (i4 > i3) {
         parseText(p, src, i3, i4, errors);
       }
-      if (s.charCodeAt(i1 + 3) != DASH) {
-        // if it doesn't start with `<!---`, store the comment
-        const a = i1 + 3; const b = i2 - 3;
-        new dom.Comment(
-          p.doc, s.substring(a, b),
-          src.loc(a, b)
-        ).linkTo(p);
-      }
+      // if (s.charCodeAt(i1 + 3) != DASH) {
+      //   // if it doesn't start with `<!---`, store the comment
+      const a = i1 + 3; const b = i2 - 3;
+      new dom.Comment(
+        p.doc, s.substring(a, b),
+        src.loc(a, b)
+      ).linkTo(p);
+      // }
       i3 = i1 = i2;
     }
   }

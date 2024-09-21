@@ -11,6 +11,12 @@ export const GROUP_DIRECTIVE_TAG = DIRECTIVE_TAG_PREFIX + 'GROUP';
 
 export const MAX_NESTING = 100;
 
+/*
+  Add support for:
+  - <:include>
+  - <:group>
+  - <!--- (triple) comments removal
+*/
 export class Preprocessor {
   docroot: string;
 
@@ -57,6 +63,23 @@ export class Preprocessor {
       }
     }
     flattenGroups(source.doc.documentElement!);
+
+    function removeTripleComments(p: dom.Element) {
+      for (let i = 0; i < p.children.length;) {
+        if (
+          p.children[i].type !== 'comment' ||
+          !(p.children[i] as dom.Comment).value.startsWith('-')
+        ) {
+          if (p.children[i].type === 'element') {
+            removeTripleComments(p.children[i] as dom.Element);
+          }
+          i++;
+          continue;
+        }
+        p.children.splice(i, 1);
+      }
+    }
+    removeTripleComments(source.doc.documentElement!);
 
     await this.processIncludes(source.doc, dir, main, nesting);
     if (main.errors.length) {
