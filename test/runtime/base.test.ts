@@ -4,7 +4,7 @@ import { Element } from '../../src/html/dom';
 import { parse } from '../../src/html/parser';
 import { ScopeObj } from '../../src/page/scope';
 import { RuntimePage } from '../../src/runtime/runtime-page';
-import { ServerGlob } from '../../src/server/server-glob';
+import { ServerGlobal } from '../../src/server/server-global';
 
 function load(html: string): ScopeObj {
   // compile
@@ -13,7 +13,7 @@ function load(html: string): ScopeObj {
   const comp = compile(src);
   assert.equal(comp.errors.length, 0);
   // load
-  const glob = new ServerGlob(comp.glob.doc, comp.glob.props);
+  const glob = new ServerGlobal(comp.glob.doc, comp.glob.props);
   const page = new RuntimePage(glob);
   return page.root.obj;
 }

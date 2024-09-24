@@ -2,7 +2,7 @@ import { Document, Element } from '../html/dom';
 import { PageProps } from './props';
 import { Scope } from './scope';
 
-export abstract class Glob extends Scope {
+export abstract class Global extends Scope {
   props: PageProps;
 
   constructor(doc: Document, props: PageProps) {

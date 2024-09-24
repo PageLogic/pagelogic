@@ -1,8 +1,8 @@
 import { Document, Element } from '../html/dom';
-import { Glob } from '../page/glob';
+import { Global } from '../page/global';
 import { PageProps } from '../page/props';
 
-export class ServerGlob extends Glob {
+export class ServerGlobal extends Global {
   js?: string;
 
   constructor(doc: Document, props: PageProps) {

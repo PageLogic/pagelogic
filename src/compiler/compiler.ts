@@ -1,12 +1,12 @@
 import { generate } from 'escodegen';
 import * as dom from '../html/dom';
 import { PageError, Source } from '../html/parser';
-import { ServerGlob } from '../server/server-glob';
+import { ServerGlobal } from '../server/server-global';
 import { CompilerPage } from './compiler-page';
 import { Preprocessor } from '../html/preprocessor';
 
 export function compile(src: Source): CompilerPage {
-  const glob = new ServerGlob(src.doc, { root: [{ dom: 0 }]} );
+  const glob = new ServerGlobal(src.doc, { root: [{ dom: 0 }]} );
   const page = new CompilerPage(glob);
   if (page.errors.length) {
     return page;

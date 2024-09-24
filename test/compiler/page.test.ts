@@ -6,7 +6,7 @@ import { describe } from 'mocha';
 import path from 'path';
 import { CompilerPage } from '../../src/compiler/compiler-page';
 import * as parser from '../../src/html/parser';
-import { ServerGlob } from '../../src/server/server-glob';
+import { ServerGlobal } from '../../src/server/server-global';
 
 const rootPath = path.join(__dirname, 'page');
 const inSuffix = '-in.html';
@@ -28,7 +28,7 @@ describe('compiler/page', () => {
         const inSource = parser.parse(inText.toString(), file);
         assert.equal(inSource.errors.length, 0);
 
-        const glob = new ServerGlob(inSource.doc, { root: [] });
+        const glob = new ServerGlobal(inSource.doc, { root: [] });
         const page = new CompilerPage(glob);
 
         const errPath = path.join(rootPath, name + errSuffix);

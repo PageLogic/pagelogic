@@ -1,7 +1,7 @@
 import { Element } from '../html/dom';
-import { Glob } from '../page/glob';
+import { Global } from '../page/global';
 
-export class ClientGlob extends Glob {
+export class ClientGlobal extends Global {
 
   override init() {
     //TODO

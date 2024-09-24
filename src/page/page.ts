@@ -1,5 +1,5 @@
 import { Element } from '../html/dom';
-import { Glob } from './glob';
+import { Global } from './global';
 import { ValueProps } from './props';
 import { Scope } from './scope';
 import { Value } from './value';
@@ -28,10 +28,10 @@ export const HTML_TEXT_MARKER2 = '';
 export const DOM_ID_ATTR = 'data-lid';
 
 export abstract class Page {
-  glob: Glob;
+  glob: Global;
   root!: Scope;
 
-  constructor(glob: Glob) {
+  constructor(glob: Global) {
     this.glob = glob;
     this.init();
   }
