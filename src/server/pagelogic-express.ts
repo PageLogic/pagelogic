@@ -1,9 +1,12 @@
+import { NextFunction, Request, Response } from 'express';
 import fs from 'fs';
 import path from 'path';
-import { NextFunction, Request, Response } from 'express';
-import { CLIENT_CODE_REQ, CLIENT_CODE_SRC } from './consts';
-import { Compiler } from '../compiler/compiler';
+import { compile } from '../compiler/compiler';
 import { PageError } from '../html/parser';
+import { Preprocessor } from '../html/preprocessor';
+import { RuntimePage } from '../runtime/runtime-page';
+import { CLIENT_CODE_REQ, CLIENT_CODE_SRC } from './consts';
+import { ServerGlobal } from './server-global';
 
 export interface PageLogicConfig {
   rootPath?: string;
@@ -33,7 +36,7 @@ try {
 
 export function pageLogic(config: PageLogicConfig) {
   const rootPath = config.rootPath || process.cwd();
-  const compiler = new Compiler(rootPath, {});
+  const preprocessor = new Preprocessor(rootPath);
 
   return async function (req: Request, res: Response, next: NextFunction) {
     const i = req.path.lastIndexOf('.');
@@ -65,35 +68,34 @@ export function pageLogic(config: PageLogicConfig) {
       } catch (ignored) { /* nop */ }
     }
 
-    const compiledPage = await compiler.compile(pathname + '.html');
-    console.log(compiledPage.fname);//tempdebug
-    if (compiledPage.errors.length) {
-      return serveErrorPage(compiledPage.errors, res);
+    const source = await preprocessor.load(pathname + '.html');
+    const comp = compile(source);
+    if (comp.errors.length) {
+      return serveErrorPage(comp.errors, res);
     }
+
+    const glob = new ServerGlobal(comp.glob.doc, comp.glob.props);
+    new RuntimePage(glob);
+
     res.header('Content-Type', 'text/html;charset=UTF-8');
-    res.send(compiledPage.doc!.toString());
+    res.send(comp.glob.doc.toString());
   };
 }
 
 //TODO
 function serveErrorPage(errors: PageError[], res: Response) {
   const p = new Array<string>();
-  p.push(`<!DOCTYPE html>
-    <html>
-    <head>
-      <meta name="color-scheme" content="light dark"/>
-    </head>
-    <body>
-    <ul>`);
+  p.push(`<!DOCTYPE html><html><head>
+    <meta name="color-scheme" content="light dark"/>
+    </head><body><ul>`);
   errors.forEach(err => {
     const l = err.loc;
     p.push(`<li>${err.msg}`);
-    l && p.push(` - ${l.source}`);
+    l && p.push(` - ${l.source} `);
+    l && p.push(`[${l.start.line}, ${l.start.column + 1}]`);
     p.push(`</li>`);
   });
-  p.push(`</ul>
-    </body>
-    </html>`);
+  p.push(`</ul></body></html>`);
   res.header('Content-Type', 'text/html;charset=UTF-8');
   res.send(p.join(''));
 }
