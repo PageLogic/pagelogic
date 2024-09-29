@@ -8,15 +8,15 @@ import { CompilerPage } from '../../src/compiler/compiler-page';
 import * as parser from '../../src/html/parser';
 import { ServerGlobal } from '../../src/server/server-global';
 
-const rootPath = path.join(__dirname, 'page');
+const docroot = path.join(__dirname, 'page');
 const inSuffix = '-in.html';
 const outSuffix = '-out.html';
 const propsSuffix = '-props.js';
 const errSuffix = '-err.json';
 
 describe('compiler/page', () => {
-  fs.readdirSync(rootPath).forEach(file => {
-    const inPath = path.join(rootPath, file);
+  fs.readdirSync(docroot).forEach(file => {
+    const inPath = path.join(docroot, file);
     if (
       fs.statSync(inPath).isFile() &&
       file.endsWith(inSuffix)
@@ -31,7 +31,7 @@ describe('compiler/page', () => {
         const glob = new ServerGlobal(inSource.doc, { root: [] });
         const page = new CompilerPage(glob);
 
-        const errPath = path.join(rootPath, name + errSuffix);
+        const errPath = path.join(docroot, name + errSuffix);
         if (fs.existsSync(errPath)) {
           const errText = await fs.promises.readFile(errPath);
           const expected = JSON.parse(errText.toString());
@@ -45,14 +45,14 @@ describe('compiler/page', () => {
         assert.exists(root);
         assert.equal(root.e, inSource.doc.documentElement);
 
-        const outPath = path.join(rootPath, name + outSuffix);
+        const outPath = path.join(docroot, name + outSuffix);
         if (fs.existsSync(outPath)) {
           const outText = await fs.promises.readFile(outPath);
           const outSource = parser.parse(outText.toString(), file);
           assert.equal(inSource.doc.toString(), outSource.doc.toString());
         }
 
-        const propsPath = path.join(rootPath, name + propsSuffix);
+        const propsPath = path.join(docroot, name + propsSuffix);
         if (fs.existsSync(propsPath)) {
           const propsText = (await fs.promises.readFile(propsPath)).toString();
           const propsAst = acorn.parse(propsText, { ecmaVersion: 'latest' });

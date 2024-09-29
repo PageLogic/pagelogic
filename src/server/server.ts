@@ -44,14 +44,14 @@ export class Server {
     config.trustProxy && app.set('trust proxy', 1);
     //TODO: will this limit all requests with any extension because of the '*'?
     config.pageLimit && this.setLimiter(config.pageLimit, ['*', '*.html'], app);
-    config.rootPath ||= process.cwd();
+    config.docroot ||= process.cwd();
 
     app.use(pageLogic(config));
 
-    app.use(express.static(config.rootPath));
+    app.use(express.static(config.docroot));
     this.server = app.listen(config.port);
     this.port = (this.server?.address() as AddressInfo).port;
-    this.log('info', `docroot ${config.rootPath}`);
+    this.log('info', `docroot ${config.docroot}`);
     this.log('info', `address http://127.0.0.1:${this.port}/`);
     exitHook(() => this.log('info', 'will exit'));
     process.on('uncaughtException', (err) => {

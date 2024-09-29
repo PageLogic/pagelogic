@@ -5,11 +5,11 @@ import path from 'path';
 import { Preprocessor } from '../../src/html/preprocessor';
 import { normalizeText } from '../../src/html/parser';
 
-const rootPath = path.join(__dirname, 'preprocessor');
+const docroot = path.join(__dirname, 'preprocessor');
 
 describe('html/preprocessor', () => {
-  fs.readdirSync(rootPath).forEach(dir => {
-    const dirPath = path.join(rootPath, dir);
+  fs.readdirSync(docroot).forEach(dir => {
+    const dirPath = path.join(docroot, dir);
     if (
       fs.statSync(dirPath).isDirectory() &&
       !dir.startsWith('.')
@@ -41,7 +41,7 @@ describe('html/preprocessor', () => {
               } else {
                 // const actualHTML = getMarkup(source.ast!) + '\n';
                 const actualHTML = source.doc!.toString() + '\n';
-                const pname = path.join(rootPath, dir, file.replace('-in.', '-out.'));
+                const pname = path.join(docroot, dir, file.replace('-in.', '-out.'));
                 const expectedHTML = await fs.promises.readFile(pname, { encoding: 'utf8' });
                 assert.equal(normalizeText(actualHTML), normalizeText(expectedHTML));
               }

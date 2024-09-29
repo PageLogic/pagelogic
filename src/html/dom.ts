@@ -95,8 +95,8 @@ export class Text extends Node {
   toMarkup(ret: string[]): void {
     if (typeof this.value === 'string') {
       ret.push(this.escaping
-        ? escape(this.value as string, '<>')
-        : this.value as string);
+        ? escape(this.value, '<>')
+        : this.value);
     }
   }
 

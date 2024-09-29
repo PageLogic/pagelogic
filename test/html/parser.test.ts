@@ -6,11 +6,11 @@ import path from 'path';
 import * as dom from '../../src/html/dom';
 import * as parser from '../../src/html/parser';
 
-const rootPath = path.join(__dirname, 'parser');
+const docroot = path.join(__dirname, 'parser');
 
 describe('html/parser', () => {
-  fs.readdirSync(rootPath).forEach(file => {
-    const filePath = path.join(rootPath, file);
+  fs.readdirSync(docroot).forEach(file => {
+    const filePath = path.join(docroot, file);
     if (
       fs.statSync(filePath).isFile() &&
       file.endsWith('-in.html')
@@ -21,7 +21,7 @@ describe('html/parser', () => {
         const source = parser.parse(text.toString(), file);
         if (source.errors.length) {
           const fname = file.replace('-in.html', '-err.json');
-          const pname = path.join(rootPath, fname);
+          const pname = path.join(docroot, fname);
           const aerrs = source.errors.map(e => e.msg);
           let eerrs = [];
           try {
@@ -33,7 +33,7 @@ describe('html/parser', () => {
           }
         } else {
           const actualHTML = source.doc!.toString() + '\n';
-          const pname = path.join(rootPath, file.replace('-in.', '-out.'));
+          const pname = path.join(docroot, file.replace('-in.', '-out.'));
           const expectedHTML = await fs.promises.readFile(pname, { encoding: 'utf8' });
           assert.equal(parser.normalizeText(actualHTML), parser.normalizeText(expectedHTML));
         }

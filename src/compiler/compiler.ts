@@ -37,8 +37,8 @@ export class Compiler {
   preprocessor: Preprocessor;
   props: CompilerProps;
 
-  constructor(rootPath: string, props: CompilerProps) {
-    this.preprocessor = new Preprocessor(rootPath);
+  constructor(docroot: string, props: CompilerProps) {
+    this.preprocessor = new Preprocessor(docroot);
     this.props = props;
   }
 

@@ -8,7 +8,7 @@ import { CLIENT_CODE_REQ, CLIENT_CODE_SRC } from './consts';
 import { ServerGlobal } from './server-global';
 
 export interface PageLogicConfig {
-  rootPath?: string;
+  docroot?: string;
   ssr?: boolean;
   csr?: boolean;
   // virtualFiles?: Array<VirtualFile>;
@@ -35,9 +35,9 @@ try {
 }
 
 export function pageLogic(config: PageLogicConfig) {
-  const rootPath = config.rootPath || process.cwd();
-  // const preprocessor = new Preprocessor(rootPath);
-  const compiler = new Compiler(rootPath, {});
+  const docroot = config.docroot || process.cwd();
+  // const preprocessor = new Preprocessor(docroot);
+  const compiler = new Compiler(docroot, {});
 
   return async function (req: Request, res: Response, next: NextFunction) {
     const i = req.path.lastIndexOf('.');
@@ -61,7 +61,7 @@ export function pageLogic(config: PageLogicConfig) {
     let pathname = i < 0 ? req.path : req.path.substring(0, i).toLowerCase();
     if (i < 0) {
       try {
-        const fullPath = path.join(rootPath, pathname);
+        const fullPath = path.join(docroot, pathname);
         const stat = await fs.promises.stat(fullPath);
         if (stat.isDirectory()) {
           pathname = path.join(pathname, 'index');
@@ -76,9 +76,10 @@ export function pageLogic(config: PageLogicConfig) {
 
     const glob = new ServerGlobal(comp.doc!, comp.props!);
     new RuntimePage(glob);
+    const html = comp.doc!.toString();
 
     res.header('Content-Type', 'text/html;charset=UTF-8');
-    res.send(comp.doc!.toString());
+    res.send('<!DOCTYPE html>' + html);
   };
 }
 

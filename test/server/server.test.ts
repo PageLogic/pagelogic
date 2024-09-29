@@ -4,7 +4,7 @@ import { Server } from '../../src/server/server';
 import { Browser, BrowserPage } from 'happy-dom';
 import path from 'path';
 
-const rootPath = path.join(__dirname, 'www');
+const docroot = path.join(__dirname, 'www');
 
 async function load(port: number, fname: string): Promise<BrowserPage> {
   const page = new Browser().newPage();
@@ -21,7 +21,9 @@ describe('server', () => {
     let server: Server;
     let browser: Browser;
     before(async () => {
-      server = await new Server({rootPath, mute: true, ssr: true }).start();
+      server = await new Server({
+        docroot, mute: true, ssr: true, csr: false
+      }).start();
       browser = new Browser();
     });
     after(async () => {
@@ -34,9 +36,23 @@ describe('server', () => {
       assert.equal(
         page.content,
         '<html data-lid="0"><head data-lid="1"></head>'
-        +'<body data-lid="2"></body></html>'
+        + '<body data-lid="2"></body></html>'
       );
     });
+
+    it('002', async () => {
+      const page = await load(server.port!, '002.html');
+      assert.equal(
+        page.content,
+        '<html data-lid="0">\n'
+        + '<head data-lid="1">\n'
+        + '<meta name="color-scheme" content="light dark">\n'
+        + '</head>\n'
+        + '<body data-lid="2">hi <!---t0-->there<!---->!</body>\n'
+        + '</html>'
+      );
+    });
+
   });
 
   describe('server/!ssr+csr', () => {
