@@ -10,6 +10,7 @@ import { ServerGlobal } from './server-global';
 export interface PageLogicConfig {
   rootPath?: string;
   ssr?: boolean;
+  csr?: boolean;
   // virtualFiles?: Array<VirtualFile>;
 }
 

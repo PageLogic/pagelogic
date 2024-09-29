@@ -18,7 +18,6 @@ export interface ServerConfig extends PageLogicConfig {
   pageLimit?: TrafficLimit;
   logger?: ServerLogger;
   mute?: boolean;
-  ssr?: boolean;
 }
 
 //TODO: prevent loading remote stuff in ssr environment
@@ -27,17 +26,18 @@ export class Server {
   config: ServerConfig;
   server?: http.Server;
   port?: number;
+  app?: Application;
 
   constructor(config?: ServerConfig) {
     this.config = config || {};
   }
 
-  start(cb?: (server: Server, app: Application, config: ServerConfig) => void): this {
+  async start(): Promise<Server> {
     if (this.server) {
       return this;
     }
     const config = this.config;
-    const app = express();
+    const app = this.app = express();
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
     // see https://expressjs.com/en/guide/behind-proxies.html
@@ -48,7 +48,6 @@ export class Server {
 
     app.use(pageLogic(config));
 
-    cb && cb(this, app, config);
     app.use(express.static(config.rootPath));
     this.server = app.listen(config.port);
     this.port = (this.server?.address() as AddressInfo).port;
@@ -61,11 +60,14 @@ export class Server {
     return this;
   }
 
-  stop(): this {
-    this.server?.close();
-    delete this.server;
-    delete this.port;
-    return this;
+  stop(): Promise<this> {
+    return new Promise((resolve, error) => {
+      this.server?.close(err => {
+        delete this.server;
+        delete this.port;
+        err ? error(err) : resolve(this);
+      });
+    });
   }
 
   log(type: 'error' | 'warn' | 'info' | 'debug', msg: unknown) {
