@@ -6,6 +6,7 @@ import { PageError } from '../html/parser';
 import { RuntimePage } from '../runtime/runtime-page';
 import { CLIENT_CODE_REQ, CLIENT_CODE_SRC } from './consts';
 import { ServerGlobal } from './server-global';
+import { PageLogicLogger } from '../utils/logger';
 
 export interface PageLogicConfig {
   docroot?: string;
@@ -14,8 +15,6 @@ export interface PageLogicConfig {
   logger?: PageLogicLogger;
   // virtualFiles?: Array<VirtualFile>;
 }
-
-export type PageLogicLogger = (type: 'error' | 'warn' | 'info' | 'debug', msg: unknown) => void;
 
 let runtimeJs = '';
 
@@ -40,7 +39,7 @@ try {
 export function pageLogic(config: PageLogicConfig) {
   const docroot = config.docroot || process.cwd();
   // const preprocessor = new Preprocessor(docroot);
-  const compiler = new Compiler(docroot, {});
+  const compiler = new Compiler(docroot, { logger: config.logger });
 
   return async function (req: Request, res: Response, next: NextFunction) {
     const i = req.path.lastIndexOf('.');

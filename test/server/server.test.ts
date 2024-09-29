@@ -21,10 +21,12 @@ describe('server', () => {
   describe('server/ssr+!csr', () => {
     let server: Server;
     let browser: Browser;
+    const log = new Array<string>();
 
     before(async () => {
       server = await new Server({
-        docroot, mute: true, ssr: true, csr: false
+        docroot, mute: true, ssr: true, csr: false,
+        logger: (_, msg) => log.push(msg as string)
       }).start();
       browser = new Browser();
     });
@@ -153,6 +155,36 @@ describe('server', () => {
         `http://127.0.0.1:${server.port}${CLIENT_CODE_REQ}`
       );
       assert.equal(res.status, 200);
+    });
+
+    it('comp1', async () => {
+      // should compile only once (sequential requests)
+      log.splice(0, log.length);
+      await load(server.port!, '/comp1');
+      await load(server.port!, '/comp1');
+      await load(server.port!, '/comp1');
+      assert.deepEqual(log, [
+        '[compiler] /comp1.html will compile',
+        '[compiler] /comp1.html is compiled',
+        '[compiler] /comp1.html is compiled'
+      ]);
+    });
+
+    it('comp2', async () => {
+      // should compile only once (parallel requests)
+      log.splice(0, log.length);
+      await Promise.all([
+        load(server.port!, '/comp2'),
+        load(server.port!, '/comp2'),
+        load(server.port!, '/comp2')
+      ]);
+      await load(server.port!, '/comp2');
+      assert.deepEqual(log, [
+        '[compiler] /comp2.html will compile',
+        '[compiler] /comp2.html is compiling',
+        '[compiler] /comp2.html is compiling',
+        '[compiler] /comp2.html is compiled'
+      ]);
     });
 
     it('001', async () => {

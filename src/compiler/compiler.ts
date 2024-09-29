@@ -6,9 +6,10 @@ import { CompilerPage } from './compiler-page';
 import { Preprocessor } from '../html/preprocessor';
 import { PageProps } from '../page/props';
 import { Observable } from './util';
+import { defaultLogger, PageLogicLogger } from '../utils/logger';
 
 export interface CompilerProps {
-  cache?: boolean;
+  logger?: PageLogicLogger;
 }
 
 export interface CompiledPage {
@@ -20,31 +21,37 @@ export interface CompiledPage {
 export class Compiler {
   preprocessor: Preprocessor;
   props: CompilerProps;
+  logger: PageLogicLogger;
   pages: Map<string, CompiledPage>;
   pending: Map<string, Observable<CompiledPage>>;
 
   constructor(docroot: string, props: CompilerProps) {
     this.preprocessor = new Preprocessor(docroot);
     this.props = props;
+    this.logger = props.logger ?? defaultLogger;
     this.pages = new Map();
     this.pending = new Map();
   }
 
   async get(fname: string): Promise<CompiledPage> {
     if (this.pages.has(fname)) {
+      this.logger('debug', `[compiler] ${fname} is compiled`);
       return this.pages.get(fname)!;
     }
     if (this.pending.has(fname)) {
+      this.logger('debug', `[compiler] ${fname} is compiling`);
       const observable = this.pending.get(fname)!;
       return new Promise<CompiledPage>(resolve => {
         observable.addObserver(page => resolve(page));
       });
     }
+    this.logger('debug', `[compiler] ${fname} will compile`);
     const observable = new Observable<CompiledPage>();
     this.pending.set(fname, observable);
     const ret = await this.compile(fname);
     observable.notify(ret);
     this.pending.delete(fname);
+    this.pages.set(fname, ret);
     return ret;
   }
 

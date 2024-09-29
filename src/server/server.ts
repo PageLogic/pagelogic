@@ -4,6 +4,7 @@ import * as http from 'http';
 import { AddressInfo } from 'net';
 import { pageLogic, PageLogicConfig } from './pagelogic-express';
 import exitHook from './exit-hook';
+import { defaultLogger, PageLogicLogger } from '../utils/logger';
 
 export interface TrafficLimit {
   windowMs: number,
@@ -19,12 +20,14 @@ export interface ServerConfig extends PageLogicConfig {
 
 export class Server {
   config: ServerConfig;
+  logger: PageLogicLogger;
   server?: http.Server;
   port?: number;
   app?: Application;
 
   constructor(config?: ServerConfig) {
     this.config = config || {};
+    this.logger = this.config.logger ?? defaultLogger;
   }
 
   async start(): Promise<Server> {
@@ -44,14 +47,13 @@ export class Server {
     app.use(pageLogic(config));
 
     app.use(express.static(config.docroot));
-
     this.server = app.listen(config.port);
     this.port = (this.server?.address() as AddressInfo).port;
-    this.log('info', `docroot ${config.docroot}`);
-    this.log('info', `address http://127.0.0.1:${this.port}/`);
-    exitHook(() => this.log('info', 'will exit'));
+    this.logger('info', `[server] docroot ${config.docroot}`);
+    this.logger('info', `[server] address http://127.0.0.1:${this.port}/`);
+    exitHook(() => this.logger('info', '[server] will exit'));
     process.on('uncaughtException', (err) => {
-      this.log('error', err.stack ? err.stack : `${err}`);
+      this.logger('error', err.stack ? err.stack : `${err}`);
     });
     return this;
   }
@@ -64,33 +66,6 @@ export class Server {
         err ? error(err) : resolve(this);
       });
     });
-  }
-
-  log(type: 'error' | 'warn' | 'info' | 'debug', msg: unknown) {
-    if (!this.config.mute) {
-      if (this.config.logger) {
-        this.config.logger(type, msg);
-      } else {
-        const ts = this.getTimestamp();
-        switch (type) {
-        case 'error': console.error(ts, type, msg); break;
-        case 'warn': console.warn(ts, type, msg); break;
-        case 'info': console.info(ts, type, msg); break;
-        case 'debug': console.debug(ts, type, msg); break;
-        default: console.log(ts, type, msg);
-        }
-      }
-    }
-  }
-
-  getTimestamp(): string {
-    const d = new Date();
-    return d.getFullYear() + '-'
-        + ('' + (d.getMonth() + 1)).padStart(2, '0') + '-'
-        + ('' + d.getDate()).padStart(2, '0') + ' '
-        + ('' + d.getHours()).padStart(2, '0') + ':'
-        + ('' + d.getMinutes()).padStart(2, '0') + ':'
-        + ('' + d.getSeconds()).padStart(2, '0');
   }
 
   setLimiter(limit: TrafficLimit, paths: Array<string>, app: Application) {
