@@ -1,9 +1,8 @@
 import { NextFunction, Request, Response } from 'express';
 import fs from 'fs';
 import path from 'path';
-import { compile } from '../compiler/compiler';
+import { Compiler } from '../compiler/compiler';
 import { PageError } from '../html/parser';
-import { Preprocessor } from '../html/preprocessor';
 import { RuntimePage } from '../runtime/runtime-page';
 import { CLIENT_CODE_REQ, CLIENT_CODE_SRC } from './consts';
 import { ServerGlobal } from './server-global';
@@ -36,7 +35,8 @@ try {
 
 export function pageLogic(config: PageLogicConfig) {
   const rootPath = config.rootPath || process.cwd();
-  const preprocessor = new Preprocessor(rootPath);
+  // const preprocessor = new Preprocessor(rootPath);
+  const compiler = new Compiler(rootPath, {});
 
   return async function (req: Request, res: Response, next: NextFunction) {
     const i = req.path.lastIndexOf('.');
@@ -68,21 +68,19 @@ export function pageLogic(config: PageLogicConfig) {
       } catch (ignored) { /* nop */ }
     }
 
-    const source = await preprocessor.load(pathname + '.html');
-    const comp = compile(source);
+    const comp = await compiler.compile(pathname + '.html');
     if (comp.errors.length) {
       return serveErrorPage(comp.errors, res);
     }
 
-    const glob = new ServerGlobal(comp.glob.doc, comp.glob.props);
+    const glob = new ServerGlobal(comp.doc!, comp.props!);
     new RuntimePage(glob);
 
     res.header('Content-Type', 'text/html;charset=UTF-8');
-    res.send(comp.glob.doc.toString());
+    res.send(comp.doc!.toString());
   };
 }
 
-//TODO
 function serveErrorPage(errors: PageError[], res: Response) {
   const p = new Array<string>();
   p.push(`<!DOCTYPE html><html><head>
@@ -93,9 +91,9 @@ function serveErrorPage(errors: PageError[], res: Response) {
     p.push(`<li>${err.msg}`);
     l && p.push(` - ${l.source} `);
     l && p.push(`[${l.start.line}, ${l.start.column + 1}]`);
-    p.push(`</li>`);
+    p.push('</li>');
   });
-  p.push(`</ul></body></html>`);
+  p.push('</ul></body></html>');
   res.header('Content-Type', 'text/html;charset=UTF-8');
   res.send(p.join(''));
 }

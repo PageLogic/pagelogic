@@ -49,6 +49,6 @@ export class Compiler {
       errors: comp.errors,
       doc: comp.glob.doc,
       props: comp.glob.props
-    }
+    };
   }
 }
