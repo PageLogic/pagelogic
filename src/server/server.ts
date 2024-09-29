@@ -10,18 +10,13 @@ export interface TrafficLimit {
   maxRequests: number,
 }
 
-export type ServerLogger = (type: 'error' | 'warn' | 'info' | 'debug', msg: unknown) => void;
-
 export interface ServerConfig extends PageLogicConfig {
   port?: number;
   trustProxy?: boolean;
   pageLimit?: TrafficLimit;
-  logger?: ServerLogger;
   mute?: boolean;
 }
 
-//TODO: prevent loading remote stuff in ssr environment
-//TODO: serialize compiler calls
 export class Server {
   config: ServerConfig;
   server?: http.Server;

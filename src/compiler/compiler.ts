@@ -5,6 +5,7 @@ import { ServerGlobal } from '../server/server-global';
 import { CompilerPage } from './compiler-page';
 import { Preprocessor } from '../html/preprocessor';
 import { PageProps } from '../page/props';
+import { Observable } from './util';
 
 export interface CompilerProps {
   cache?: boolean;
@@ -19,13 +20,35 @@ export interface CompiledPage {
 export class Compiler {
   preprocessor: Preprocessor;
   props: CompilerProps;
+  pages: Map<string, CompiledPage>;
+  pending: Map<string, Observable<CompiledPage>>;
 
   constructor(docroot: string, props: CompilerProps) {
     this.preprocessor = new Preprocessor(docroot);
     this.props = props;
+    this.pages = new Map();
+    this.pending = new Map();
   }
 
-  async compile(fname: string): Promise<CompiledPage> {
+  async get(fname: string): Promise<CompiledPage> {
+    if (this.pages.has(fname)) {
+      return this.pages.get(fname)!;
+    }
+    if (this.pending.has(fname)) {
+      const observable = this.pending.get(fname)!;
+      return new Promise<CompiledPage>(resolve => {
+        observable.addObserver(page => resolve(page));
+      });
+    }
+    const observable = new Observable<CompiledPage>();
+    this.pending.set(fname, observable);
+    const ret = await this.compile(fname);
+    observable.notify(ret);
+    this.pending.delete(fname);
+    return ret;
+  }
+
+  protected async compile(fname: string): Promise<CompiledPage> {
     const source = await this.preprocessor.load(fname);
     if (source.errors.length) {
       return { errors: source.errors };

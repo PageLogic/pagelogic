@@ -11,8 +11,11 @@ export interface PageLogicConfig {
   docroot?: string;
   ssr?: boolean;
   csr?: boolean;
+  logger?: PageLogicLogger;
   // virtualFiles?: Array<VirtualFile>;
 }
+
+export type PageLogicLogger = (type: 'error' | 'warn' | 'info' | 'debug', msg: unknown) => void;
 
 let runtimeJs = '';
 
@@ -69,7 +72,7 @@ export function pageLogic(config: PageLogicConfig) {
       } catch (ignored) { /* nop */ }
     }
 
-    const comp = await compiler.compile(pathname + '.html');
+    const comp = await compiler.get(pathname + '.html');
     if (comp.errors.length) {
       return serveErrorPage(comp.errors, res);
     }
