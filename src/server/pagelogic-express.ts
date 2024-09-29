@@ -38,8 +38,7 @@ try {
 
 export function pageLogic(config: PageLogicConfig) {
   const docroot = config.docroot || process.cwd();
-  // const preprocessor = new Preprocessor(docroot);
-  const compiler = new Compiler(docroot, { logger: config.logger });
+  const compiler = new Compiler(docroot, { logger: config.logger, watch: true });
 
   return async function (req: Request, res: Response, next: NextFunction) {
     const i = req.path.lastIndexOf('.');

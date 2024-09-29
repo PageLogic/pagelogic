@@ -4,6 +4,7 @@ import { before } from 'mocha';
 import path from 'path';
 import { CLIENT_CODE_REQ } from '../../src/server/consts';
 import { Server } from '../../src/server/server';
+import fs from 'fs';
 
 const docroot = path.join(__dirname, 'www');
 
@@ -184,6 +185,25 @@ describe('server', () => {
         '[compiler] /comp2.html is compiling',
         '[compiler] /comp2.html is compiling',
         '[compiler] /comp2.html is compiled'
+      ]);
+    });
+
+    it('comp3', async () => {
+      // should recompile upon changes
+      log.splice(0, log.length);
+      await load(server.port!, '/comp3');
+      await load(server.port!, '/comp3');
+      const pathname = path.join(docroot, 'comp3.html');
+      const text = fs.readFileSync(pathname).toString();
+      fs.writeFileSync(pathname, text);
+      await load(server.port!, '/comp3');
+      await load(server.port!, '/comp3');
+      assert.deepEqual(log, [
+        '[compiler] /comp3.html will compile',
+        '[compiler] /comp3.html is compiled',
+        '[compiler] clear cache',
+        '[compiler] /comp3.html will compile',
+        '[compiler] /comp3.html is compiled'
       ]);
     });
 

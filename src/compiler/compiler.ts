@@ -1,15 +1,17 @@
+import chokidar from 'chokidar';
 import { generate } from 'escodegen';
 import * as dom from '../html/dom';
 import { PageError, Source } from '../html/parser';
-import { ServerGlobal } from '../server/server-global';
-import { CompilerPage } from './compiler-page';
 import { Preprocessor } from '../html/preprocessor';
 import { PageProps } from '../page/props';
-import { Observable } from './util';
+import { ServerGlobal } from '../server/server-global';
 import { defaultLogger, PageLogicLogger } from '../utils/logger';
+import { CompilerPage } from './compiler-page';
+import { Observable } from './util';
 
 export interface CompilerProps {
   logger?: PageLogicLogger;
+  watch?: boolean;
 }
 
 export interface CompiledPage {
@@ -31,6 +33,21 @@ export class Compiler {
     this.logger = props.logger ?? defaultLogger;
     this.pages = new Map();
     this.pending = new Map();
+    if (props.watch) {
+      chokidar.watch(docroot, {
+        ignorePermissionErrors: true,
+        depth: 20,
+        ignoreInitial: true,
+      }).on('all', () => this.clearCache());
+    }
+  }
+
+  clearCache() {
+    this.logger('debug', '[compiler] clear cache');
+    this.pages.clear();
+    this.pending.forEach((observable, fname) => {
+      observable.addObserver(_ => this.pages.delete(fname));
+    });
   }
 
   async get(fname: string): Promise<CompiledPage> {
@@ -49,9 +66,11 @@ export class Compiler {
     const observable = new Observable<CompiledPage>();
     this.pending.set(fname, observable);
     const ret = await this.compile(fname);
+    // must be set before `observable.notify` so an observer can remove from
+    // cache a pending page as soon as it's ready (used by clearCache())
+    this.pages.set(fname, ret);
     observable.notify(ret);
     this.pending.delete(fname);
-    this.pages.set(fname, ret);
     return ret;
   }
 
