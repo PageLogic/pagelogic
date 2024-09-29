@@ -6,23 +6,6 @@ import { CompilerPage } from './compiler-page';
 import { Preprocessor } from '../html/preprocessor';
 import { PageProps } from '../page/props';
 
-export function compile(src: Source): CompilerPage {
-  const glob = new ServerGlobal(src.doc, { root: [{ dom: 0 }]} );
-  const page = new CompilerPage(glob);
-  if (page.errors.length) {
-    return page;
-  }
-  try {
-    glob.js = generate(page.ast);
-    glob.props = eval(`(${glob.js})`);
-  } catch (err) {
-    page.errors.push(new PageError(
-      'error', `compiler internal error: ${err}`, src.doc.loc
-    ));
-  }
-  return page;
-}
-
 export interface CompilerProps {
   cache?: boolean;
 }
@@ -54,4 +37,21 @@ export class Compiler {
       props: comp.glob.props
     };
   }
+}
+
+export function compile(src: Source): CompilerPage {
+  const glob = new ServerGlobal(src.doc, { root: [{ dom: 0 }]} );
+  const page = new CompilerPage(glob);
+  if (page.errors.length) {
+    return page;
+  }
+  try {
+    glob.js = generate(page.ast);
+    glob.props = eval(`(${glob.js})`);
+  } catch (err) {
+    page.errors.push(new PageError(
+      'error', `compiler internal error: ${err}`, src.doc.loc
+    ));
+  }
+  return page;
 }

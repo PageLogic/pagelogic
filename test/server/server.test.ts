@@ -1,9 +1,9 @@
 import { assert } from 'chai';
+import { Browser, BrowserPage } from 'happy-dom';
 import { before } from 'mocha';
-import { Server } from '../../src/server/server';
-import { Browser, BrowserNavigationCrossOriginPolicyEnum, BrowserPage, Response, Window } from 'happy-dom';
 import path from 'path';
 import { CLIENT_CODE_REQ } from '../../src/server/consts';
+import { Server } from '../../src/server/server';
 
 const docroot = path.join(__dirname, 'www');
 
