@@ -1,14 +1,15 @@
 import { assert } from 'chai';
 import { before } from 'mocha';
 import { Server } from '../../src/server/server';
-import { Browser, BrowserPage } from 'happy-dom';
+import { Browser, BrowserNavigationCrossOriginPolicyEnum, BrowserPage, Response, Window } from 'happy-dom';
 import path from 'path';
+import { CLIENT_CODE_REQ } from '../../src/server/consts';
 
 const docroot = path.join(__dirname, 'www');
 
 async function load(port: number, fname: string): Promise<BrowserPage> {
   const page = new Browser().newPage();
-  await page.goto(`http://127.0.0.1:${port}/${fname}`);
+  await page.goto(`http://127.0.0.1:${port}${fname}`);
   await page.waitUntilComplete();
   return page;
 }
@@ -31,8 +32,39 @@ describe('server', () => {
       await server.stop();
     });
 
+    it('/index', async () => {
+      let page = await load(server.port!, '/');
+      assert.equal(page.mainFrame.document.title, '/index');
+      page = await load(server.port!, '/index');
+      assert.equal(page.mainFrame.document.title, '/index');
+      page = await load(server.port!, '/index.html');
+      assert.equal(page.mainFrame.document.title, '/index');
+    });
+
+    it('/other', async () => {
+      let page = await load(server.port!, '/other');
+      assert.equal(page.mainFrame.document.title, '/other');
+      page = await load(server.port!, '/other.html');
+      assert.equal(page.mainFrame.document.title, '/other');
+    });
+
+    it('/fragment', async () => {
+      let page = await load(server.port!, '/fragment');
+      assert.equal(page.mainFrame.document.title, 'Page Error');
+      page = await load(server.port!, '/fragment.htm');
+      assert.equal(page.content.replace(/<.*?>/g, ''), 'Not Found');
+    });
+
+    it(CLIENT_CODE_REQ, async () => {
+      const page = await load(server.port!, '');
+      const res = await page.mainFrame.window.fetch(
+        `http://127.0.0.1:${server.port}${CLIENT_CODE_REQ}`
+      );
+      assert.equal(res.status, 200);
+    });
+
     it('001', async () => {
-      const page = await load(server.port!, '001.html');
+      const page = await load(server.port!, '/001.html');
       assert.equal(
         page.content,
         '<html data-lid="0"><head data-lid="1"></head>'
@@ -41,7 +73,7 @@ describe('server', () => {
     });
 
     it('002', async () => {
-      const page = await load(server.port!, '002.html');
+      const page = await load(server.port!, '/002.html');
       assert.equal(
         page.content,
         '<html data-lid="0">\n'

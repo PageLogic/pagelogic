@@ -49,6 +49,7 @@ export class Server {
     app.use(pageLogic(config));
 
     app.use(express.static(config.docroot));
+
     this.server = app.listen(config.port);
     this.port = (this.server?.address() as AddressInfo).port;
     this.log('info', `docroot ${config.docroot}`);

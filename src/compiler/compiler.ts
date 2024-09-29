@@ -44,6 +44,9 @@ export class Compiler {
 
   async compile(fname: string): Promise<CompiledPage> {
     const source = await this.preprocessor.load(fname);
+    if (source.errors.length) {
+      return { errors: source.errors };
+    }
     const comp = compile(source);
     return {
       errors: comp.errors,

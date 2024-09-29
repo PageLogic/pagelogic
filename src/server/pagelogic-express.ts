@@ -86,6 +86,7 @@ export function pageLogic(config: PageLogicConfig) {
 function serveErrorPage(errors: PageError[], res: Response) {
   const p = new Array<string>();
   p.push(`<!DOCTYPE html><html><head>
+    <title>Page Error</title>
     <meta name="color-scheme" content="light dark"/>
     </head><body><ul>`);
   errors.forEach(err => {
@@ -97,5 +98,6 @@ function serveErrorPage(errors: PageError[], res: Response) {
   });
   p.push('</ul></body></html>');
   res.header('Content-Type', 'text/html;charset=UTF-8');
+  // res.sendStatus(500);
   res.send(p.join(''));
 }
