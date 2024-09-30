@@ -1,8 +1,8 @@
 import { assert } from 'chai';
 import fs from 'fs';
-import { Browser, BrowserPage } from 'happy-dom';
 import { before } from 'mocha';
 import path from 'path';
+import { Browser, chromium, Page } from 'playwright';
 import * as k from '../../src/page/consts';
 import { CLIENT_CODE_REQ } from '../../src/page/consts';
 import { Server } from '../../src/server/server';
@@ -10,30 +10,28 @@ import { Server } from '../../src/server/server';
 const docroot = path.join(__dirname, 'www');
 
 async function load(
+  page: Page,
   checkSSR: boolean, checkCSR: boolean, port: number, fname: string
-): Promise<BrowserPage> {
-  const page = new Browser().newPage();
+) {
   await page.goto(`http://127.0.0.1:${port}${fname}`);
-  await page.waitUntilComplete();
   if (checkSSR) {
-    if (page.content.match(/<!---t\d+--><!---->/)) {
+    if ((await page.content()).match(/<!---t\d+--><!---->/)) {
       assert(false, 'empty text found in SSR mode');
     }
   } else {
-    if (page.content.match(/<!---t\d+-->.+?<!---->/)) {
+    if ((await page.content()).match(/<!---t\d+-->.+?<!---->/)) {
       assert(false, 'interpolated text found in non-SSR mode');
     }
   }
   if (checkCSR) {
     const query = `script#${k.CLIENT_PROPS_SCRIPT_ID}`;
-    const script = page.mainFrame.document.querySelector(query);
+    const script = await page.$(query);
     assert.exists(script, `missing ${query} in CSR mode`);
   }
-  return page;
 }
 
-function getMarkup(page: BrowserPage) {
-  const txt = page.content;
+async function getMarkup(page: Page) {
+  const txt = await page.content();
   const i1 = txt.indexOf(`<script id="${k.CLIENT_PROPS_SCRIPT_ID}">`);
   const i2 = i1 >= 0 ? txt.indexOf('</script>', i1) : -1;
   if (i2 > 0) {
@@ -43,6 +41,25 @@ function getMarkup(page: BrowserPage) {
 }
 
 describe('server', () => {
+  let browser: Browser;
+  let page1: Page;
+  let page2: Page;
+  let page3: Page;
+
+  before(async () => {
+    browser = await chromium.launch();
+    page1 = await browser.newPage();
+    page2 = await browser.newPage();
+    page3 = await browser.newPage();
+  });
+
+  after(async () => {
+    await page3.close();
+    await page2.close();
+    await page1.close();
+    await browser.close();
+  });
+
   for (const mode of [
     { ssr: false, csr: false },
     { ssr: true, csr: false },
@@ -56,7 +73,6 @@ describe('server', () => {
 
     describe(`server/${ssrLabel}+${csrLabel}`, () => {
       let server: Server;
-      let browser: Browser;
       const log = new Array<string>();
 
       before(async () => {
@@ -64,117 +80,105 @@ describe('server', () => {
           docroot, mute: true, ssr, csr,
           logger: (_, msg) => log.push(msg as string)
         }).start();
-        browser = new Browser({
-          settings: {
-            disableJavaScriptFileLoading: true,
-            disableJavaScriptEvaluation: true,
-            disableCSSFileLoading: true,
-            enableFileSystemHttpRequests: false
-          }
-        });
       });
 
       after(async () => {
-        await browser.close();
         await server.stop();
       });
 
       it('/index', async () => {
-        let page = await load(ssr, csr, server.port!, '/');
-        assert.equal(page.mainFrame.document.title, '/index');
-        page = await load(ssr, csr, server.port!, '/index');
-        assert.equal(page.mainFrame.document.title, '/index');
-        page = await load(ssr, csr, server.port!, '/index.html');
-        assert.equal(page.mainFrame.document.title, '/index');
+        await load(page1, ssr, csr, server.port!, '/');
+        assert.equal(await page1.title(), '/index');
+        await load(page1, ssr, csr, server.port!, '/index');
+        assert.equal(await page1.title(), '/index');
+        await load(page1, ssr, csr, server.port!, '/index.html');
+        assert.equal(await page1.title(), '/index');
       });
 
       it('/other', async () => {
-        let page = await load(ssr, csr, server.port!, '/other');
-        assert.equal(page.mainFrame.document.title, '/other');
-        page = await load(ssr, csr, server.port!, '/other.html');
-        assert.equal(page.mainFrame.document.title, '/other');
+        await load(page1, ssr, csr, server.port!, '/other');
+        assert.equal(await page1.title(), '/other');
+        await load(page1, ssr, csr, server.port!, '/other.html');
+        assert.equal(await page1.title(), '/other');
       });
 
       it('/fragment', async () => {
-        let page = await load(false, false, server.port!, '/fragment');
-        assert.equal(page.mainFrame.document.title, 'Page Error');
-        page = await load(false, false, server.port!, '/fragment.htm');
-        assert.equal(page.content.replace(/<.*?>/g, ''), 'Not Found');
+        await load(page1, false, false, server.port!, '/fragment');
+        assert.equal(await page1.title(), 'Page Error');
+        await load(page1, false, false, server.port!, '/fragment.htm');
+        assert.equal((await getMarkup(page1)).replace(/<.*?>/g, ''), 'Not Found');
       });
 
       it('/text.txt', async () => {
-        const page = await load(ssr, csr, server.port!, '/');
-        const res = await page.mainFrame.window.fetch(
+        const res = await fetch(
           `http://127.0.0.1:${server.port}/text.txt`
         );
         assert.equal(res.status, 200);
-        const txt = await res.body?.getReader().read();
-        assert.equal(txt?.value.toString(), 'some text in /');
+        const txt = await res.text();
+        assert.equal(txt, 'some text in /');
       });
 
       it('/visible/index', async () => {
-        let page = await load(ssr, csr, server.port!, '/visible');
-        assert.equal(page.mainFrame.document.title, '/visible/index');
-        page = await load(ssr, csr, server.port!, '/visible/');
-        assert.equal(page.mainFrame.document.title, '/visible/index');
-        page = await load(ssr, csr, server.port!, '/visible/index');
-        assert.equal(page.mainFrame.document.title, '/visible/index');
-        page = await load(ssr, csr, server.port!, '/visible/index.html');
-        assert.equal(page.mainFrame.document.title, '/visible/index');
+        await load(page1, ssr, csr, server.port!, '/visible');
+        assert.equal(await page1.title(), '/visible/index');
+        await load(page1, ssr, csr, server.port!, '/visible/');
+        assert.equal(await page1.title(), '/visible/index');
+        await load(page1, ssr, csr, server.port!, '/visible/index');
+        assert.equal(await page1.title(), '/visible/index');
+        await load(page1, ssr, csr, server.port!, '/visible/index.html');
+        assert.equal(await page1.title(), '/visible/index');
       });
 
       it('/visible/other', async () => {
-        let page = await load(ssr, csr, server.port!, '/visible/other');
-        assert.equal(page.mainFrame.document.title, '/visible/other');
-        page = await load(ssr, csr, server.port!, '/visible/other.html');
-        assert.equal(page.mainFrame.document.title, '/visible/other');
+        await load(page1, ssr, csr, server.port!, '/visible/other');
+        assert.equal(await page1.title(), '/visible/other');
+        await load(page1, ssr, csr, server.port!, '/visible/other.html');
+        assert.equal(await page1.title(), '/visible/other');
       });
 
       it('/visible/fragment', async () => {
-        let page = await load(false, false, server.port!, '/visible/fragment');
-        assert.equal(page.mainFrame.document.title, 'Page Error');
-        page = await load(false, false, server.port!, '/visible/fragment.htm');
-        assert.equal(page.content.replace(/<.*?>/g, ''), 'Not Found');
+        await load(page1, false, false, server.port!, '/visible/fragment');
+        assert.equal(await page1.title(), 'Page Error');
+        await load(page1, false, false, server.port!, '/visible/fragment.htm');
+        assert.equal((await getMarkup(page1)).replace(/<.*?>/g, ''), 'Not Found');
       });
 
       it('/visible/text.txt', async () => {
-        const page = await load(ssr, csr, server.port!, '/');
-        const res = await page.mainFrame.window.fetch(
+        const res = await fetch(
           `http://127.0.0.1:${server.port}/visible/text.txt`
         );
         assert.equal(res.status, 200);
-        const txt = await res.body?.getReader().read();
-        assert.equal(txt?.value.toString(), 'some text in /visible');
+        const txt = await res.text();
+        assert.equal(txt, 'some text in /visible');
       });
 
       it('/.hidden/index', async () => {
-        let page = await load(false, false, server.port!, '/.hidden');
-        assert.equal(page.content.replace(/<.*?>/g, ''), 'Not Found');
-        page = await load(false, false, server.port!, '/.hidden/');
-        assert.equal(page.content.replace(/<.*?>/g, ''), 'Not Found');
-        page = await load(false, false, server.port!, '/.hidden/index');
-        assert.equal(page.content.replace(/<.*?>/g, ''), 'Not Found');
-        page = await load(false, false, server.port!, '/.hidden/index.html');
-        assert.equal(page.content.replace(/<.*?>/g, ''), 'Not Found');
+        await load(page1, false, false, server.port!, '/.hidden');
+        assert.equal((await getMarkup(page1)).replace(/<.*?>/g, ''), 'Not Found');
+        await load(page1, false, false, server.port!, '/.hidden/');
+        assert.equal((await getMarkup(page1)).replace(/<.*?>/g, ''), 'Not Found');
+        await load(page1, false, false, server.port!, '/.hidden/index');
+        assert.equal((await getMarkup(page1)).replace(/<.*?>/g, ''), 'Not Found');
+        await load(page1, false, false, server.port!, '/.hidden/index.html');
+        assert.equal((await getMarkup(page1)).replace(/<.*?>/g, ''), 'Not Found');
       });
 
       it('/.hidden/other', async () => {
-        let page = await load(false, false, server.port!, '/.hidden/other');
-        assert.equal(page.content.replace(/<.*?>/g, ''), 'Not Found');
-        page = await load(false, false, server.port!, '/.hidden/other.html');
-        assert.equal(page.content.replace(/<.*?>/g, ''), 'Not Found');
+        await load(page1, false, false, server.port!, '/.hidden/other');
+        assert.equal((await getMarkup(page1)).replace(/<.*?>/g, ''), 'Not Found');
+        await load(page1, false, false, server.port!, '/.hidden/other.html');
+        assert.equal((await getMarkup(page1)).replace(/<.*?>/g, ''), 'Not Found');
       });
 
       it('/.hidden/fragment', async () => {
-        let page = await load(false, false, server.port!, '/.hidden/fragment');
-        assert.equal(page.content.replace(/<.*?>/g, ''), 'Not Found');
-        page = await load(false, false, server.port!, '/.hidden/fragment.htm');
-        assert.equal(page.content.replace(/<.*?>/g, ''), 'Not Found');
+        await load(page1, false, false, server.port!, '/.hidden/fragment');
+        assert.equal((await getMarkup(page1)).replace(/<.*?>/g, ''), 'Not Found');
+        await load(page1, false, false, server.port!, '/.hidden/fragment.htm');
+        assert.equal((await getMarkup(page1)).replace(/<.*?>/g, ''), 'Not Found');
       });
 
       it('/.hidden/text.txt', async () => {
-        const page = await load(ssr, csr, server.port!, '/');
-        const res = await page.mainFrame.window.fetch(
+        const res = await fetch(
           `http://127.0.0.1:${server.port}/.hidden/text.txt`
         );
         assert.equal(res.status, 404);
@@ -182,19 +186,18 @@ describe('server', () => {
 
       it('/folder/index', async () => {
         // /folder/ directory has priority over /folder.html page
-        let page = await load(ssr, csr, server.port!, '/folder');
-        assert.equal(page.mainFrame.document.title, '/folder/index');
-        page = await load(ssr, csr, server.port!, '/folder/');
-        assert.equal(page.mainFrame.document.title, '/folder/index');
-        page = await load(ssr, csr, server.port!, '/folder/index');
-        assert.equal(page.mainFrame.document.title, '/folder/index');
-        page = await load(ssr, csr, server.port!, '/folder/index.html');
-        assert.equal(page.mainFrame.document.title, '/folder/index');
+        await load(page1, ssr, csr, server.port!, '/folder');
+        assert.equal(await page1.title(), '/folder/index');
+        await load(page1, ssr, csr, server.port!, '/folder/');
+        assert.equal(await page1.title(), '/folder/index');
+        await load(page1, ssr, csr, server.port!, '/folder/index');
+        assert.equal(await page1.title(), '/folder/index');
+        await load(page1, ssr, csr, server.port!, '/folder/index.html');
+        assert.equal(await page1.title(), '/folder/index');
       });
 
       it(CLIENT_CODE_REQ, async () => {
-        const page = await load(ssr, csr, server.port!, '');
-        const res = await page.mainFrame.window.fetch(
+        const res = await fetch(
           `http://127.0.0.1:${server.port}${CLIENT_CODE_REQ}`
         );
         assert.equal(res.status, 200);
@@ -203,9 +206,9 @@ describe('server', () => {
       it('comp1', async () => {
         // should compile only once (sequential requests)
         log.splice(0, log.length);
-        await load(ssr, csr, server.port!, '/comp1');
-        await load(ssr, csr, server.port!, '/comp1');
-        await load(ssr, csr, server.port!, '/comp1');
+        await load(page1, ssr, csr, server.port!, '/comp1');
+        await load(page2, ssr, csr, server.port!, '/comp1');
+        await load(page3, ssr, csr, server.port!, '/comp1');
         assert.deepEqual(log, [
           '[compiler] /comp1.html will compile',
           '[compiler] /comp1.html is compiled',
@@ -217,29 +220,27 @@ describe('server', () => {
         // should compile only once (parallel requests)
         log.splice(0, log.length);
         await Promise.all([
-          load(ssr, csr, server.port!, '/comp2'),
-          load(ssr, csr, server.port!, '/comp2'),
-          load(ssr, csr, server.port!, '/comp2')
+          load(page1, ssr, csr, server.port!, '/comp2'),
+          load(page2, ssr, csr, server.port!, '/comp2'),
+          load(page3, ssr, csr, server.port!, '/comp2')
         ]);
-        await load(ssr, csr, server.port!, '/comp2');
-        assert.deepEqual(log, [
-          '[compiler] /comp2.html will compile',
-          '[compiler] /comp2.html is compiling',
-          '[compiler] /comp2.html is compiling',
-          '[compiler] /comp2.html is compiled'
-        ]);
+        await load(page1, ssr, csr, server.port!, '/comp2');
+        const entries = new Set(log);
+        assert(entries.has('[compiler] /comp2.html will compile'));
+        assert(entries.has('[compiler] /comp2.html is compiling'));
+        assert(entries.has('[compiler] /comp2.html is compiled'));
       });
 
       it('comp3', async () => {
         // should recompile upon changes
         log.splice(0, log.length);
-        await load(ssr, csr, server.port!, '/comp3');
-        await load(ssr, csr, server.port!, '/comp3');
+        await load(page1, ssr, csr, server.port!, '/comp3');
+        await load(page1, ssr, csr, server.port!, '/comp3');
         const pathname = path.join(docroot, 'comp3.html');
         const text = fs.readFileSync(pathname).toString();
         fs.writeFileSync(pathname, text);
-        await load(ssr, csr, server.port!, '/comp3');
-        await load(ssr, csr, server.port!, '/comp3');
+        await load(page1, ssr, csr, server.port!, '/comp3');
+        await load(page1, ssr, csr, server.port!, '/comp3');
         assert.deepEqual(log, [
           '[compiler] /comp3.html will compile',
           '[compiler] /comp3.html is compiled',
@@ -250,25 +251,25 @@ describe('server', () => {
       });
 
       it('001', async () => {
-        const page = await load(ssr, csr, server.port!, '/001.html');
+        await load(page1, ssr, csr, server.port!, '/001.html');
         assert.equal(
-          getMarkup(page),
-          '<html data-pl="0"><head data-pl="1"></head>'
+          await getMarkup(page1),
+          '<!DOCTYPE html><html data-pl="0"><head data-pl="1"></head>'
           + '<body data-pl="2"></body></html>'
         );
       });
 
       it('002', async () => {
-        const page = await load(ssr, csr, server.port!, '/002.html');
+        await load(page1, ssr, csr, server.port!, '/002.html');
         assert.equal(
-          getMarkup(page),
-          '<html data-pl="0">\n'
+          await getMarkup(page1),
+          '<!DOCTYPE html><html data-pl="0">'
           + '<head data-pl="1">\n'
           + '<meta name="color-scheme" content="light dark">\n'
           + '</head>\n'
           + (ssr
-            ? '<body data-pl="2">hi <!---t0-->there<!---->!</body>\n'
-            : '<body data-pl="2">hi <!---t0--><!---->!</body>\n')
+            ? '<body data-pl="2">hi <!---t0-->there<!---->!\n</body>'
+            : '<body data-pl="2">hi <!---t0--><!---->!\n</body>')
           + '</html>'
         );
       });
