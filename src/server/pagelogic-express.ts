@@ -16,26 +16,6 @@ export interface PageLogicConfig {
   // virtualFiles?: Array<VirtualFile>;
 }
 
-let runtimeJs = '';
-
-try {
-  runtimeJs = fs.readFileSync(
-    path.join(__dirname, CLIENT_CODE_SRC),
-    { encoding: 'utf8' }
-  );
-} catch (error) {
-  // console.log('runtimeJs', error);
-  // tempdebug
-  try {
-    runtimeJs = fs.readFileSync(
-      path.join(__dirname, `../${CLIENT_CODE_SRC}`),
-      { encoding: 'utf8' }
-    );
-  } catch (ignored) {
-    console.log('runtimeJs', error);
-  }
-}
-
 export function pageLogic(config: PageLogicConfig) {
   const docroot = config.docroot || process.cwd();
   const compiler = new Compiler(docroot, {
@@ -47,6 +27,27 @@ export function pageLogic(config: PageLogicConfig) {
   return async function (req: Request, res: Response, next: NextFunction) {
     const i = req.path.lastIndexOf('.');
     const extname = i < 0 ? '.html' : req.path.substring(i).toLowerCase();
+
+    let runtimeJs = '';
+    try {
+      runtimeJs = fs.readFileSync(
+        path.join(__dirname, CLIENT_CODE_SRC),
+        { encoding: 'utf8' }
+      );
+    } catch (error) {
+      if (process.env.NODE_ENV === 'test') {
+        try {
+          runtimeJs = fs.readFileSync(
+            path.join(__dirname, `../../dist/server/${CLIENT_CODE_SRC}`),
+            { encoding: 'utf8' }
+          );
+        } catch (ignored) {
+          console.log('runtimeJs', error);
+        }
+      } else {
+        console.log('runtimeJs', error);
+      }
+    }
 
     // handle non-page requests
     if (req.path === CLIENT_CODE_REQ) {

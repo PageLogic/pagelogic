@@ -114,9 +114,9 @@ export function compile(src: Source, csr?: boolean): CompilerPage {
     const code = `\n${k.CLIENT_PROPS_SCRIPT_GLOBAL} = ${glob.js}\n`;
     new dom.Text(doc, code, doc.loc).linkTo(script1);
 
-    // const script2 = new dom.Element(doc, 'script', doc.loc).linkTo(doc.body!);
-    // script2.setAttribute('id', k.CLIENT_CODE_SCRIPT_ID);
-    // script2.setAttribute('src', k.CLIENT_CODE_REQ);
+    const script2 = new dom.Element(doc, 'script', doc.loc).linkTo(doc.body!);
+    script2.setAttribute('id', k.CLIENT_CODE_SCRIPT_ID);
+    script2.setAttribute('src', k.CLIENT_CODE_REQ);
   }
   return page;
 }

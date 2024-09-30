@@ -7,6 +7,8 @@ import * as k from '../../src/page/consts';
 import { CLIENT_CODE_REQ } from '../../src/page/consts';
 import { Server } from '../../src/server/server';
 
+process.env.NODE_ENV = 'test';
+
 const docroot = path.join(__dirname, 'www');
 
 async function load(
@@ -255,7 +257,11 @@ describe('server', () => {
         assert.equal(
           await getMarkup(page1),
           '<!DOCTYPE html><html data-pl="0"><head data-pl="1"></head>'
-          + '<body data-pl="2"></body></html>'
+          + '<body data-pl="2">'
+          + (csr
+            ? '<script id="pl-client" src="/.pagelogic.js"></script>'
+            : '')
+          + '</body></html>'
         );
       });
 
@@ -268,8 +274,12 @@ describe('server', () => {
           + '<meta name="color-scheme" content="light dark">\n'
           + '</head>\n'
           + (ssr
-            ? '<body data-pl="2">hi <!---t0-->there<!---->!\n</body>'
-            : '<body data-pl="2">hi <!---t0--><!---->!\n</body>')
+            ? '<body data-pl="2">hi <!---t0-->there<!---->!'
+            : '<body data-pl="2">hi <!---t0--><!---->!')
+          + (csr
+            ? '<script id="pl-client" src="/.pagelogic.js"></script>'
+            : '')
+          + '\n</body>'
           + '</html>'
         );
       });
