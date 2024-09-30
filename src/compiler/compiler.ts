@@ -8,8 +8,10 @@ import { ServerGlobal } from '../server/server-global';
 import { defaultLogger, PageLogicLogger } from '../utils/logger';
 import { CompilerPage } from './compiler-page';
 import { Observable } from './util';
+import { CLIENT_PROPS_SCRIPT_ID } from '../page/consts';
 
 export interface CompilerProps {
+  csr?: boolean;
   logger?: PageLogicLogger;
   watch?: boolean;
 }
@@ -79,7 +81,7 @@ export class Compiler {
     if (source.errors.length) {
       return { errors: source.errors };
     }
-    const comp = compile(source);
+    const comp = compile(source, this.props.csr);
     return {
       errors: comp.errors,
       doc: comp.glob.doc,
@@ -88,19 +90,27 @@ export class Compiler {
   }
 }
 
-export function compile(src: Source): CompilerPage {
+export function compile(src: Source, csr?: boolean): CompilerPage {
   const glob = new ServerGlobal(src.doc, { root: [{ dom: 0 }]} );
   const page = new CompilerPage(glob);
   if (page.errors.length) {
     return page;
   }
+  let code;
   try {
     glob.js = generate(page.ast);
-    glob.props = eval(`(${glob.js})`);
+    code = `(${glob.js})`;
+    glob.props = eval(code);
   } catch (err) {
     page.errors.push(new PageError(
       'error', `compiler internal error: ${err}`, src.doc.loc
     ));
+  }
+  if (csr) {
+    const doc = glob.doc;
+    const script = new dom.Element(doc, 'script', doc.loc).linkTo(doc.body!);
+    script.setAttribute('id', CLIENT_PROPS_SCRIPT_ID);
+    new dom.Text(doc, code!, doc.loc).linkTo(script);
   }
   return page;
 }

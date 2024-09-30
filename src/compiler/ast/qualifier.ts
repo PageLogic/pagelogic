@@ -1,7 +1,7 @@
 import * as acorn from 'acorn';
 import estraverse from 'estraverse';
 import * as es from 'estree';
-import { RT_SCOPE_PARENT_KEY } from '../../page/page';
+import { RT_SCOPE_PARENT_KEY } from '../../page/consts';
 import { CompilerPage } from '../compiler-page';
 import { getProperty } from './acorn-utils';
 

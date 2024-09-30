@@ -3,10 +3,10 @@ import fs from 'fs';
 import path from 'path';
 import { Compiler } from '../compiler/compiler';
 import { PageError } from '../html/parser';
+import { CLIENT_CODE_REQ, CLIENT_CODE_SRC } from '../page/consts';
 import { RuntimePage } from '../runtime/runtime-page';
-import { CLIENT_CODE_REQ, CLIENT_CODE_SRC } from './consts';
-import { ServerGlobal } from './server-global';
 import { PageLogicLogger } from '../utils/logger';
+import { ServerGlobal } from './server-global';
 
 export interface PageLogicConfig {
   docroot?: string;
@@ -38,7 +38,11 @@ try {
 
 export function pageLogic(config: PageLogicConfig) {
   const docroot = config.docroot || process.cwd();
-  const compiler = new Compiler(docroot, { logger: config.logger, watch: true });
+  const compiler = new Compiler(docroot, {
+    csr: config.csr,
+    logger: config.logger,
+    watch: true
+  });
 
   return async function (req: Request, res: Response, next: NextFunction) {
     const i = req.path.lastIndexOf('.');
@@ -75,10 +79,12 @@ export function pageLogic(config: PageLogicConfig) {
       return serveErrorPage(comp.errors, res);
     }
 
-    const glob = new ServerGlobal(comp.doc!, comp.props!);
-    new RuntimePage(glob);
-    const html = comp.doc!.toString();
+    if (config.ssr) {
+      const glob = new ServerGlobal(comp.doc!, comp.props!);
+      new RuntimePage(glob);
+    }
 
+    const html = comp.doc!.toString();
     res.header('Content-Type', 'text/html;charset=UTF-8');
     res.send('<!DOCTYPE html>' + html);
   };

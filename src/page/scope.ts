@@ -1,10 +1,6 @@
 import { Comment, Element, Text } from '../html/dom';
-import {
-  HTML_TEXT_MARKER1,
-  Page, RT_SCOPE_CHILDREN_KEY, RT_SCOPE_DOM_KEY, RT_SCOPE_ID_KEY,
-  RT_SCOPE_ISOLATED_KEY, RT_SCOPE_NAME_KEY, RT_SCOPE_PARENT_KEY,
-  RT_SCOPE_VALUE_KEY
-} from './page';
+import * as k from './consts';
+import { Page } from './page';
 import { ValueProps } from './props';
 import { Value } from './value';
 
@@ -64,7 +60,7 @@ export class Scope {
   }
 
   domText(id: string): Text | undefined {
-    const key = HTML_TEXT_MARKER1 + id;
+    const key = k.HTML_TEXT_MARKER1 + id;
     const f = (e: Element): Text | undefined => {
       for (let i = 0; i < e.children.length; i++) {
         const n = e.children[i];
@@ -84,25 +80,25 @@ export class Scope {
   activate(page: Page): this {
     const that = this;
 
-    this.values[RT_SCOPE_ID_KEY] = page.newValue(page, this, RT_SCOPE_ID_KEY, {
+    this.values[k.RT_SCOPE_ID_KEY] = page.newValue(page, this, k.RT_SCOPE_ID_KEY, {
       exp: function() { return that.id; }
     });
-    this.values[RT_SCOPE_NAME_KEY] = page.newValue(page, this, RT_SCOPE_NAME_KEY, {
+    this.values[k.RT_SCOPE_NAME_KEY] = page.newValue(page, this, k.RT_SCOPE_NAME_KEY, {
       exp: function() { return that.name; }
     });
-    this.values[RT_SCOPE_DOM_KEY] = page.newValue(page, this, RT_SCOPE_DOM_KEY, {
+    this.values[k.RT_SCOPE_DOM_KEY] = page.newValue(page, this, k.RT_SCOPE_DOM_KEY, {
       exp: function() { return that.e; }
     });
-    this.values[RT_SCOPE_ISOLATED_KEY] = page.newValue(page, this, RT_SCOPE_ISOLATED_KEY, {
+    this.values[k.RT_SCOPE_ISOLATED_KEY] = page.newValue(page, this, k.RT_SCOPE_ISOLATED_KEY, {
       exp: function() { return !!that.isolated; }
     });
-    this.values[RT_SCOPE_PARENT_KEY] = page.newValue(page, this, RT_SCOPE_PARENT_KEY, {
+    this.values[k.RT_SCOPE_PARENT_KEY] = page.newValue(page, this, k.RT_SCOPE_PARENT_KEY, {
       exp: function() { return that.parent?.obj; }
     });
-    this.values[RT_SCOPE_CHILDREN_KEY] = page.newValue(page, this, RT_SCOPE_CHILDREN_KEY, {
+    this.values[k.RT_SCOPE_CHILDREN_KEY] = page.newValue(page, this, k.RT_SCOPE_CHILDREN_KEY, {
       exp: function() { return that.children.map(child => child.obj); }
     });
-    this.values[RT_SCOPE_VALUE_KEY] = page.newValue(page, this, RT_SCOPE_VALUE_KEY, {
+    this.values[k.RT_SCOPE_VALUE_KEY] = page.newValue(page, this, k.RT_SCOPE_VALUE_KEY, {
       exp: function() { return (key: string) => that.values[key]; }
     });
 
@@ -113,8 +109,8 @@ export class Scope {
         if (v) {
           return v.get();
         }
-        const isolated = target[RT_SCOPE_ISOLATED_KEY];
-        const parent = !isolated && target[RT_SCOPE_PARENT_KEY];
+        const isolated = target[k.RT_SCOPE_ISOLATED_KEY];
+        const parent = !isolated && target[k.RT_SCOPE_PARENT_KEY];
         if (parent) {
           return parent[key];
         }
@@ -127,8 +123,8 @@ export class Scope {
           v.set(val);
           return true;
         }
-        const isolated = target[RT_SCOPE_ISOLATED_KEY];
-        const parent = isolated ? null : target[RT_SCOPE_PARENT_KEY];
+        const isolated = target[k.RT_SCOPE_ISOLATED_KEY];
+        const parent = isolated ? null : target[k.RT_SCOPE_PARENT_KEY];
         if (parent) {
           try {
             (parent.get() as ScopeObj)[key as string] = val;

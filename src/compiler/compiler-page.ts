@@ -3,15 +3,16 @@ import {
 } from 'acorn';
 import { Attribute, Comment, Element, SourceLocation, Text } from '../html/dom';
 import { PageError } from '../html/parser';
+import * as k from '../page/consts';
 import * as pg from '../page/page';
+import { ValueProps } from '../page/props';
+import { Scope } from '../page/scope';
+import { Value } from '../page/value';
 import {
   astArrayExpression, astLiteral, astLocation, astObjectExpression, astProperty
 } from './ast/acorn-utils';
 import { qualifyPageIdentifiers } from './ast/qualifier';
 import { resolveValueDependencies } from './ast/resolver';
-import { ValueProps } from '../page/props';
-import { Value } from '../page/value';
-import { Scope } from '../page/scope';
 
 const DEF_NAMES: { [key: string]: string } = {
   HTML: 'page',
@@ -31,7 +32,7 @@ export class CompilerPage extends pg.Page {
       if (this.needsScope(e)) {
         const l = e.loc;
         const id = this.scopes.length;
-        e.setAttribute(pg.DOM_ID_ATTR, `${id}`);
+        e.setAttribute(k.DOM_ID_ATTR, `${id}`);
 
         s = this.newScope(id, e).linkTo(s);
         s.name = DEF_NAMES[e.name];
@@ -96,7 +97,7 @@ export class CompilerPage extends pg.Page {
     // 2) `:`-prefixed attributes & attribute expressions
     for (const attr of e.attributes) {
       if (
-        attr.name.startsWith(pg.SRC_LOGIC_ATTR_PREFIX) ||
+        attr.name.startsWith(k.SRC_LOGIC_ATTR_PREFIX) ||
         typeof attr.value !== 'string'
       ) {
         return true;
@@ -106,7 +107,7 @@ export class CompilerPage extends pg.Page {
   }
 
   getName(e: Element) {
-    const attr = e.getAttributeNode(pg.SRC_NAME_ATTR);
+    const attr = e.getAttributeNode(k.SRC_NAME_ATTR);
     if (attr) {
       const name = typeof attr.value === 'string' ? attr.value : null;
       if (/^[a-zA-z_]\w*$/.test(name ?? '')) {
@@ -122,22 +123,22 @@ export class CompilerPage extends pg.Page {
   collectAttributes(scope: Scope, e: Element, ret: ObjectExpression) {
     for (let i = 0; i < e.attributes.length;) {
       const a = e.attributes[i];
-      if (!pg.SRC_ATTR_NAME_REGEX.test(a.name)) {
+      if (!k.SRC_ATTR_NAME_REGEX.test(a.name)) {
         const err = new PageError('error', 'invalid attribute name', a.loc);
         this.errors.push(err);
         i++;
         continue;
       }
       if (
-        !a.name.startsWith(pg.SRC_LOGIC_ATTR_PREFIX) &&
+        !a.name.startsWith(k.SRC_LOGIC_ATTR_PREFIX) &&
         typeof a.value === 'string'
       ) {
         i++;
         continue;
       }
-      if (a.name.startsWith(pg.SRC_SYSTEM_ATTR_PREFIX)) {
+      if (a.name.startsWith(k.SRC_SYSTEM_ATTR_PREFIX)) {
         this.collectSystemAttribute(scope, a, ret);
-      } else if (a.name.startsWith(pg.SRC_LOGIC_ATTR_PREFIX)) {
+      } else if (a.name.startsWith(k.SRC_LOGIC_ATTR_PREFIX)) {
         this.collectValueAttribute(a, ret);
       } else {
         this.collectNativeAttribute(a, ret);
@@ -147,8 +148,8 @@ export class CompilerPage extends pg.Page {
   }
 
   collectSystemAttribute(scope: Scope, a: Attribute, ret: ObjectExpression) {
-    const name = pg.RT_SYS_VALUE_PREFIX
-      + a.name.substring(pg.SRC_SYSTEM_ATTR_PREFIX.length);
+    const name = k.RT_SYS_VALUE_PREFIX
+      + a.name.substring(k.SRC_SYSTEM_ATTR_PREFIX.length);
     switch (name) {
     case '$name':
       this.checkLiteralAttribute(a) && (scope.name = a.value as string);
@@ -171,13 +172,13 @@ export class CompilerPage extends pg.Page {
   }
 
   collectValueAttribute(a: Attribute, ret: ObjectExpression) {
-    const name = a.name.substring(pg.SRC_LOGIC_ATTR_PREFIX.length);
+    const name = a.name.substring(k.SRC_LOGIC_ATTR_PREFIX.length);
     const value = this.makeValue(name, a.value, a.valueLoc!);
     ret.properties.push(value);
   }
 
   collectNativeAttribute(a: Attribute, ret: ObjectExpression) {
-    const name = pg.RT_ATTR_VALUE_PREFIX + a.name;
+    const name = k.RT_ATTR_VALUE_PREFIX + a.name;
     const value = this.makeValue(name, a.value, a.valueLoc!);
     ret.properties.push(value);
   }
@@ -190,11 +191,11 @@ export class CompilerPage extends pg.Page {
         if (n.type === 'element' && !this.needsScope(n as Element)) {
           f(n as Element);
         } else if (n.type === 'text' && typeof (n as Text).value !== 'string') {
-          const name = pg.RT_TEXT_VALUE_PREFIX + count;
+          const name = k.RT_TEXT_VALUE_PREFIX + count;
           const value = this.makeValue(name, (n as Text).value, n.loc);
           v.properties.push(value);
-          new Comment(e.doc, pg.HTML_TEXT_MARKER1 + (count++), n.loc).linkTo(e, n);
-          new Comment(e.doc, pg.HTML_TEXT_MARKER2, n.loc).linkTo(e, n.nextSibling ?? undefined);
+          new Comment(e.doc, k.HTML_TEXT_MARKER1 + (count++), n.loc).linkTo(e, n);
+          new Comment(e.doc, k.HTML_TEXT_MARKER2, n.loc).linkTo(e, n.nextSibling ?? undefined);
           i += 2;
         }
         i++;

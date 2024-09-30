@@ -4,7 +4,7 @@ import {
   MemberExpression, Node, ObjectExpression, Property
 } from 'estree';
 import { PageError } from '../../html/parser';
-import { RT_SCOPE_PARENT_KEY, RT_SCOPE_VALUE_KEY } from '../../page/page';
+import { RT_SCOPE_PARENT_KEY, RT_SCOPE_VALUE_KEY } from '../../page/consts';
 import { CompilerPage } from '../compiler-page';
 import { Stack } from '../util';
 import { getProperty, getPropertyName, Path, PathItem } from './estree-utils';

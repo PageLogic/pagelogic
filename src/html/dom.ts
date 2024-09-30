@@ -315,7 +315,13 @@ export class Document extends Element {
   constructor(loc: string | SourceLocation) {
     super(null, '#document',
       typeof loc === 'string'
-        ? { source: loc, start: { line: 1, column: 0 }, end: { line: 1, column: 0 }, i1: 0, i2: 0 }
+        ? {
+            source: loc,
+            start: { line: 1, column: 0 },
+            end: { line: 1, column: 0 },
+            i1: 0,
+            i2: 0
+          }
         : loc
     );
     this.doc = this;
@@ -326,6 +332,30 @@ export class Document extends Element {
     for (const e of this.children) {
       if (e.type === 'element') {
         return e as Element;
+      }
+    }
+    return null;
+  }
+
+  get head(): Element | null {
+    const root = this.documentElement;
+    if (root) {
+      for (const e of root.children ?? []) {
+        if (e.type === 'element' && (e as Element).name === 'HEAD') {
+          return e as Element;
+        }
+      }
+    }
+    return null;
+  }
+
+  get body(): Element | null {
+    const root = this.documentElement;
+    if (root) {
+      for (const e of root.children ?? []) {
+        if (e.type === 'element' && (e as Element).name === 'BODY') {
+          return e as Element;
+        }
       }
     }
     return null;

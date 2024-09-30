@@ -1,5 +1,6 @@
 import { Element } from '../html/dom';
-import { Page, RT_ATTR_VALUE_PREFIX, RT_TEXT_VALUE_PREFIX } from '../page/page';
+import * as k from '../page/consts';
+import { Page } from '../page/page';
 import { ScopeProps, ValueProps } from '../page/props';
 import { Scope } from '../page/scope';
 import { Value } from '../page/value';
@@ -30,15 +31,15 @@ export class RuntimePage extends Page {
     page: Page, scope: Scope, name: string, props: ValueProps
   ): Value {
     const ret = new Value(page, scope, props);
-    if (name.startsWith(RT_ATTR_VALUE_PREFIX)) {
-      const key = name.substring(RT_ATTR_VALUE_PREFIX.length);
+    if (name.startsWith(k.RT_ATTR_VALUE_PREFIX)) {
+      const key = name.substring(k.RT_ATTR_VALUE_PREFIX.length);
       ret.cb = (scope, v) => {
         //TODO: batch DOM changes
         scope.e.setAttribute(key, `${v != null ? v : ''}`);
         return v;
       };
-    } else if (name.startsWith(RT_TEXT_VALUE_PREFIX)) {
-      const key = name.substring(RT_TEXT_VALUE_PREFIX.length);
+    } else if (name.startsWith(k.RT_TEXT_VALUE_PREFIX)) {
+      const key = name.substring(k.RT_TEXT_VALUE_PREFIX.length);
       const t = scope.domText(key)!;
       ret.cb = (scope, v) => {
         t.value = `${v != null ? v : ''}`;
