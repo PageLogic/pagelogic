@@ -8,7 +8,7 @@ import { ServerGlobal } from '../server/server-global';
 import { defaultLogger, PageLogicLogger } from '../utils/logger';
 import { CompilerPage } from './compiler-page';
 import { Observable } from './util';
-import { CLIENT_PROPS_SCRIPT_ID } from '../page/consts';
+import * as k from '../page/consts';
 
 export interface CompilerProps {
   csr?: boolean;
@@ -96,11 +96,11 @@ export function compile(src: Source, csr?: boolean): CompilerPage {
   if (page.errors.length) {
     return page;
   }
-  let code: string;
   try {
-    glob.js = generate(page.ast);
-    code = `(${glob.js})`;
-    glob.props = eval(code);
+    glob.js = generate(page.ast, {
+      format: { compact: true }
+    });
+    glob.props = eval(`(${glob.js})`);
   } catch (err) {
     page.errors.push(new PageError(
       'error', `compiler internal error: ${err}`, src.doc.loc
@@ -108,9 +108,15 @@ export function compile(src: Source, csr?: boolean): CompilerPage {
   }
   if (csr) {
     const doc = glob.doc;
-    const script = new dom.Element(doc, 'script', doc.loc).linkTo(doc.body!);
-    script.setAttribute('id', CLIENT_PROPS_SCRIPT_ID);
-    new dom.Text(doc, code!, doc.loc).linkTo(script);
+    
+    const script1 = new dom.Element(doc, 'script', doc.loc).linkTo(doc.body!);
+    script1.setAttribute('id', k.CLIENT_PROPS_SCRIPT_ID);
+    const code = `\n${k.CLIENT_PROPS_SCRIPT_GLOBAL} = ${glob.js}\n`;
+    new dom.Text(doc, code, doc.loc).linkTo(script1);
+
+    // const script2 = new dom.Element(doc, 'script', doc.loc).linkTo(doc.body!);
+    // script2.setAttribute('id', k.CLIENT_CODE_SCRIPT_ID);
+    // script2.setAttribute('src', k.CLIENT_CODE_REQ);
   }
   return page;
 }

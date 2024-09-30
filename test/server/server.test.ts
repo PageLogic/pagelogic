@@ -10,26 +10,21 @@ import { Server } from '../../src/server/server';
 const docroot = path.join(__dirname, 'www');
 
 async function load(
-  ssr: boolean, csr: boolean, port: number, fname: string
+  checkSSR: boolean, checkCSR: boolean, port: number, fname: string
 ): Promise<BrowserPage> {
   const page = new Browser().newPage();
   await page.goto(`http://127.0.0.1:${port}${fname}`);
   await page.waitUntilComplete();
-  const isPL = page.mainFrame.document.querySelector(`html[${k.DOM_ID_ATTR}]`);
-  if (!isPL) {
-    // not a PageLogic page (might be an error page);
-    return page;
-  }
-  if (ssr) {
-    if (page.content.match(/<!---t\d+--><!----->/)) {
+  if (checkSSR) {
+    if (page.content.match(/<!---t\d+--><!---->/)) {
       assert(false, 'empty text found in SSR mode');
     }
   } else {
-    if (page.content.match(/<!---t\d+-->.+?<!----->/)) {
+    if (page.content.match(/<!---t\d+-->.+?<!---->/)) {
       assert(false, 'interpolated text found in non-SSR mode');
     }
   }
-  if (csr) {
+  if (checkCSR) {
     const query = `script#${k.CLIENT_PROPS_SCRIPT_ID}`;
     const script = page.mainFrame.document.querySelector(query);
     assert.exists(script, `missing ${query} in CSR mode`);
@@ -69,7 +64,14 @@ describe('server', () => {
           docroot, mute: true, ssr, csr,
           logger: (_, msg) => log.push(msg as string)
         }).start();
-        browser = new Browser();
+        browser = new Browser({
+          settings: {
+            disableJavaScriptFileLoading: true,
+            disableJavaScriptEvaluation: true,
+            disableCSSFileLoading: true,
+            enableFileSystemHttpRequests: false
+          }
+        });
       });
 
       after(async () => {
@@ -94,9 +96,9 @@ describe('server', () => {
       });
 
       it('/fragment', async () => {
-        let page = await load(ssr, csr, server.port!, '/fragment');
+        let page = await load(false, false, server.port!, '/fragment');
         assert.equal(page.mainFrame.document.title, 'Page Error');
-        page = await load(ssr, csr, server.port!, '/fragment.htm');
+        page = await load(false, false, server.port!, '/fragment.htm');
         assert.equal(page.content.replace(/<.*?>/g, ''), 'Not Found');
       });
 
@@ -129,9 +131,9 @@ describe('server', () => {
       });
 
       it('/visible/fragment', async () => {
-        let page = await load(ssr, csr, server.port!, '/visible/fragment');
+        let page = await load(false, false, server.port!, '/visible/fragment');
         assert.equal(page.mainFrame.document.title, 'Page Error');
-        page = await load(ssr, csr, server.port!, '/visible/fragment.htm');
+        page = await load(false, false, server.port!, '/visible/fragment.htm');
         assert.equal(page.content.replace(/<.*?>/g, ''), 'Not Found');
       });
 
@@ -146,27 +148,27 @@ describe('server', () => {
       });
 
       it('/.hidden/index', async () => {
-        let page = await load(ssr, csr, server.port!, '/.hidden');
+        let page = await load(false, false, server.port!, '/.hidden');
         assert.equal(page.content.replace(/<.*?>/g, ''), 'Not Found');
-        page = await load(ssr, csr, server.port!, '/.hidden/');
+        page = await load(false, false, server.port!, '/.hidden/');
         assert.equal(page.content.replace(/<.*?>/g, ''), 'Not Found');
-        page = await load(ssr, csr, server.port!, '/.hidden/index');
+        page = await load(false, false, server.port!, '/.hidden/index');
         assert.equal(page.content.replace(/<.*?>/g, ''), 'Not Found');
-        page = await load(ssr, csr, server.port!, '/.hidden/index.html');
+        page = await load(false, false, server.port!, '/.hidden/index.html');
         assert.equal(page.content.replace(/<.*?>/g, ''), 'Not Found');
       });
 
       it('/.hidden/other', async () => {
-        let page = await load(ssr, csr, server.port!, '/.hidden/other');
+        let page = await load(false, false, server.port!, '/.hidden/other');
         assert.equal(page.content.replace(/<.*?>/g, ''), 'Not Found');
-        page = await load(ssr, csr, server.port!, '/.hidden/other.html');
+        page = await load(false, false, server.port!, '/.hidden/other.html');
         assert.equal(page.content.replace(/<.*?>/g, ''), 'Not Found');
       });
 
       it('/.hidden/fragment', async () => {
-        let page = await load(ssr, csr, server.port!, '/.hidden/fragment');
+        let page = await load(false, false, server.port!, '/.hidden/fragment');
         assert.equal(page.content.replace(/<.*?>/g, ''), 'Not Found');
-        page = await load(ssr, csr, server.port!, '/.hidden/fragment.htm');
+        page = await load(false, false, server.port!, '/.hidden/fragment.htm');
         assert.equal(page.content.replace(/<.*?>/g, ''), 'Not Found');
       });
 
@@ -251,8 +253,8 @@ describe('server', () => {
         const page = await load(ssr, csr, server.port!, '/001.html');
         assert.equal(
           getMarkup(page),
-          '<html data-lid="0"><head data-lid="1"></head>'
-          + '<body data-lid="2"></body></html>'
+          '<html data-pl="0"><head data-pl="1"></head>'
+          + '<body data-pl="2"></body></html>'
         );
       });
 
@@ -260,13 +262,13 @@ describe('server', () => {
         const page = await load(ssr, csr, server.port!, '/002.html');
         assert.equal(
           getMarkup(page),
-          '<html data-lid="0">\n'
-          + '<head data-lid="1">\n'
+          '<html data-pl="0">\n'
+          + '<head data-pl="1">\n'
           + '<meta name="color-scheme" content="light dark">\n'
           + '</head>\n'
           + (ssr
-            ? '<body data-lid="2">hi <!---t0-->there<!---->!</body>\n'
-            : '<body data-lid="2">hi <!---t0--><!---->!</body>\n')
+            ? '<body data-pl="2">hi <!---t0-->there<!---->!</body>\n'
+            : '<body data-pl="2">hi <!---t0--><!---->!</body>\n')
           + '</html>'
         );
       });

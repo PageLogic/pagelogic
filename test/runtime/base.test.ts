@@ -70,9 +70,9 @@ describe('runtime/base', () => {
     assert.notExists(page.attr$lang);
     assert.equal(
       (page.$dom as Element).toString(),
-      '<html lang="en" data-lid="0">'
-        + '<head data-lid="1"></head>'
-        + '<body data-lid="2"></body>'
+      '<html lang="en" data-pl="0">'
+        + '<head data-pl="1"></head>'
+        + '<body data-pl="2"></body>'
         + '</html>'
     );
   });
@@ -82,9 +82,9 @@ describe('runtime/base', () => {
     assert.equal(page.attr$lang, 'en');
     assert.equal(
       (page.$dom as Element).toString(),
-      '<html data-lid="0" lang="en">'
-        + '<head data-lid="1"></head>'
-        + '<body data-lid="2"></body>'
+      '<html data-pl="0" lang="en">'
+        + '<head data-pl="1"></head>'
+        + '<body data-pl="2"></body>'
         + '</html>'
     );
   });
@@ -93,9 +93,9 @@ describe('runtime/base', () => {
     const page = load('<html><body> ${"hi"} </body></html>');
     assert.equal(
       (page.$dom as Element).toString(),
-      '<html data-lid="0">'
-        + '<head data-lid="1"></head>'
-        + '<body data-lid="2"> <!---t0-->hi<!----> </body>'
+      '<html data-pl="0">'
+        + '<head data-pl="1"></head>'
+        + '<body data-pl="2"> <!---t0-->hi<!----> </body>'
         + '</html>'
     );
   });
@@ -104,9 +104,9 @@ describe('runtime/base', () => {
     const page = load('<html><body>${"hi"} </body></html>');
     assert.equal(
       (page.$dom as Element).toString(),
-      '<html data-lid="0">'
-        + '<head data-lid="1"></head>'
-        + '<body data-lid="2"><!---t0-->hi<!----> </body>'
+      '<html data-pl="0">'
+        + '<head data-pl="1"></head>'
+        + '<body data-pl="2"><!---t0-->hi<!----> </body>'
         + '</html>'
     );
   });
@@ -115,9 +115,9 @@ describe('runtime/base', () => {
     const page = load('<html><body> ${"hi"}</body></html>');
     assert.equal(
       (page.$dom as Element).toString(),
-      '<html data-lid="0">'
-        + '<head data-lid="1"></head>'
-        + '<body data-lid="2"> <!---t0-->hi<!----></body>'
+      '<html data-pl="0">'
+        + '<head data-pl="1"></head>'
+        + '<body data-pl="2"> <!---t0-->hi<!----></body>'
         + '</html>'
     );
   });
@@ -126,9 +126,9 @@ describe('runtime/base', () => {
     const page = load('<html><body>${"hi"}</body></html>');
     assert.equal(
       (page.$dom as Element).toString(),
-      '<html data-lid="0">'
-        + '<head data-lid="1"></head>'
-        + '<body data-lid="2"><!---t0-->hi<!----></body>'
+      '<html data-pl="0">'
+        + '<head data-pl="1"></head>'
+        + '<body data-pl="2"><!---t0-->hi<!----></body>'
         + '</html>'
     );
   });

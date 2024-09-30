@@ -19,9 +19,11 @@ export const RT_SCOPE_VALUE_KEY = '$value';
 export const HTML_TEXT_MARKER1 = '-t';
 export const HTML_TEXT_MARKER2 = '';
 
-export const DOM_ID_ATTR = 'data-lid';
+export const DOM_ID_ATTR = 'data-pl';
 
 export const CLIENT_CODE_SRC = '../client.js';
 export const CLIENT_CODE_REQ = '/.pagelogic.js';
 
-export const CLIENT_PROPS_SCRIPT_ID = 'pagelogic';
+export const CLIENT_PROPS_SCRIPT_ID = 'pl-props';
+export const CLIENT_PROPS_SCRIPT_GLOBAL = 'pagelogic$props';
+export const CLIENT_CODE_SCRIPT_ID = 'pl-client';
