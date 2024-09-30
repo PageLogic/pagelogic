@@ -13,12 +13,13 @@ async function load(
   ssr: boolean, csr: boolean, port: number, fname: string
 ): Promise<BrowserPage> {
   const page = new Browser().newPage();
-  const resp = await page.goto(`http://127.0.0.1:${port}${fname}`);
+  await page.goto(`http://127.0.0.1:${port}${fname}`);
   await page.waitUntilComplete();
-  // console.log(resp?.status);
-  // if (resp?.status !== 200) {
-  //   return page;
-  // }
+  const isPL = page.mainFrame.document.querySelector(`html[${k.DOM_ID_ATTR}]`);
+  if (!isPL) {
+    // not a PageLogic page (might be an error page);
+    return page;
+  }
   if (ssr) {
     if (page.content.match(/<!---t\d+--><!----->/)) {
       assert(false, 'empty text found in SSR mode');
@@ -28,16 +29,16 @@ async function load(
       assert(false, 'interpolated text found in non-SSR mode');
     }
   }
-  // if (csr) {
-  //   const query = `script#${k.CLIENT_PROPS_ID}`;
-  //   const script = page.mainFrame.document.querySelector(query);
-  //   assert.exists(script, `missing ${query} in CSR mode`);
-  // }
+  if (csr) {
+    const query = `script#${k.CLIENT_PROPS_SCRIPT_ID}`;
+    const script = page.mainFrame.document.querySelector(query);
+    assert.exists(script, `missing ${query} in CSR mode`);
+  }
   return page;
 }
 
 function getMarkup(page: BrowserPage) {
-  let txt = page.content;
+  const txt = page.content;
   const i1 = txt.indexOf(`<script id="${k.CLIENT_PROPS_SCRIPT_ID}">`);
   const i2 = i1 >= 0 ? txt.indexOf('</script>', i1) : -1;
   if (i2 > 0) {

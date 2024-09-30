@@ -316,12 +316,12 @@ export class Document extends Element {
     super(null, '#document',
       typeof loc === 'string'
         ? {
-            source: loc,
-            start: { line: 1, column: 0 },
-            end: { line: 1, column: 0 },
-            i1: 0,
-            i2: 0
-          }
+          source: loc,
+          start: { line: 1, column: 0 },
+          end: { line: 1, column: 0 },
+          i1: 0,
+          i2: 0
+        }
         : loc
     );
     this.doc = this;

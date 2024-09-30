@@ -96,7 +96,7 @@ export function compile(src: Source, csr?: boolean): CompilerPage {
   if (page.errors.length) {
     return page;
   }
-  let code;
+  let code: string;
   try {
     glob.js = generate(page.ast);
     code = `(${glob.js})`;
