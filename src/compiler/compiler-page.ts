@@ -196,9 +196,9 @@ export class CompilerPage extends pg.Page {
           const name = k.RT_TEXT_VALUE_PREFIX + count;
           const value = this.makeValue(name, (n as ServerText).textContent, n.loc);
           v.properties.push(value);
-          const c1 = new ServerComment(e.doc, k.HTML_TEXT_MARKER1 + (count++), n.loc);
+          const c1 = new ServerComment(e.ownerDocument, k.HTML_TEXT_MARKER1 + (count++), n.loc);
           e.insertBefore(c1, n);
-          const c2 = new ServerComment(e.doc, k.HTML_TEXT_MARKER2, n.loc);
+          const c2 = new ServerComment(e.ownerDocument, k.HTML_TEXT_MARKER2, n.loc);
           e.insertBefore(c2, (n.nextSibling as ServerNode) ?? null);
           i += 2;
         }

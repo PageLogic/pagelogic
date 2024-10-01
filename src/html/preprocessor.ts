@@ -178,8 +178,8 @@ export class Preprocessor {
     if (!loaded) {
       return;
     }
-    const e = new dom.ServerElement(d.node.doc, as, d.node.loc);
-    e.appendChild(new dom.ServerText(e.doc, loaded.text, d.node.loc, false));
+    const e = new dom.ServerElement(d.node.ownerDocument, as, d.node.loc);
+    e.appendChild(new dom.ServerText(e.ownerDocument, loaded.text, d.node.loc, false));
     d.parent.childNodes.splice(i, 0, e);
   }
 

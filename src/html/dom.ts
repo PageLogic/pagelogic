@@ -7,7 +7,7 @@ export const NodeType = {
 }
 
 export interface Node {
-  doc: Document | null;
+  ownerDocument: Document | null;
   parent: Element | null;
   nodeType: unknown;
   loc: unknown;
@@ -40,4 +40,5 @@ export interface Attribute extends Node {
 
 export interface Document extends Element {
   // documentElement: Element | null;
+  createTextNode(text: string): Text;
 }

@@ -16,12 +16,13 @@ async function load(
   checkSSR: boolean, checkCSR: boolean, port: number, fname: string
 ) {
   await page.goto(`http://127.0.0.1:${port}${fname}`);
-  if (checkSSR) {
+  if (checkSSR || checkCSR) {
     if ((await page.content()).match(/<!---t\d+--><!---->/)) {
       assert(false, 'empty text found in SSR mode');
     }
   } else {
-    if ((await page.content()).match(/<!---t\d+-->.+?<!---->/)) {
+    const html = await page.content();
+    if (html.match(/<!---t\d+-->.+?<!---->/)) {
       assert(false, 'interpolated text found in non-SSR mode');
     }
   }
@@ -273,7 +274,7 @@ describe('server', () => {
           + '<head data-pl="1">\n'
           + '<meta name="color-scheme" content="light dark">\n'
           + '</head>'
-          + (ssr
+          + (ssr || csr
             ? '<body data-pl="2">hi <!---t0-->there<!---->!'
             : '<body data-pl="2">hi <!---t0--><!---->!')
           + (csr

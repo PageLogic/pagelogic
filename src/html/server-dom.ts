@@ -14,7 +14,7 @@ export interface SourceLocation extends acorn.SourceLocation {
 }
 
 export abstract class ServerNode implements Node {
-  doc: ServerDocument | null;
+  ownerDocument: ServerDocument | null;
   parent: ServerElement | null;
   nodeType: number;
   loc: SourceLocation;
@@ -24,7 +24,7 @@ export abstract class ServerNode implements Node {
     type: number,
     loc: SourceLocation
   ) {
-    this.doc = doc;
+    this.ownerDocument = doc;
     this.parent = null;
     this.nodeType = type;
     this.loc = loc;
@@ -52,7 +52,7 @@ export abstract class ServerNode implements Node {
   toJSON(): object {
     return {
       type: this.nodeType,
-      loc: this.doc?.jsonLoc ? this.loc : null
+      loc: this.ownerDocument?.jsonLoc ? this.loc : null
     };
   }
 
@@ -87,7 +87,7 @@ export class ServerText extends ServerNode implements Text {
     return {
       type: this.nodeType,
       value: this.textContent,
-      loc: this.doc?.jsonLoc ? this.loc : null
+      loc: this.ownerDocument?.jsonLoc ? this.loc : null
     };
   }
 
@@ -100,7 +100,7 @@ export class ServerText extends ServerNode implements Text {
   }
 
   clone(parent: ServerElement | null): ServerText {
-    const ret = new ServerText(this.doc, this.textContent, this.loc, this.escaping);
+    const ret = new ServerText(this.ownerDocument, this.textContent, this.loc, this.escaping);
     parent && parent.appendChild(ret); // ret.linkTo(parent);
     return ret;
   }
@@ -122,7 +122,7 @@ export class ServerComment extends ServerNode implements Comment {
     return {
       type: this.nodeType,
       value: this.textContent,
-      loc: this.doc?.jsonLoc ? this.loc : null
+      loc: this.ownerDocument?.jsonLoc ? this.loc : null
     };
   }
 
@@ -133,7 +133,7 @@ export class ServerComment extends ServerNode implements Comment {
   }
 
   clone(parent: ServerElement | null): ServerComment {
-    const ret = new ServerComment(this.doc, this.textContent, this.loc);
+    const ret = new ServerComment(this.ownerDocument, this.textContent, this.loc);
     parent && parent.appendChild(ret); // ret.linkTo(parent);
     return ret;
   }
@@ -164,7 +164,7 @@ export class ServerAttribute extends ServerNode implements Attribute {
       name: this.name,
       value: this.value,
       quote: this.quote,
-      loc: this.doc?.jsonLoc ? this.loc : null
+      loc: this.ownerDocument?.jsonLoc ? this.loc : null
     };
   }
 
@@ -185,7 +185,7 @@ export class ServerAttribute extends ServerNode implements Attribute {
   }
 
   clone(parent: ServerElement | null): ServerAttribute {
-    const ret = new ServerAttribute(this.doc, parent, this.name, this.value, this.loc);
+    const ret = new ServerAttribute(this.ownerDocument, parent, this.name, this.value, this.loc);
     ret.valueLoc = this.valueLoc;
     ret.quote = this.quote;
     return ret;
@@ -266,7 +266,7 @@ export class ServerElement extends ServerNode implements Element {
       a.value = value;
       return;
     }
-    a = new ServerAttribute(this.doc, this, name, value, this.loc);
+    a = new ServerAttribute(this.ownerDocument, this, name, value, this.loc);
   }
 
   removeAttribute(name: string) {
@@ -280,7 +280,7 @@ export class ServerElement extends ServerNode implements Element {
       name: this.tagName,
       attributes: this.attributes,
       children: this.childNodes,
-      loc: this.doc?.jsonLoc ? this.loc : null
+      loc: this.ownerDocument?.jsonLoc ? this.loc : null
     };
   }
 
@@ -302,7 +302,7 @@ export class ServerElement extends ServerNode implements Element {
   }
 
   clone(parent: ServerElement | null): ServerElement {
-    const ret = new ServerElement(this.doc, this.tagName, this.loc);
+    const ret = new ServerElement(this.ownerDocument, this.tagName, this.loc);
     parent && parent.appendChild(ret);// ret.linkTo(parent);
     this.attributes.forEach(a => (a as ServerAttribute).clone(ret));
     this.childNodes.forEach(n => (n as ServerNode).clone(ret));
@@ -326,7 +326,7 @@ export class ServerDocument extends ServerElement implements Document {
         }
         : loc
     );
-    this.doc = this;
+    this.ownerDocument = this;
     this.nodeType = NodeType.DOCUMENT;
   }
 
@@ -361,6 +361,10 @@ export class ServerDocument extends ServerElement implements Document {
       }
     }
     return null;
+  }
+
+  createTextNode(text: string): Text {
+    return new ServerText(this, text, this.loc);
   }
 
   toJSON(): object {

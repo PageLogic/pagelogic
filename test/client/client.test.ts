@@ -57,18 +57,17 @@ describe('client', () => {
         const res = await page.goto(`http://127.0.0.1:${server.port}${fname}`);
         assert.equal(res?.status(), 200);
         await page.waitForLoadState();
-        // console.log(await page.content());
         const globalFound = await page.evaluate(`!!window.${k.CLIENT_GLOBAL}`);
         assert.isTrue(globalFound);
         return page;
       }
 
-      // it('/index', async () => {
-      //   const page = await goto('/index');
-      //   const div = await page.$('div');
-      //   const text = await div?.textContent();
-      //   assert.equal(text, 'hi');
-      // });
+      it('/index', async () => {
+        const page = await goto('/index');
+        const div = await page.$('div');
+        const text = await div?.textContent();
+        assert.equal(text, 'hi');
+      });
 
     });
   }

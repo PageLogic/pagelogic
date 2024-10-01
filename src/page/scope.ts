@@ -74,7 +74,9 @@ export class Scope {
         } else if (n.nodeType === NodeType.COMMENT && (n as Comment).textContent === key) {
           let ret = e.childNodes[i + 1] as Text;
           if (ret.nodeType !== NodeType.TEXT) {
-            console.log('---------------');//tempdebug
+            const t = e.ownerDocument?.createTextNode('');
+            e.insertBefore(t!, ret);
+            ret = t!;
           }
           return ret;
         }

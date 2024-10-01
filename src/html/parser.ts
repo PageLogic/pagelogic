@@ -96,7 +96,7 @@ function parseNodes(p: dom.ServerElement, src: Source, i: number, errors: PageEr
       //   // if it doesn't start with `<!---`, store the comment
       const a = i1 + 3; const b = i2 - 3;
       p.appendChild(new dom.ServerComment(
-        p.doc, s.substring(a, b),
+        p.ownerDocument, s.substring(a, b),
         src.loc(a, b)
       ));
       // }
@@ -117,7 +117,7 @@ function parseNodes(p: dom.ServerElement, src: Source, i: number, errors: PageEr
 function parseElement(p: dom.ServerElement, src: Source, i1: number, i2: number, errors: PageError[]): number {
   const s = src.s;
   const e = new dom.ServerElement(
-    p.doc, s.substring(i1, i2),
+    p.ownerDocument, s.substring(i1, i2),
     src.loc(i1 - 1, i2)
   );
   p.appendChild(e);
@@ -149,7 +149,7 @@ function parseElement(p: dom.ServerElement, src: Source, i1: number, i2: number,
       }
       if (res.i0 > i1) {
         e.appendChild(new dom.ServerText(
-          e.doc, s.substring(i1, res.i0),
+          e.ownerDocument, s.substring(i1, res.i0),
           src.loc(i1, res.i0)
         ));
       }
@@ -177,7 +177,7 @@ function parseAttributes(e: dom.ServerElement, src: Source, i2: number, errors: 
       throw Error();
     }
     const a = new dom.ServerAttribute(
-      e.doc, e, name, null,
+      e.ownerDocument, e, name, null,
       src.loc(i1, i2)
     );
     i1 = skipBlanksAndComments(s, i2);
@@ -288,7 +288,7 @@ function parseAtomicText(p: dom.ServerElement, src: Source, i1: number, i2: numb
   const k = s.indexOf(LEXP, i1);
   if (k < 0 || k >= i2) {
     // static text
-    p.appendChild(new dom.ServerText(p.doc, s.substring(i1, i2), src.loc(i1, i2)));
+    p.appendChild(new dom.ServerText(p.ownerDocument, s.substring(i1, i2), src.loc(i1, i2)));
     return;
   }
   const exps = new Array<acorn.Expression>();
@@ -343,7 +343,7 @@ function parseAtomicText(p: dom.ServerElement, src: Source, i1: number, i2: numb
     });
   }
   if (exps.length === 1) {
-    p.appendChild(new dom.ServerText(p.doc, exps[0], src.loc(i1, i2)));
+    p.appendChild(new dom.ServerText(p.ownerDocument, exps[0], src.loc(i1, i2)));
     return;
   }
   function concat(n: number): acorn.BinaryExpression {
@@ -360,7 +360,7 @@ function parseAtomicText(p: dom.ServerElement, src: Source, i1: number, i2: numb
     };
   }
   const exp = concat(exps.length - 1);
-  p.appendChild(new dom.ServerText(p.doc, exp, src.loc(i1, i2)));
+  p.appendChild(new dom.ServerText(p.ownerDocument, exp, src.loc(i1, i2)));
 }
 
 function parseSplittableText(p: dom.ServerElement, src: Source, i1: number, i2: number, errors: PageError[]) {
@@ -368,11 +368,11 @@ function parseSplittableText(p: dom.ServerElement, src: Source, i1: number, i2: 
   for (let j1 = i1; j1 < i2;) {
     let j2 = s.indexOf(LEXP, j1);
     if (j2 < 0 || j2 >= i2) {
-      p.appendChild(new dom.ServerText(p.doc, s.substring(j1, i2), src.loc(j1, i2)));
+      p.appendChild(new dom.ServerText(p.ownerDocument, s.substring(j1, i2), src.loc(j1, i2)));
       break;
     }
     if (j2 > j1) {
-      p.appendChild(new dom.ServerText(p.doc, s.substring(j1, j2), src.loc(j1, j2)));
+      p.appendChild(new dom.ServerText(p.ownerDocument, s.substring(j1, j2), src.loc(j1, j2)));
       j1 = j2;
     }
     const j0 = j2;
@@ -392,7 +392,7 @@ function parseSplittableText(p: dom.ServerElement, src: Source, i1: number, i2: 
     if (s.charCodeAt(j1) === REXP) {
       j1++;
     }
-    p.appendChild(new dom.ServerText(p.doc, exp, src.loc(j0, j1)));
+    p.appendChild(new dom.ServerText(p.ownerDocument, exp, src.loc(j0, j1)));
   }
 }
 
