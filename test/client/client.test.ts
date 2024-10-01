@@ -1,10 +1,8 @@
 import { assert } from 'chai';
-import fs from 'fs';
 import { before } from 'mocha';
 import path from 'path';
 import { Browser, chromium, Page } from 'playwright';
 import * as k from '../../src/page/consts';
-import { CLIENT_CODE_REQ } from '../../src/page/consts';
 import { Server } from '../../src/server/server';
 
 process.env.NODE_ENV = 'test';

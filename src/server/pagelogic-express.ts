@@ -16,6 +16,8 @@ export interface PageLogicConfig {
   // virtualFiles?: Array<VirtualFile>;
 }
 
+let js: string | undefined;
+
 export function pageLogic(config: PageLogicConfig) {
   const docroot = config.docroot || process.cwd();
   const compiler = new Compiler(docroot, {
@@ -24,35 +26,19 @@ export function pageLogic(config: PageLogicConfig) {
     watch: true
   });
 
-  return async function (req: Request, res: Response, next: NextFunction) {
+  return async function(req: Request, res: Response, next: NextFunction) {
     const i = req.path.lastIndexOf('.');
     const extname = i < 0 ? '.html' : req.path.substring(i).toLowerCase();
 
-    let runtimeJs = '';
-    try {
-      runtimeJs = fs.readFileSync(
-        path.join(__dirname, CLIENT_CODE_SRC),
-        { encoding: 'utf8' }
-      );
-    } catch (error) {
-      if (process.env.NODE_ENV === 'test') {
-        try {
-          runtimeJs = fs.readFileSync(
-            path.join(__dirname, `../../dist/server/${CLIENT_CODE_SRC}`),
-            { encoding: 'utf8' }
-          );
-        } catch (ignored) {
-          console.log('runtimeJs', error);
-        }
-      } else {
-        console.log('runtimeJs', error);
-      }
+    if (!js) {
+      js = await getRuntimeCode();
     }
 
     // handle non-page requests
     if (req.path === CLIENT_CODE_REQ) {
+      //TODO: cache policy
       res.header('Content-Type', 'text/javascript;charset=UTF-8');
-      res.send(runtimeJs);
+      res.send(js);
       return;
     }
     if (req.path.startsWith('/.') || extname === '.htm') {
@@ -108,4 +94,28 @@ function serveErrorPage(errors: PageError[], res: Response) {
   res.header('Content-Type', 'text/html;charset=UTF-8');
   // res.sendStatus(500);
   res.send(p.join(''));
+}
+
+async function getRuntimeCode(): Promise<string> {
+  let js = '';
+  try {
+    js = fs.readFileSync(
+      path.join(__dirname, CLIENT_CODE_SRC),
+      { encoding: 'utf8' }
+    );
+  } catch (error) {
+    if (process.env.NODE_ENV === 'test') {
+      try {
+        js = fs.readFileSync(
+          path.join(__dirname, `../../dist/server/${CLIENT_CODE_SRC}`),
+          { encoding: 'utf8' }
+        );
+      } catch (ignored) {
+        console.log('runtimeJs', error);
+      }
+    } else {
+      console.log('runtimeJs', error);
+    }
+  }
+  return js;
 }

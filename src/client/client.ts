@@ -4,7 +4,7 @@ import { PageProps } from '../page/props';
 import { RuntimePage } from '../runtime/runtime-page';
 import { ClientGlobal } from './client-global';
 
-// @ts-ignore
+// @ts-expect-error get global var
 const props = window[CLIENT_PROPS_SCRIPT_GLOBAL] as PageProps;
 const glob = new ClientGlobal(document as unknown as dom.Document, props);
 const page = new RuntimePage(glob);

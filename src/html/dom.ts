@@ -4,7 +4,7 @@ export const NodeType = {
   TEXT: 3,
   COMMENT: 8,
   DOCUMENT: 9,
-}
+};
 
 export interface Node {
   ownerDocument: Document | null;

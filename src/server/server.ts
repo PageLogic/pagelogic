@@ -1,4 +1,5 @@
 import express, { Application } from 'express';
+import compression from 'compression';
 import rateLimit from 'express-rate-limit';
 import * as http from 'http';
 import { AddressInfo } from 'net';
@@ -36,6 +37,7 @@ export class Server {
     }
     const config = this.config;
     const app = this.app = express();
+    app.use(compression());
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
     // see https://expressjs.com/en/guide/behind-proxies.html
