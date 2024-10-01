@@ -1,11 +1,11 @@
-import { Document, Element } from '../html/dom';
+import { ServerDocument, ServerElement } from '../html/server-dom';
 import { Global } from '../page/global';
 import { PageProps } from '../page/props';
 
 export class ServerGlobal extends Global {
   js?: string;
 
-  constructor(doc: Document, props: PageProps) {
+  constructor(doc: ServerDocument, props: PageProps) {
     super(doc, props);
   }
 
@@ -13,7 +13,7 @@ export class ServerGlobal extends Global {
     //TODO
   }
 
-  override getElement(dom: number): Element {
-    return this.doc.domIdElements[dom];
+  override getElement(dom: number): ServerElement {
+    return (this.doc as ServerDocument).domIdElements[dom];
   }
 }

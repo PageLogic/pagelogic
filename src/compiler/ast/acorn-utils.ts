@@ -1,5 +1,5 @@
 import { ArrayExpression, Expression, Identifier, Literal, ObjectExpression, Property } from 'acorn';
-import { SourceLocation } from '../../html/dom';
+import { SourceLocation } from '../../html/server-dom';
 
 export function astLocation(l: SourceLocation) {
   return {

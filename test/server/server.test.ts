@@ -259,7 +259,7 @@ describe('server', () => {
           '<!DOCTYPE html><html data-pl="0"><head data-pl="1"></head>'
           + '<body data-pl="2">'
           + (csr
-            ? '<script id="pl-client" src="/.pagelogic.js"></script>'
+            ? '<script id="pl-client" async="" src="/.pagelogic.js"></script>'
             : '')
           + '</body></html>'
         );
@@ -277,7 +277,7 @@ describe('server', () => {
             ? '<body data-pl="2">hi <!---t0-->there<!---->!'
             : '<body data-pl="2">hi <!---t0--><!---->!')
           + (csr
-            ? '<script id="pl-client" src="/.pagelogic.js"></script>'
+            ? '<script id="pl-client" async="" src="/.pagelogic.js"></script>'
             : '')
           + '\n</body>'
           + '</html>'

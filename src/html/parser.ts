@@ -1,6 +1,6 @@
 import * as acorn from 'acorn';
 import { DOM_ID_ATTR } from '../page/consts';
-import * as dom from './dom';
+import * as dom from './server-dom';
 
 export const DIRECTIVE_TAG_PREFIX = ':';
 
@@ -27,18 +27,18 @@ export function parse(s: string, fname: string, ret?: Source, sanitize = true): 
   }
   if (sanitize) {
     // sanitize doc
-    const doc = ret.doc;
-    doc.documentElement || doc.children.push(new dom.Element(doc, 'HTML', doc.loc));
+    const doc = ret.doc as dom.ServerDocument;
+    doc.documentElement || doc.children.push(new dom.ServerElement(doc, 'HTML', doc.loc));
     let head, body;
     doc.documentElement!.children.forEach(n => {
       if (n.type === 'element') {
-        const e = n as unknown as dom.Element;
+        const e = n as unknown as dom.ServerElement;
         e.name === 'HEAD' && (head = e);
         e.name === 'BODY' && (body = e);
       }
     });
-    body || (body = new dom.Element(doc, 'BODY', doc.loc).linkTo(doc.documentElement!));
-    head || (head = new dom.Element(doc, 'HEAD', doc.loc).linkTo(doc.documentElement!, body));
+    body || doc.documentElement!.appendChild((body = new dom.ServerElement(doc, 'BODY', doc.loc)));
+    head || doc.documentElement!.insertBefore((head = new dom.ServerElement(doc, 'HEAD', doc.loc)), body);
     !doc.domIdElements[0] && (doc.domIdElements[0] = doc.documentElement!);
     !doc.domIdElements[1] && (doc.domIdElements[1] = head);
     !doc.domIdElements[2] && (doc.domIdElements[2] = body);
@@ -47,7 +47,7 @@ export function parse(s: string, fname: string, ret?: Source, sanitize = true): 
   return ret;
 }
 
-function parseNodes(p: dom.Element, src: Source, i: number, errors: PageError[]) {
+function parseNodes(p: dom.ServerElement, src: Source, i: number, errors: PageError[]) {
   const s = src.s;
   let i1 = i; let i2; let closure; let i3 = i; let i4; let closetag: string | null = null;
   while ((i2 = s.indexOf('<', i1)) >= 0) {
@@ -94,10 +94,10 @@ function parseNodes(p: dom.Element, src: Source, i: number, errors: PageError[])
       // if (s.charCodeAt(i1 + 3) != DASH) {
       //   // if it doesn't start with `<!---`, store the comment
       const a = i1 + 3; const b = i2 - 3;
-      new dom.Comment(
+      p.appendChild(new dom.ServerComment(
         p.doc, s.substring(a, b),
         src.loc(a, b)
-      ).linkTo(p);
+      ));
       // }
       i3 = i1 = i2;
     }
@@ -113,12 +113,13 @@ function parseNodes(p: dom.Element, src: Source, i: number, errors: PageError[])
   return i1;
 }
 
-function parseElement(p: dom.Element, src: Source, i1: number, i2: number, errors: PageError[]): number {
+function parseElement(p: dom.ServerElement, src: Source, i1: number, i2: number, errors: PageError[]): number {
   const s = src.s;
-  const e = new dom.Element(
+  const e = new dom.ServerElement(
     p.doc, s.substring(i1, i2),
     src.loc(i1 - 1, i2)
-  ).linkTo(p);
+  );
+  p.appendChild(e);
   i1 = parseAttributes(e, src, i2, errors);
   i1 = skipBlanks(s, i1);
   let selfclose = false;
@@ -146,10 +147,10 @@ function parseElement(p: dom.Element, src: Source, i1: number, i2: number, error
         throw new Error();
       }
       if (res.i0 > i1) {
-        new dom.Text(
+        e.appendChild(new dom.ServerText(
           e.doc, s.substring(i1, res.i0),
           src.loc(i1, res.i0)
-        ).linkTo(e);
+        ));
       }
       i1 = res.i2;
     } else {
@@ -161,7 +162,7 @@ function parseElement(p: dom.Element, src: Source, i1: number, i2: number, error
   return i1;
 }
 
-function parseAttributes(e: dom.Element, src: Source, i2: number, errors: PageError[]) {
+function parseAttributes(e: dom.ServerElement, src: Source, i2: number, errors: PageError[]) {
   const s = src.s;
   let i1 = skipBlanksAndComments(s, i2);
   while ((i2 = skipName(src, i1, true)) > i1) {
@@ -174,8 +175,8 @@ function parseAttributes(e: dom.Element, src: Source, i2: number, errors: PageEr
       ));
       throw Error();
     }
-    const a = new dom.Attribute(
-      e.doc, e, name, '',
+    const a = new dom.ServerAttribute(
+      e.doc, e, name, null,
       src.loc(i1, i2)
     );
     i1 = skipBlanksAndComments(s, i2);
@@ -209,7 +210,7 @@ function parseAttributes(e: dom.Element, src: Source, i2: number, errors: PageEr
 }
 
 function parseValue(
-  p: dom.Element, a: dom.Attribute, src: Source, i1: number,
+  p: dom.ServerElement, a: dom.ServerAttribute, src: Source, i1: number,
   quote: number, term: string, errors: PageError[]
 ) {
   if (quote !== DOLLAR) {
@@ -220,7 +221,7 @@ function parseValue(
 }
 
 function parseLiteralValue(
-  p: dom.Element, a: dom.Attribute, src: Source, i1: number,
+  p: dom.ServerElement, a: dom.ServerAttribute, src: Source, i1: number,
   quote: number, term: string, errors: PageError[]
 ) {
   const s = src.s;
@@ -249,7 +250,7 @@ function parseLiteralValue(
 }
 
 function parseExpressionValue(
-  p: dom.Element, a: dom.Attribute, src: Source, i1: number, errors: PageError[]
+  p: dom.ServerElement, a: dom.ServerAttribute, src: Source, i1: number, errors: PageError[]
 ) {
   const s = src.s;
   const exp = parseExpression(p, src, i1, errors);
@@ -273,7 +274,7 @@ function parseExpressionValue(
   return i2;
 }
 
-function parseText(p: dom.Element, src: Source, i1: number, i2: number, errors: PageError[]) {
+function parseText(p: dom.ServerElement, src: Source, i1: number, i2: number, errors: PageError[]) {
   if (ATOMIC_TEXT_TAGS.has(p.name)) {
     parseAtomicText(p, src, i1, i2, errors);
   } else {
@@ -281,12 +282,12 @@ function parseText(p: dom.Element, src: Source, i1: number, i2: number, errors: 
   }
 }
 
-function parseAtomicText(p: dom.Element, src: Source, i1: number, i2: number, errors: PageError[]) {
+function parseAtomicText(p: dom.ServerElement, src: Source, i1: number, i2: number, errors: PageError[]) {
   const s = src.s;
   const k = s.indexOf(LEXP, i1);
   if (k < 0 || k >= i2) {
     // static text
-    new dom.Text(p.doc, s.substring(i1, i2), src.loc(i1, i2)).linkTo(p);
+    p.appendChild(new dom.ServerText(p.doc, s.substring(i1, i2), src.loc(i1, i2)));
     return;
   }
   const exps = new Array<acorn.Expression>();
@@ -341,7 +342,7 @@ function parseAtomicText(p: dom.Element, src: Source, i1: number, i2: number, er
     });
   }
   if (exps.length === 1) {
-    new dom.Text(p.doc, exps[0], src.loc(i1, i2)).linkTo(p);
+    p.appendChild(new dom.ServerText(p.doc, exps[0], src.loc(i1, i2)));
     return;
   }
   function concat(n: number): acorn.BinaryExpression {
@@ -358,19 +359,19 @@ function parseAtomicText(p: dom.Element, src: Source, i1: number, i2: number, er
     };
   }
   const exp = concat(exps.length - 1);
-  new dom.Text(p.doc, exp, src.loc(i1, i2)).linkTo(p);
+  p.appendChild(new dom.ServerText(p.doc, exp, src.loc(i1, i2)));
 }
 
-function parseSplittableText(p: dom.Element, src: Source, i1: number, i2: number, errors: PageError[]) {
+function parseSplittableText(p: dom.ServerElement, src: Source, i1: number, i2: number, errors: PageError[]) {
   const s = src.s;
   for (let j1 = i1; j1 < i2;) {
     let j2 = s.indexOf(LEXP, j1);
     if (j2 < 0 || j2 >= i2) {
-      new dom.Text(p.doc, s.substring(j1, i2), src.loc(j1, i2)).linkTo(p);
+      p.appendChild(new dom.ServerText(p.doc, s.substring(j1, i2), src.loc(j1, i2)));
       break;
     }
     if (j2 > j1) {
-      new dom.Text(p.doc, s.substring(j1, j2), src.loc(j1, j2)).linkTo(p);
+      p.appendChild(new dom.ServerText(p.doc, s.substring(j1, j2), src.loc(j1, j2)));
       j1 = j2;
     }
     const j0 = j2;
@@ -390,11 +391,11 @@ function parseSplittableText(p: dom.Element, src: Source, i1: number, i2: number
     if (s.charCodeAt(j1) === REXP) {
       j1++;
     }
-    new dom.Text(p.doc, exp, src.loc(j0, j1)).linkTo(p);
+    p.appendChild(new dom.ServerText(p.doc, exp, src.loc(j0, j1)));
   }
 }
 
-function parseExpression(p: dom.Element, src: Source, i1: number, errors: PageError[]) {
+function parseExpression(p: dom.ServerElement, src: Source, i1: number, errors: PageError[]) {
   const s = src.s;
   try {
     const exp = acorn.parseExpressionAt(s, i1, {
@@ -419,7 +420,7 @@ function parseExpression(p: dom.Element, src: Source, i1: number, errors: PageEr
 // utils
 // =============================================================================
 
-function hasAttribute(e: dom.Element, name: string): boolean {
+function hasAttribute(e: dom.ServerElement, name: string): boolean {
   for (const a of e.attributes) {
     if (a.name === name) {
       return true;
@@ -461,7 +462,7 @@ function skipBlanksAndComments(s: string, i: number) {
   return i;
 }
 
-function skipContent(p: dom.Element, tag: string, src: Source, i1: number, errors: PageError[]) {
+function skipContent(p: dom.ServerElement, tag: string, src: Source, i1: number, errors: PageError[]) {
   const s = src.s;
   let i2;
   while ((i2 = s.indexOf('</', i1)) >= 0) {
@@ -507,7 +508,7 @@ function skipName(src: Source, i: number, acceptsDots = false) {
   return i;
 }
 
-function skipComment(p: dom.Element, src: Source, i1: number, errors: PageError[]) {
+function skipComment(p: dom.ServerElement, src: Source, i1: number, errors: PageError[]) {
   const s = src.s;
   if (s.charCodeAt(i1) === '!'.charCodeAt(0) &&
     s.charCodeAt(i1 + 1) === DASH &&
@@ -539,7 +540,7 @@ export class Source {
   files: string[];
   linestarts!: number[];
   errors!: PageError[];
-  doc!: dom.Document;
+  doc!: dom.ServerDocument;
 
   constructor(s: string, fname: string) {
     this.reset(s);
@@ -551,7 +552,7 @@ export class Source {
     this.s = s = s.trimEnd();
     this.linestarts = [0];
     this.errors = [];
-    this.doc = new dom.Document(this.loc(0, s.length));
+    this.doc = new dom.ServerDocument(this.loc(0, s.length));
     for (let i1 = 0, i2; (i2 = s.indexOf('\n', i1)) >= 0; i1 = i2 + 1) {
       this.linestarts.push(i2 + 1);
     }

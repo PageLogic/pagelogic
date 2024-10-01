@@ -1,6 +1,6 @@
 import chokidar from 'chokidar';
 import { generate } from 'escodegen';
-import * as dom from '../html/dom';
+import * as dom from '../html/server-dom';
 import { PageError, Source } from '../html/parser';
 import { Preprocessor } from '../html/preprocessor';
 import { PageProps } from '../page/props';
@@ -18,7 +18,7 @@ export interface CompilerProps {
 
 export interface CompiledPage {
   errors: PageError[];
-  doc?: dom.Document;
+  doc?: dom.ServerDocument;
   props?: PageProps;
 }
 
@@ -84,7 +84,7 @@ export class Compiler {
     const comp = compile(source, this.props.csr);
     return {
       errors: comp.errors,
-      doc: comp.glob.doc,
+      doc: comp.glob.doc as dom.ServerDocument,
       props: comp.glob.props
     };
   }
@@ -107,15 +107,18 @@ export function compile(src: Source, csr?: boolean): CompilerPage {
     ));
   }
   if (csr) {
-    const doc = glob.doc;
+    const doc = glob.doc as dom.ServerDocument;
     
-    const script1 = new dom.Element(doc, 'script', doc.loc).linkTo(doc.body!);
+    const script1 = new dom.ServerElement(doc, 'script', doc.loc);
+    doc.body!.appendChild(script1);
     script1.setAttribute('id', k.CLIENT_PROPS_SCRIPT_ID);
     const code = `\n${k.CLIENT_PROPS_SCRIPT_GLOBAL} = ${glob.js}\n`;
-    new dom.Text(doc, code, doc.loc).linkTo(script1);
+    script1.appendChild(new dom.ServerText(doc, code, doc.loc));
 
-    const script2 = new dom.Element(doc, 'script', doc.loc).linkTo(doc.body!);
+    const script2 = new dom.ServerElement(doc, 'script', doc.loc);
+    doc.body!.appendChild(script2);
     script2.setAttribute('id', k.CLIENT_CODE_SCRIPT_ID);
+    script2.setAttribute('async', null);
     script2.setAttribute('src', k.CLIENT_CODE_REQ);
   }
   return page;

@@ -5,6 +5,7 @@ import { describe } from 'mocha';
 import path from 'path';
 import * as dom from '../../src/html/dom';
 import * as parser from '../../src/html/parser';
+import { ServerElement } from '../../src/html/server-dom';
 
 const docroot = path.join(__dirname, 'parser');
 
@@ -144,7 +145,7 @@ describe('html/parser', () => {
     });
 
     { // root attributes
-      const a1 = root.attributes[0] as dom.Attribute;
+      const a1 = (root as ServerElement).attributes[0] as dom.Attribute;
       assert.equal(a1.name, ':title');
       assert.deepEqual(a1.loc, {
         source: 'inline',
@@ -166,7 +167,7 @@ describe('html/parser', () => {
         start: { line: 1, column: 15 },
         end: { line: 1, column: 23 },
       });
-      const a2 = root.attributes[1] as dom.Attribute;
+      const a2 = (root as ServerElement).attributes[1] as dom.Attribute;
       assert.equal(a2.name, 'lang');
       assert.deepEqual(a2.loc, {
         source: 'inline',

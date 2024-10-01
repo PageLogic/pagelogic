@@ -1,4 +1,4 @@
-import { Element } from '../html/dom';
+import * as dom from '../html/dom';
 import * as k from '../page/consts';
 import { Page } from '../page/page';
 import { ScopeProps, ValueProps } from '../page/props';
@@ -10,7 +10,8 @@ export class RuntimePage extends Page {
 
   override init() {
     const load = (props: ScopeProps, p: Scope) => {
-      const e = this.glob.doc.domIdElements[props.dom];
+      // const e = (this.glob.doc as ServerDocument).domIdElements[props.dom];
+      const e = this.glob.getElement(props.dom);
       const s = this.newScope(props.dom, e)
         .setName(props.name)
         .setValues(this, props.values)
@@ -23,7 +24,7 @@ export class RuntimePage extends Page {
     this.refresh(this.root);
   }
 
-  override newScope(id: number, e: Element): Scope {
+  override newScope(id: number, e: dom.Element): Scope {
     return new Scope(id, e);
   }
 

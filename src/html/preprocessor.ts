@@ -1,5 +1,5 @@
 import { DIRECTIVE_TAG_PREFIX, parse, Source } from './parser';
-import * as dom from './dom';
+import * as dom from './server-dom';
 import fs from 'fs';
 import path from 'path';
 
@@ -32,7 +32,7 @@ export class Preprocessor {
 
   protected async loadSource(
     fname: string, currDir: string, main: Source,
-    nesting: number, once = false, from?: dom.Element
+    nesting: number, once = false, from?: dom.ServerElement
   ): Promise<Source | undefined> {
     if (nesting >= MAX_NESTING) {
       main.addError('error', 'Too many nested inclusions', from?.loc);
@@ -49,10 +49,10 @@ export class Preprocessor {
     }
     const dir = path.dirname(loaded.relPath);
 
-    function flattenGroups(p: dom.Element) {
+    function flattenGroups(p: dom.ServerElement) {
       for (let i = 0; i < p.children.length;) {
         if (p.children[i].type === 'element') {
-          const e = p.children[i] as dom.Element;
+          const e = p.children[i] as dom.ServerElement;
           if (e.name === GROUP_DIRECTIVE_TAG) {
             p.children.splice(i, 1, ...e.children);
             continue;
@@ -64,14 +64,14 @@ export class Preprocessor {
     }
     flattenGroups(source.doc.documentElement!);
 
-    function removeTripleComments(p: dom.Element) {
+    function removeTripleComments(p: dom.ServerElement) {
       for (let i = 0; i < p.children.length;) {
         if (
           p.children[i].type !== 'comment' ||
-          !(p.children[i] as dom.Comment).value.startsWith('-')
+          !(p.children[i] as dom.ServerComment).value.startsWith('-')
         ) {
           if (p.children[i].type === 'element') {
-            removeTripleComments(p.children[i] as dom.Element);
+            removeTripleComments(p.children[i] as dom.ServerElement);
           }
           i++;
           continue;
@@ -90,7 +90,7 @@ export class Preprocessor {
 
   protected async loadText(
     fname: string, currDir: string, main: Source,
-    once = false, from?: dom.Element
+    once = false, from?: dom.ServerElement
   ): Promise<{ text: string, relPath: string } | undefined> {
     if (fname.startsWith('/')) {
       currDir = '';
@@ -122,13 +122,13 @@ export class Preprocessor {
   // ===========================================================================
 
   protected async processIncludes(
-    doc: dom.Document, currDir: string, main: Source, nesting: number
+    doc: dom.ServerDocument, currDir: string, main: Source, nesting: number
   ) {
     const includes = new Array<Include>();
-    const collectIncludes = (p: dom.Element) => {
+    const collectIncludes = (p: dom.ServerElement) => {
       for (const n of p.children) {
         if (n.type === 'element') {
-          const e = n as dom.Element;
+          const e = n as dom.ServerElement;
           if (e.name === INCLUDE_DIRECTIVE_TAG) {
             includes.push({ name: e.name, parent: p, node: e });
           } else {
@@ -177,8 +177,8 @@ export class Preprocessor {
     if (!loaded) {
       return;
     }
-    const e = new dom.Element(d.node.doc, as, d.node.loc);
-    new dom.Text(e.doc, loaded.text, d.node.loc, false).linkTo(e);
+    const e = new dom.ServerElement(d.node.doc, as, d.node.loc);
+    e.appendChild(new dom.ServerText(e.doc, loaded.text, d.node.loc, false));
     d.parent.children.splice(i, 0, e);
   }
 
@@ -200,13 +200,13 @@ export class Preprocessor {
     // include contents
     const nn = [...rootElement.children];
     if (nn.length > 0) {
-      const n = nn[0] as dom.Text;
+      const n = nn[0] as dom.ServerText;
       if (n.type === 'text' && typeof n.value === 'string' && /^\s*$/.test(n.value)) {
         nn.shift();
       }
     }
     if (nn.length > 0) {
-      const n = nn[nn.length - 1] as dom.Text;
+      const n = nn[nn.length - 1] as dom.ServerText;
       if (n.type === 'text' && typeof n.value === 'string' && /^\s*$/.test(n.value)) {
         nn.pop();
       }
@@ -214,7 +214,7 @@ export class Preprocessor {
     d.parent.children.splice(i, 0, ...nn);
   }
 
-  protected applyIncludedAttributes(directive: Include, rootElement: dom.Element) {
+  protected applyIncludedAttributes(directive: Include, rootElement: dom.ServerElement) {
     const existing = directive.parent.getAttributeNames();
     for (const attr of rootElement.attributes) {
       const name = attr.name;
@@ -227,6 +227,6 @@ export class Preprocessor {
 
 export type Include = {
   name: string,
-  node: dom.Element,
-  parent: dom.Element,
+  node: dom.ServerElement,
+  parent: dom.ServerElement,
 };

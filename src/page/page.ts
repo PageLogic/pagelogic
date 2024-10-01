@@ -1,4 +1,4 @@
-import { Element } from '../html/dom';
+import { ServerElement } from '../html/server-dom';
 import { Global } from './global';
 import { ValueProps } from './props';
 import { Scope } from './scope';
@@ -14,7 +14,7 @@ export abstract class Page {
   }
 
   abstract init(): void;
-  abstract newScope(id: number, e: Element): Scope;
+  abstract newScope(id: number, e: ServerElement): Scope;
   abstract newValue(page: Page, scope: Scope, name: string, props: ValueProps): Value;
 
   // ===========================================================================

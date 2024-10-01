@@ -1,7 +1,8 @@
 import {
   ArrayExpression, BlockStatement, Expression, ObjectExpression
 } from 'acorn';
-import { Attribute, Comment, Element, SourceLocation, Text } from '../html/dom';
+import { ServerAttribute, ServerComment, SourceLocation, ServerText, ServerDocument, ServerElement, ServerNode } from '../html/server-dom';
+import * as dom from '../html/dom';
 import { PageError } from '../html/parser';
 import * as k from '../page/consts';
 import * as pg from '../page/page';
@@ -28,7 +29,7 @@ export class CompilerPage extends pg.Page {
   errors!: PageError[];
 
   override init() {
-    const load = (e: Element, s: Scope, p: ArrayExpression, v?: ObjectExpression) => {
+    const load = (e: ServerElement, s: Scope, p: ArrayExpression, v?: ObjectExpression) => {
       if (this.needsScope(e)) {
         const l = e.loc;
         const id = this.scopes.length;
@@ -53,26 +54,27 @@ export class CompilerPage extends pg.Page {
         p = astArrayExpression(l);
         o.properties.push(astProperty('children', p, l));
       }
-      e.children.forEach(n => {
+      e.children.forEach((n: dom.Node) => {
         if (n.type === 'element') {
-          load(n as Element, s, p, v);
+          load(n as ServerElement, s, p, v);
         }
       });
       return s;
     };
 
-    this.ast = astObjectExpression(this.glob.doc.loc);
-    const p = astArrayExpression(this.glob.doc.loc);
-    this.ast.properties.push(astProperty('root', p, this.glob.doc.loc));
+    const doc = this.glob.doc as ServerDocument;
+    this.ast = astObjectExpression(doc.loc);
+    const p = astArrayExpression(doc.loc);
+    this.ast.properties.push(astProperty('root', p, doc.loc));
     this.scopes = [];
     this.objects = [];
     this.errors = [];
-    this.root = load(this.glob.doc.documentElement!, this.glob, p);
+    this.root = load(doc.documentElement! as ServerElement, this.glob, p);
     !this.hasErrors() && qualifyPageIdentifiers(this);
     !this.hasErrors() && resolveValueDependencies(this);
   }
 
-  override newScope(id: number, e: Element): Scope {
+  override newScope(id: number, e: dom.Element): Scope {
     return new Scope(id, e);
   }
 
@@ -89,7 +91,7 @@ export class CompilerPage extends pg.Page {
     return false;
   }
 
-  needsScope(e: Element) {
+  needsScope(e: ServerElement) {
     // 1) special tagnames
     if (DEF_NAMES[e.name]) {
       return true;
@@ -106,8 +108,8 @@ export class CompilerPage extends pg.Page {
     return false;
   }
 
-  getName(e: Element) {
-    const attr = e.getAttributeNode(k.SRC_NAME_ATTR);
+  getName(e: ServerElement) {
+    const attr = e.getAttributeNode(k.SRC_NAME_ATTR) as ServerAttribute;
     if (attr) {
       const name = typeof attr.value === 'string' ? attr.value : null;
       if (/^[a-zA-z_]\w*$/.test(name ?? '')) {
@@ -120,9 +122,9 @@ export class CompilerPage extends pg.Page {
     return DEF_NAMES[e.name];
   }
 
-  collectAttributes(scope: Scope, e: Element, ret: ObjectExpression) {
+  collectAttributes(scope: Scope, e: ServerElement, ret: ObjectExpression) {
     for (let i = 0; i < e.attributes.length;) {
-      const a = e.attributes[i];
+      const a = e.attributes[i] as ServerAttribute;
       if (!k.SRC_ATTR_NAME_REGEX.test(a.name)) {
         const err = new PageError('error', 'invalid attribute name', a.loc);
         this.errors.push(err);
@@ -147,7 +149,7 @@ export class CompilerPage extends pg.Page {
     }
   }
 
-  collectSystemAttribute(scope: Scope, a: Attribute, ret: ObjectExpression) {
+  collectSystemAttribute(scope: Scope, a: ServerAttribute, ret: ObjectExpression) {
     const name = k.RT_SYS_VALUE_PREFIX
       + a.name.substring(k.SRC_SYSTEM_ATTR_PREFIX.length);
     switch (name) {
@@ -159,7 +161,7 @@ export class CompilerPage extends pg.Page {
     ret.properties.push(value);
   }
 
-  checkLiteralAttribute(a: Attribute): boolean {
+  checkLiteralAttribute(a: ServerAttribute): boolean {
     const ret = typeof a.value === 'string';
     if (!ret) {
       this.errors.push(new PageError(
@@ -171,31 +173,33 @@ export class CompilerPage extends pg.Page {
     return ret;
   }
 
-  collectValueAttribute(a: Attribute, ret: ObjectExpression) {
+  collectValueAttribute(a: ServerAttribute, ret: ObjectExpression) {
     const name = a.name.substring(k.SRC_LOGIC_ATTR_PREFIX.length);
     const value = this.makeValue(name, a.value, a.valueLoc!);
     ret.properties.push(value);
   }
 
-  collectNativeAttribute(a: Attribute, ret: ObjectExpression) {
+  collectNativeAttribute(a: ServerAttribute, ret: ObjectExpression) {
     const name = k.RT_ATTR_VALUE_PREFIX + a.name;
     const value = this.makeValue(name, a.value, a.valueLoc!);
     ret.properties.push(value);
   }
 
-  collectTexts(e: Element, v: ObjectExpression) {
+  collectTexts(e: ServerElement, v: ObjectExpression) {
     let count = 0;
-    const f = (e: Element) => {
+    const f = (e: ServerElement) => {
       for (let i = 0; i < e.children.length;) {
-        const n = e.children[i];
-        if (n.type === 'element' && !this.needsScope(n as Element)) {
-          f(n as Element);
-        } else if (n.type === 'text' && typeof (n as Text).value !== 'string') {
+        const n = e.children[i] as ServerNode;
+        if (n.type === 'element' && !this.needsScope(n as ServerElement)) {
+          f(n as ServerElement);
+        } else if (n.type === 'text' && typeof (n as ServerText).value !== 'string') {
           const name = k.RT_TEXT_VALUE_PREFIX + count;
-          const value = this.makeValue(name, (n as Text).value, n.loc);
+          const value = this.makeValue(name, (n as ServerText).value, n.loc);
           v.properties.push(value);
-          new Comment(e.doc, k.HTML_TEXT_MARKER1 + (count++), n.loc).linkTo(e, n);
-          new Comment(e.doc, k.HTML_TEXT_MARKER2, n.loc).linkTo(e, n.nextSibling ?? undefined);
+          const c1 = new ServerComment(e.doc, k.HTML_TEXT_MARKER1 + (count++), n.loc);
+          e.insertBefore(c1, n);
+          const c2 = new ServerComment(e.doc, k.HTML_TEXT_MARKER2, n.loc);
+          e.insertBefore(c2, (n.nextSibling as ServerNode) ?? null);
           i += 2;
         }
         i++;
@@ -204,14 +208,14 @@ export class CompilerPage extends pg.Page {
     f(e);
   }
 
-  makeValue(name: string, value: string | Expression, l: SourceLocation) {
+  makeValue(name: string, value: string | Expression | null, l: SourceLocation) {
     const o = astObjectExpression(l);
     const p = astProperty('exp', this.makeValueFunction(value, l), l);
     o.properties.push(p);
     return astProperty(name, o, l);
   }
 
-  makeValueFunction(value: string | Expression, l: SourceLocation): Expression {
+  makeValueFunction(value: string | Expression | null, l: SourceLocation): Expression {
     const body: BlockStatement = {
       type: 'BlockStatement',
       body: [
