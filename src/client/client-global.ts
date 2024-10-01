@@ -1,21 +1,20 @@
-import { Global } from '../page/global';
-import * as k from '../page/consts';
 import * as dom from '../html/dom';
+import * as k from '../page/consts';
+import { Global } from '../page/global';
 
-//TODO: it shouldn't import dom.ts
 export class ClientGlobal extends Global {
+  domIdElements!: dom.Element[];
 
   override init() {
-    //TODO
+    const doc = this.doc as unknown as Document;
+    this.domIdElements = [];
+    doc.querySelectorAll(`*[${k.DOM_ID_ATTR}]`).forEach(e => {
+      const id = parseInt(e.getAttribute(k.DOM_ID_ATTR)!);
+      this.domIdElements[id] = e as unknown as dom.Element;
+    });
   }
 
-  // get doc(): Document {
-  //   return this.e as unknown as Document;
-  // }
-
   override getElement(dom: number): dom.Element {
-    const doc = this.doc as unknown as Document;
-    const ret = doc.querySelector(`*[${k.DOM_ID_ATTR}="${dom}"]`)!;
-    return ret as unknown as dom.Element;
+    return this.domIdElements[dom];
   }
 }

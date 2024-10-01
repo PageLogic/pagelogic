@@ -1,3 +1,4 @@
+import { Document } from '../html/dom';
 import { ServerDocument, ServerElement } from '../html/server-dom';
 import { Global } from '../page/global';
 import { PageProps } from '../page/props';
@@ -5,7 +6,7 @@ import { PageProps } from '../page/props';
 export class ServerGlobal extends Global {
   js?: string;
 
-  constructor(doc: ServerDocument, props: PageProps) {
+  constructor(doc: Document, props: PageProps) {
     super(doc, props);
   }
 
