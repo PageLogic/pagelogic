@@ -1,6 +1,7 @@
 import * as acorn from 'acorn';
 import { DOM_ID_ATTR } from '../page/consts';
 import * as dom from './server-dom';
+import { NodeType } from './dom';
 
 export const DIRECTIVE_TAG_PREFIX = ':';
 
@@ -31,7 +32,7 @@ export function parse(s: string, fname: string, ret?: Source, sanitize = true): 
     doc.documentElement || doc.children.push(new dom.ServerElement(doc, 'HTML', doc.loc));
     let head, body;
     doc.documentElement!.children.forEach(n => {
-      if (n.type === 'element') {
+      if (n.nodeType === NodeType.ELEMENT) {
         const e = n as unknown as dom.ServerElement;
         e.tagName === 'HEAD' && (head = e);
         e.tagName === 'BODY' && (body = e);

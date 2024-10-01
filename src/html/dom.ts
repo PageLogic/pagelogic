@@ -1,8 +1,15 @@
+export const NodeType = {
+  ELEMENT: 1,
+  ATTRIBUTE: 2,
+  TEXT: 3,
+  COMMENT: 8,
+  DOCUMENT: 9,
+}
 
 export interface Node {
   doc: Document | null;
   parent: Element | null;
-  type: unknown;
+  nodeType: unknown;
   loc: unknown;
 
   unlink(): void;

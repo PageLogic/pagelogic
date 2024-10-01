@@ -1,5 +1,5 @@
 import * as acorn from 'acorn';
-import { Attribute, Element, Node, Text, Document } from './dom';
+import { Attribute, Element, Node, Text, Document, NodeType } from './dom';
 import { DIRECTIVE_TAG_PREFIX } from './parser';
 
 export const VOID_ELEMENTS = new Set([
@@ -7,8 +7,6 @@ export const VOID_ELEMENTS = new Set([
   'LINK', 'META', 'PARAM', 'SOURCE', 'TRACK', 'WBR',
   'COMMAND', 'KEYGEN', 'MENUITEM'
 ]);
-
-export type ServerNodeType = 'node' | 'text' | 'comment' | 'element' | 'attribute' | 'document';
 
 export interface SourceLocation extends acorn.SourceLocation {
   i1: number;
@@ -18,17 +16,17 @@ export interface SourceLocation extends acorn.SourceLocation {
 export abstract class ServerNode implements Node {
   doc: ServerDocument | null;
   parent: ServerElement | null;
-  type: ServerNodeType;
+  nodeType: number;
   loc: SourceLocation;
 
   constructor(
     doc: ServerDocument | null,
-    type: ServerNodeType,
+    type: number,
     loc: SourceLocation
   ) {
     this.doc = doc;
     this.parent = null;
-    this.type = type;
+    this.nodeType = type;
     this.loc = loc;
   }
 
@@ -53,7 +51,7 @@ export abstract class ServerNode implements Node {
 
   toJSON(): object {
     return {
-      type: this.type,
+      type: this.nodeType,
       loc: this.doc?.jsonLoc ? this.loc : null
     };
   }
@@ -78,7 +76,7 @@ export class ServerText extends ServerNode implements Text {
     loc: SourceLocation,
     escaping = true
   ) {
-    super(doc, 'text', loc);
+    super(doc, NodeType.TEXT, loc);
     this.value = typeof value === 'string' && escaping
       ? unescapeText(value)
       : value;
@@ -87,7 +85,7 @@ export class ServerText extends ServerNode implements Text {
 
   toJSON(): object {
     return {
-      type: this.type,
+      type: this.nodeType,
       value: this.value,
       loc: this.doc?.jsonLoc ? this.loc : null
     };
@@ -116,13 +114,13 @@ export class ServerComment extends ServerNode {
     value: string,
     loc: SourceLocation
   ) {
-    super(doc, 'comment', loc);
+    super(doc, NodeType.COMMENT, loc);
     this.value = value;
   }
 
   toJSON(): object {
     return {
-      type: this.type,
+      type: this.nodeType,
       value: this.value,
       loc: this.doc?.jsonLoc ? this.loc : null
     };
@@ -154,7 +152,7 @@ export class ServerAttribute extends ServerNode implements Attribute {
     value: string | acorn.Expression | null,
     loc: SourceLocation
   ) {
-    super(doc, 'attribute', loc);
+    super(doc, NodeType.ATTRIBUTE, loc);
     this.name = name;
     this.value = value;
     parent && parent.attributes.push(this);
@@ -162,7 +160,7 @@ export class ServerAttribute extends ServerNode implements Attribute {
 
   toJSON(): object {
     return {
-      type: this.type,
+      type: this.nodeType,
       name: this.name,
       value: this.value,
       quote: this.quote,
@@ -204,7 +202,7 @@ export class ServerElement extends ServerNode implements Element {
     name: string,
     loc: SourceLocation
   ) {
-    super(doc, 'element', loc);
+    super(doc, NodeType.ELEMENT, loc);
     this.tagName = name.toUpperCase();
     this.children = [];
     this.attributes = [];
@@ -278,7 +276,7 @@ export class ServerElement extends ServerNode implements Element {
 
   toJSON(): object {
     return {
-      type: this.type,
+      type: this.nodeType,
       name: this.tagName,
       attributes: this.attributes,
       children: this.children,
@@ -329,12 +327,12 @@ export class ServerDocument extends ServerElement implements Document {
         : loc
     );
     this.doc = this;
-    this.type = 'document';
+    this.nodeType = NodeType.DOCUMENT;
   }
 
   get documentElement(): ServerElement | null {
     for (const e of this.children) {
-      if (e.type === 'element') {
+      if (e.nodeType === NodeType.ELEMENT) {
         return e as ServerElement;
       }
     }
@@ -345,7 +343,7 @@ export class ServerDocument extends ServerElement implements Document {
     const root = this.documentElement;
     if (root) {
       for (const e of root.children ?? []) {
-        if (e.type === 'element' && (e as ServerElement).tagName === 'HEAD') {
+        if (e.nodeType === NodeType.ELEMENT && (e as ServerElement).tagName === 'HEAD') {
           return e as ServerElement;
         }
       }
@@ -357,7 +355,7 @@ export class ServerDocument extends ServerElement implements Document {
     const root = this.documentElement;
     if (root) {
       for (const e of root.children ?? []) {
-        if (e.type === 'element' && (e as ServerElement).tagName === 'BODY') {
+        if (e.nodeType === NodeType.ELEMENT && (e as ServerElement).tagName === 'BODY') {
           return e as ServerElement;
         }
       }
@@ -367,7 +365,7 @@ export class ServerDocument extends ServerElement implements Document {
 
   toJSON(): object {
     return {
-      type: this.type,
+      type: this.nodeType,
       children: this.children,
       loc: this.jsonLoc ? this.loc : null
     };
@@ -375,7 +373,7 @@ export class ServerDocument extends ServerElement implements Document {
 
   toMarkup(ret: string[]): void {
     for (const n of this.children) {
-      if (n.type === 'element') {
+      if (n.nodeType === NodeType.ELEMENT) {
         (n as ServerNode).toMarkup(ret);
         break;
       }

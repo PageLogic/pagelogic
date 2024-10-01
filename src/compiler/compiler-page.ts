@@ -55,7 +55,7 @@ export class CompilerPage extends pg.Page {
         o.properties.push(astProperty('children', p, l));
       }
       e.children.forEach((n: dom.Node) => {
-        if (n.type === 'element') {
+        if (n.nodeType === dom.NodeType.ELEMENT) {
           load(n as ServerElement, s, p, v);
         }
       });
@@ -190,9 +190,9 @@ export class CompilerPage extends pg.Page {
     const f = (e: ServerElement) => {
       for (let i = 0; i < e.children.length;) {
         const n = e.children[i] as ServerNode;
-        if (n.type === 'element' && !this.needsScope(n as ServerElement)) {
+        if (n.nodeType === dom.NodeType.ELEMENT && !this.needsScope(n as ServerElement)) {
           f(n as ServerElement);
-        } else if (n.type === 'text' && typeof (n as ServerText).value !== 'string') {
+        } else if (n.nodeType === dom.NodeType.TEXT && typeof (n as ServerText).value !== 'string') {
           const name = k.RT_TEXT_VALUE_PREFIX + count;
           const value = this.makeValue(name, (n as ServerText).value, n.loc);
           v.properties.push(value);

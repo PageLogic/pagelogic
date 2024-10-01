@@ -1,3 +1,4 @@
+import { NodeType } from './dom';
 import { DIRECTIVE_TAG_PREFIX, parse, Source } from './parser';
 import * as dom from './server-dom';
 import fs from 'fs';
@@ -51,7 +52,7 @@ export class Preprocessor {
 
     function flattenGroups(p: dom.ServerElement) {
       for (let i = 0; i < p.children.length;) {
-        if (p.children[i].type === 'element') {
+        if (p.children[i].nodeType === NodeType.ELEMENT) {
           const e = p.children[i] as dom.ServerElement;
           if (e.tagName === GROUP_DIRECTIVE_TAG) {
             p.children.splice(i, 1, ...e.children);
@@ -67,10 +68,10 @@ export class Preprocessor {
     function removeTripleComments(p: dom.ServerElement) {
       for (let i = 0; i < p.children.length;) {
         if (
-          p.children[i].type !== 'comment' ||
+          p.children[i].nodeType !== NodeType.COMMENT ||
           !(p.children[i] as dom.ServerComment).value.startsWith('-')
         ) {
-          if (p.children[i].type === 'element') {
+          if (p.children[i].nodeType === NodeType.ELEMENT) {
             removeTripleComments(p.children[i] as dom.ServerElement);
           }
           i++;
@@ -127,7 +128,7 @@ export class Preprocessor {
     const includes = new Array<Include>();
     const collectIncludes = (p: dom.ServerElement) => {
       for (const n of p.children) {
-        if (n.type === 'element') {
+        if (n.nodeType === NodeType.ELEMENT) {
           const e = n as dom.ServerElement;
           if (e.tagName === INCLUDE_DIRECTIVE_TAG) {
             includes.push({ name: e.tagName, parent: p, node: e });
@@ -201,13 +202,13 @@ export class Preprocessor {
     const nn = [...rootElement.children];
     if (nn.length > 0) {
       const n = nn[0] as dom.ServerText;
-      if (n.type === 'text' && typeof n.value === 'string' && /^\s*$/.test(n.value)) {
+      if (n.nodeType === NodeType.TEXT && typeof n.value === 'string' && /^\s*$/.test(n.value)) {
         nn.shift();
       }
     }
     if (nn.length > 0) {
       const n = nn[nn.length - 1] as dom.ServerText;
-      if (n.type === 'text' && typeof n.value === 'string' && /^\s*$/.test(n.value)) {
+      if (n.nodeType === NodeType.TEXT && typeof n.value === 'string' && /^\s*$/.test(n.value)) {
         nn.pop();
       }
     }

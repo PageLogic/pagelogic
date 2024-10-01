@@ -1,4 +1,4 @@
-import { Comment, Element, Text } from '../html/dom';
+import { Comment, Element, NodeType, Text } from '../html/dom';
 import * as k from './consts';
 import { Page } from './page';
 import { ValueProps } from './props';
@@ -62,16 +62,17 @@ export class Scope {
   }
 
   domText(id: string): Text | undefined {
+    debugger;//tempdebug
     const key = k.HTML_TEXT_MARKER1 + id;
     const f = (e: Element): Text | undefined => {
       for (let i = 0; i < e.children.length; i++) {
         const n = e.children[i];
-        if (n.type === 'element') {
+        if (n.nodeType === NodeType.ELEMENT) {
           const ret = f(n as Element);
           if (ret) {
             return ret;
           }
-        } else if (n.type === 'comment' && (n as Comment).value === key) {
+        } else if (n.nodeType === NodeType.COMMENT && (n as Comment).value === key) {
           return e.children[i + 1] as Text;
         }
       }

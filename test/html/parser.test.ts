@@ -179,7 +179,7 @@ describe('html/parser', () => {
     }
 
     const rootText1 = root.children[0]!;
-    assert.equal(rootText1.type, 'text');
+    assert.equal(rootText1.nodeType, dom.NodeType.TEXT);
     assert.deepEqual(rootText1.loc, {
       source: 'inline',
       start: { line: 3, column: 16 },
@@ -211,7 +211,7 @@ describe('html/parser', () => {
       // style text is atomic
       assert.equal(style.children.length, 1);
       const styleText = style.children[0] as dom.Text;
-      assert.equal(styleText.type, 'text');
+      assert.equal(styleText.nodeType, dom.NodeType.TEXT);
       assert.equal(typeof styleText.value, 'object');
       assert.deepEqual(styleText.loc, {
         source: 'inline',
@@ -223,7 +223,7 @@ describe('html/parser', () => {
     }
 
     const rootText2 = root.children[2]!;
-    assert.equal(rootText2.type, 'text');
+    assert.equal(rootText2.nodeType, dom.NodeType.TEXT);
     assert.deepEqual(rootText2.loc, {
       source: 'inline',
       start: { line: 8, column: 17 },
@@ -244,7 +244,7 @@ describe('html/parser', () => {
 
     { // body text
       const bodyText1 = body.children[0] as dom.Text;
-      assert.equal(bodyText1.type, 'text');
+      assert.equal(bodyText1.nodeType, dom.NodeType.TEXT);
       assert.equal(typeof bodyText1.value, 'string');
       assert.deepEqual(bodyText1.loc, {
         source: 'inline',
@@ -255,7 +255,7 @@ describe('html/parser', () => {
       });
 
       const bodyText2 = body.children[1] as dom.Text;
-      assert.equal(bodyText2.type, 'text');
+      assert.equal(bodyText2.nodeType, dom.NodeType.TEXT);
       assert.equal(typeof bodyText2.value, 'object');
       assert.deepEqual(bodyText2.loc, {
         source: 'inline',
@@ -266,7 +266,7 @@ describe('html/parser', () => {
       });
 
       const bodyText3 = body.children[2] as dom.Text;
-      assert.equal(bodyText3.type, 'text');
+      assert.equal(bodyText3.nodeType, dom.NodeType.TEXT);
       assert.deepEqual(bodyText3.loc, {
         source: 'inline',
         start: { line: 10, column: 12 },
@@ -277,7 +277,7 @@ describe('html/parser', () => {
     }
 
     const rootText3 = root.children[4]!;
-    assert.equal(rootText3.type, 'text');
+    assert.equal(rootText3.nodeType, dom.NodeType.TEXT);
     assert.deepEqual(rootText3.loc, {
       source: 'inline',
       start: { line: 11, column: 9 },
