@@ -16,11 +16,11 @@ export interface Node {
 }
 
 export interface Text extends Node {
-  value: unknown;
+  textContent: unknown;
 }
 
 export interface Comment extends Node {
-  value: unknown;  
+  textContent: string;  
 }
 
 export interface Element extends Node {

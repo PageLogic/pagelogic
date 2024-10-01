@@ -1,5 +1,5 @@
 import * as acorn from 'acorn';
-import { Attribute, Element, Node, Text, Document, NodeType } from './dom';
+import { Attribute, Element, Node, Text, Document, NodeType, Comment } from './dom';
 import { DIRECTIVE_TAG_PREFIX } from './parser';
 
 export const VOID_ELEMENTS = new Set([
@@ -67,7 +67,7 @@ export abstract class ServerNode implements Node {
 }
 
 export class ServerText extends ServerNode implements Text {
-  value: string | acorn.Expression;
+  textContent: string | acorn.Expression;
   escaping: boolean;
 
   constructor (
@@ -77,7 +77,7 @@ export class ServerText extends ServerNode implements Text {
     escaping = true
   ) {
     super(doc, NodeType.TEXT, loc);
-    this.value = typeof value === 'string' && escaping
+    this.textContent = typeof value === 'string' && escaping
       ? unescapeText(value)
       : value;
     this.escaping = escaping;
@@ -86,28 +86,28 @@ export class ServerText extends ServerNode implements Text {
   toJSON(): object {
     return {
       type: this.nodeType,
-      value: this.value,
+      value: this.textContent,
       loc: this.doc?.jsonLoc ? this.loc : null
     };
   }
 
   toMarkup(ret: string[]): void {
-    if (typeof this.value === 'string') {
+    if (typeof this.textContent === 'string') {
       ret.push(this.escaping
-        ? escape(this.value, '<>')
-        : this.value);
+        ? escape(this.textContent, '<>')
+        : this.textContent);
     }
   }
 
   clone(parent: ServerElement | null): ServerText {
-    const ret = new ServerText(this.doc, this.value, this.loc, this.escaping);
+    const ret = new ServerText(this.doc, this.textContent, this.loc, this.escaping);
     parent && parent.appendChild(ret); // ret.linkTo(parent);
     return ret;
   }
 }
 
-export class ServerComment extends ServerNode {
-  value: string;
+export class ServerComment extends ServerNode implements Comment {
+  textContent: string;  
 
   constructor(
     doc: ServerDocument | null,
@@ -115,25 +115,25 @@ export class ServerComment extends ServerNode {
     loc: SourceLocation
   ) {
     super(doc, NodeType.COMMENT, loc);
-    this.value = value;
+    this.textContent = value;
   }
 
   toJSON(): object {
     return {
       type: this.nodeType,
-      value: this.value,
+      value: this.textContent,
       loc: this.doc?.jsonLoc ? this.loc : null
     };
   }
 
   toMarkup(ret: string[]): void {
     ret.push('<!--');
-    ret.push(this.value);
+    ret.push(this.textContent);
     ret.push('-->');
   }
 
   clone(parent: ServerElement | null): ServerComment {
-    const ret = new ServerComment(this.doc, this.value, this.loc);
+    const ret = new ServerComment(this.doc, this.textContent, this.loc);
     parent && parent.appendChild(ret); // ret.linkTo(parent);
     return ret;
   }

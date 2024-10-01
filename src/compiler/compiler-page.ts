@@ -192,9 +192,9 @@ export class CompilerPage extends pg.Page {
         const n = e.childNodes[i] as ServerNode;
         if (n.nodeType === dom.NodeType.ELEMENT && !this.needsScope(n as ServerElement)) {
           f(n as ServerElement);
-        } else if (n.nodeType === dom.NodeType.TEXT && typeof (n as ServerText).value !== 'string') {
+        } else if (n.nodeType === dom.NodeType.TEXT && typeof (n as ServerText).textContent !== 'string') {
           const name = k.RT_TEXT_VALUE_PREFIX + count;
-          const value = this.makeValue(name, (n as ServerText).value, n.loc);
+          const value = this.makeValue(name, (n as ServerText).textContent, n.loc);
           v.properties.push(value);
           const c1 = new ServerComment(e.doc, k.HTML_TEXT_MARKER1 + (count++), n.loc);
           e.insertBefore(c1, n);

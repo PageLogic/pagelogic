@@ -42,8 +42,8 @@ export class RuntimePage extends Page {
     } else if (name.startsWith(k.RT_TEXT_VALUE_PREFIX)) {
       const key = name.substring(k.RT_TEXT_VALUE_PREFIX.length);
       const t = scope.domText(key)!;
-      ret.cb = (scope, v) => {
-        t.value = `${v != null ? v : ''}`;
+      ret.cb = (_, v) => {
+        t.textContent = `${v != null ? v : ''}`;
         return v;
       };
     }

@@ -212,7 +212,7 @@ describe('html/parser', () => {
       assert.equal(style.childNodes.length, 1);
       const styleText = style.childNodes[0] as dom.Text;
       assert.equal(styleText.nodeType, dom.NodeType.TEXT);
-      assert.equal(typeof styleText.value, 'object');
+      assert.equal(typeof styleText.textContent, 'object');
       assert.deepEqual(styleText.loc, {
         source: 'inline',
         start: { line: 4, column: 15 },
@@ -245,7 +245,7 @@ describe('html/parser', () => {
     { // body text
       const bodyText1 = body.childNodes[0] as dom.Text;
       assert.equal(bodyText1.nodeType, dom.NodeType.TEXT);
-      assert.equal(typeof bodyText1.value, 'string');
+      assert.equal(typeof bodyText1.textContent, 'string');
       assert.deepEqual(bodyText1.loc, {
         source: 'inline',
         start: { line: 9, column: 8 },
@@ -256,7 +256,7 @@ describe('html/parser', () => {
 
       const bodyText2 = body.childNodes[1] as dom.Text;
       assert.equal(bodyText2.nodeType, dom.NodeType.TEXT);
-      assert.equal(typeof bodyText2.value, 'object');
+      assert.equal(typeof bodyText2.textContent, 'object');
       assert.deepEqual(bodyText2.loc, {
         source: 'inline',
         start: { line: 10, column: 4 },

@@ -69,7 +69,7 @@ export class Preprocessor {
       for (let i = 0; i < p.childNodes.length;) {
         if (
           p.childNodes[i].nodeType !== NodeType.COMMENT ||
-          !(p.childNodes[i] as dom.ServerComment).value.startsWith('-')
+          !(p.childNodes[i] as dom.ServerComment).textContent.startsWith('-')
         ) {
           if (p.childNodes[i].nodeType === NodeType.ELEMENT) {
             removeTripleComments(p.childNodes[i] as dom.ServerElement);
@@ -202,13 +202,13 @@ export class Preprocessor {
     const nn = [...rootElement.childNodes];
     if (nn.length > 0) {
       const n = nn[0] as dom.ServerText;
-      if (n.nodeType === NodeType.TEXT && typeof n.value === 'string' && /^\s*$/.test(n.value)) {
+      if (n.nodeType === NodeType.TEXT && typeof n.textContent === 'string' && /^\s*$/.test(n.textContent)) {
         nn.shift();
       }
     }
     if (nn.length > 0) {
       const n = nn[nn.length - 1] as dom.ServerText;
-      if (n.nodeType === NodeType.TEXT && typeof n.value === 'string' && /^\s*$/.test(n.value)) {
+      if (n.nodeType === NodeType.TEXT && typeof n.textContent === 'string' && /^\s*$/.test(n.textContent)) {
         nn.pop();
       }
     }

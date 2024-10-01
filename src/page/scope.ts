@@ -62,7 +62,6 @@ export class Scope {
   }
 
   domText(id: string): Text | undefined {
-    debugger;//tempdebug
     const key = k.HTML_TEXT_MARKER1 + id;
     const f = (e: Element): Text | undefined => {
       for (let i = 0; i < e.childNodes.length; i++) {
@@ -72,8 +71,12 @@ export class Scope {
           if (ret) {
             return ret;
           }
-        } else if (n.nodeType === NodeType.COMMENT && (n as Comment).value === key) {
-          return e.childNodes[i + 1] as Text;
+        } else if (n.nodeType === NodeType.COMMENT && (n as Comment).textContent === key) {
+          let ret = e.childNodes[i + 1] as Text;
+          if (ret.nodeType !== NodeType.TEXT) {
+            console.log('---------------');//tempdebug
+          }
+          return ret;
         }
       }
     };
