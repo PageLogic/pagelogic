@@ -25,7 +25,7 @@ export interface Comment extends Node {
 
 export interface Element extends Node {
   tagName: string;
-  children: Node[];
+  childNodes: Node[];
 
   appendChild(n: Node): Node;
   insertBefore(n: Node, ref: Node | null): Node;

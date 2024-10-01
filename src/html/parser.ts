@@ -29,9 +29,9 @@ export function parse(s: string, fname: string, ret?: Source, sanitize = true): 
   if (sanitize) {
     // sanitize doc
     const doc = ret.doc as dom.ServerDocument;
-    doc.documentElement || doc.children.push(new dom.ServerElement(doc, 'HTML', doc.loc));
+    doc.documentElement || doc.childNodes.push(new dom.ServerElement(doc, 'HTML', doc.loc));
     let head, body;
-    doc.documentElement!.children.forEach(n => {
+    doc.documentElement!.childNodes.forEach(n => {
       if (n.nodeType === NodeType.ELEMENT) {
         const e = n as unknown as dom.ServerElement;
         e.tagName === 'HEAD' && (head = e);

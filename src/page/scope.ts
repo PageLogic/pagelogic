@@ -65,15 +65,15 @@ export class Scope {
     debugger;//tempdebug
     const key = k.HTML_TEXT_MARKER1 + id;
     const f = (e: Element): Text | undefined => {
-      for (let i = 0; i < e.children.length; i++) {
-        const n = e.children[i];
+      for (let i = 0; i < e.childNodes.length; i++) {
+        const n = e.childNodes[i];
         if (n.nodeType === NodeType.ELEMENT) {
           const ret = f(n as Element);
           if (ret) {
             return ret;
           }
         } else if (n.nodeType === NodeType.COMMENT && (n as Comment).value === key) {
-          return e.children[i + 1] as Text;
+          return e.childNodes[i + 1] as Text;
         }
       }
     };

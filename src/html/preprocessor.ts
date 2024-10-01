@@ -51,11 +51,11 @@ export class Preprocessor {
     const dir = path.dirname(loaded.relPath);
 
     function flattenGroups(p: dom.ServerElement) {
-      for (let i = 0; i < p.children.length;) {
-        if (p.children[i].nodeType === NodeType.ELEMENT) {
-          const e = p.children[i] as dom.ServerElement;
+      for (let i = 0; i < p.childNodes.length;) {
+        if (p.childNodes[i].nodeType === NodeType.ELEMENT) {
+          const e = p.childNodes[i] as dom.ServerElement;
           if (e.tagName === GROUP_DIRECTIVE_TAG) {
-            p.children.splice(i, 1, ...e.children);
+            p.childNodes.splice(i, 1, ...e.childNodes);
             continue;
           }
           flattenGroups(e);
@@ -66,18 +66,18 @@ export class Preprocessor {
     flattenGroups(source.doc.documentElement!);
 
     function removeTripleComments(p: dom.ServerElement) {
-      for (let i = 0; i < p.children.length;) {
+      for (let i = 0; i < p.childNodes.length;) {
         if (
-          p.children[i].nodeType !== NodeType.COMMENT ||
-          !(p.children[i] as dom.ServerComment).value.startsWith('-')
+          p.childNodes[i].nodeType !== NodeType.COMMENT ||
+          !(p.childNodes[i] as dom.ServerComment).value.startsWith('-')
         ) {
-          if (p.children[i].nodeType === NodeType.ELEMENT) {
-            removeTripleComments(p.children[i] as dom.ServerElement);
+          if (p.childNodes[i].nodeType === NodeType.ELEMENT) {
+            removeTripleComments(p.childNodes[i] as dom.ServerElement);
           }
           i++;
           continue;
         }
-        p.children.splice(i, 1);
+        p.childNodes.splice(i, 1);
       }
     }
     removeTripleComments(source.doc.documentElement!);
@@ -127,7 +127,7 @@ export class Preprocessor {
   ) {
     const includes = new Array<Include>();
     const collectIncludes = (p: dom.ServerElement) => {
-      for (const n of p.children) {
+      for (const n of p.childNodes) {
         if (n.nodeType === NodeType.ELEMENT) {
           const e = n as dom.ServerElement;
           if (e.tagName === INCLUDE_DIRECTIVE_TAG) {
@@ -140,8 +140,8 @@ export class Preprocessor {
     };
     collectIncludes(doc);
     for (const d of includes) {
-      const i = d.parent.children.indexOf(d.node);
-      d.parent.children.splice(i, 1);
+      const i = d.parent.childNodes.indexOf(d.node);
+      d.parent.childNodes.splice(i, 1);
       await this.processInclude(d, i, currDir, main, nesting);
     }
   }
@@ -180,7 +180,7 @@ export class Preprocessor {
     }
     const e = new dom.ServerElement(d.node.doc, as, d.node.loc);
     e.appendChild(new dom.ServerText(e.doc, loaded.text, d.node.loc, false));
-    d.parent.children.splice(i, 0, e);
+    d.parent.childNodes.splice(i, 0, e);
   }
 
   protected async processCodeInclude(
@@ -199,7 +199,7 @@ export class Preprocessor {
     // apply root attributes
     this.applyIncludedAttributes(d, rootElement);
     // include contents
-    const nn = [...rootElement.children];
+    const nn = [...rootElement.childNodes];
     if (nn.length > 0) {
       const n = nn[0] as dom.ServerText;
       if (n.nodeType === NodeType.TEXT && typeof n.value === 'string' && /^\s*$/.test(n.value)) {
@@ -212,7 +212,7 @@ export class Preprocessor {
         nn.pop();
       }
     }
-    d.parent.children.splice(i, 0, ...nn);
+    d.parent.childNodes.splice(i, 0, ...nn);
   }
 
   protected applyIncludedAttributes(directive: Include, rootElement: dom.ServerElement) {

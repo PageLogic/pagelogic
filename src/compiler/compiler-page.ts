@@ -54,7 +54,7 @@ export class CompilerPage extends pg.Page {
         p = astArrayExpression(l);
         o.properties.push(astProperty('children', p, l));
       }
-      e.children.forEach((n: dom.Node) => {
+      e.childNodes.forEach((n: dom.Node) => {
         if (n.nodeType === dom.NodeType.ELEMENT) {
           load(n as ServerElement, s, p, v);
         }
@@ -188,8 +188,8 @@ export class CompilerPage extends pg.Page {
   collectTexts(e: ServerElement, v: ObjectExpression) {
     let count = 0;
     const f = (e: ServerElement) => {
-      for (let i = 0; i < e.children.length;) {
-        const n = e.children[i] as ServerNode;
+      for (let i = 0; i < e.childNodes.length;) {
+        const n = e.childNodes[i] as ServerNode;
         if (n.nodeType === dom.NodeType.ELEMENT && !this.needsScope(n as ServerElement)) {
           f(n as ServerElement);
         } else if (n.nodeType === dom.NodeType.TEXT && typeof (n as ServerText).value !== 'string') {

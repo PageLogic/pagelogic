@@ -41,7 +41,7 @@ export abstract class ServerNode implements Node {
   }
 
   get nextSibling(): Node | null {
-    const nn = this.parent?.children;
+    const nn = this.parent?.childNodes;
     const i = nn ? nn.indexOf(this) : -1;
     if (i >= 0 && (i + 1) < (nn ? nn.length : 0)) {
       return nn![i + 1];
@@ -194,7 +194,7 @@ export class ServerAttribute extends ServerNode implements Attribute {
 
 export class ServerElement extends ServerNode implements Element {
   tagName: string;
-  children: Node[];
+  childNodes: Node[];
   attributes: Attribute[];
 
   constructor(
@@ -204,7 +204,7 @@ export class ServerElement extends ServerNode implements Element {
   ) {
     super(doc, NodeType.ELEMENT, loc);
     this.tagName = name.toUpperCase();
-    this.children = [];
+    this.childNodes = [];
     this.attributes = [];
   }
 
@@ -214,16 +214,16 @@ export class ServerElement extends ServerNode implements Element {
 
   insertBefore(n: Node, ref: Node | null): Node {
     this.removeChild(n);
-    let i = ref ? this.children.indexOf(ref) : -1;
-    i = i < 0 ? this.children.length : i;
-    this.children.splice(i, 0, n);
+    let i = ref ? this.childNodes.indexOf(ref) : -1;
+    i = i < 0 ? this.childNodes.length : i;
+    this.childNodes.splice(i, 0, n);
     n.parent = this;
     return n;
   }
 
   removeChild(n: Node) {
-    const i = this.children.indexOf(n);
-    i >= 0 && this.children.splice(i, 1);
+    const i = this.childNodes.indexOf(n);
+    i >= 0 && this.childNodes.splice(i, 1);
     n.parent = null;
   }
 
@@ -279,7 +279,7 @@ export class ServerElement extends ServerNode implements Element {
       type: this.nodeType,
       name: this.tagName,
       attributes: this.attributes,
-      children: this.children,
+      children: this.childNodes,
       loc: this.doc?.jsonLoc ? this.loc : null
     };
   }
@@ -295,7 +295,7 @@ export class ServerElement extends ServerNode implements Element {
     if (VOID_ELEMENTS.has(this.tagName)) {
       return;
     }
-    this.children.forEach(n => (n as ServerNode).toMarkup(ret));
+    this.childNodes.forEach(n => (n as ServerNode).toMarkup(ret));
     ret.push('</');
     ret.push(this.tagName.toLowerCase());
     ret.push('>');
@@ -305,7 +305,7 @@ export class ServerElement extends ServerNode implements Element {
     const ret = new ServerElement(this.doc, this.tagName, this.loc);
     parent && parent.appendChild(ret);// ret.linkTo(parent);
     this.attributes.forEach(a => (a as ServerAttribute).clone(ret));
-    this.children.forEach(n => (n as ServerNode).clone(ret));
+    this.childNodes.forEach(n => (n as ServerNode).clone(ret));
     return ret;
   }
 }
@@ -331,7 +331,7 @@ export class ServerDocument extends ServerElement implements Document {
   }
 
   get documentElement(): ServerElement | null {
-    for (const e of this.children) {
+    for (const e of this.childNodes) {
       if (e.nodeType === NodeType.ELEMENT) {
         return e as ServerElement;
       }
@@ -342,7 +342,7 @@ export class ServerDocument extends ServerElement implements Document {
   get head(): ServerElement | null {
     const root = this.documentElement;
     if (root) {
-      for (const e of root.children ?? []) {
+      for (const e of root.childNodes ?? []) {
         if (e.nodeType === NodeType.ELEMENT && (e as ServerElement).tagName === 'HEAD') {
           return e as ServerElement;
         }
@@ -354,7 +354,7 @@ export class ServerDocument extends ServerElement implements Document {
   get body(): ServerElement | null {
     const root = this.documentElement;
     if (root) {
-      for (const e of root.children ?? []) {
+      for (const e of root.childNodes ?? []) {
         if (e.nodeType === NodeType.ELEMENT && (e as ServerElement).tagName === 'BODY') {
           return e as ServerElement;
         }
@@ -366,13 +366,13 @@ export class ServerDocument extends ServerElement implements Document {
   toJSON(): object {
     return {
       type: this.nodeType,
-      children: this.children,
+      children: this.childNodes,
       loc: this.jsonLoc ? this.loc : null
     };
   }
 
   toMarkup(ret: string[]): void {
-    for (const n of this.children) {
+    for (const n of this.childNodes) {
       if (n.nodeType === NodeType.ELEMENT) {
         (n as ServerNode).toMarkup(ret);
         break;
