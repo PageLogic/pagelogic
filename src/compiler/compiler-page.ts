@@ -36,7 +36,7 @@ export class CompilerPage extends pg.Page {
         e.setAttribute(k.DOM_ID_ATTR, `${id}`);
 
         s = this.newScope(id, e).linkTo(s);
-        s.name = DEF_NAMES[e.name];
+        s.name = DEF_NAMES[e.tagName];
         this.scopes.push(s);
         const o = astObjectExpression(l);
         this.objects.push(o);
@@ -93,7 +93,7 @@ export class CompilerPage extends pg.Page {
 
   needsScope(e: ServerElement) {
     // 1) special tagnames
-    if (DEF_NAMES[e.name]) {
+    if (DEF_NAMES[e.tagName]) {
       return true;
     }
     // 2) `:`-prefixed attributes & attribute expressions
@@ -119,7 +119,7 @@ export class CompilerPage extends pg.Page {
         this.errors.push(err);
       }
     }
-    return DEF_NAMES[e.name];
+    return DEF_NAMES[e.tagName];
   }
 
   collectAttributes(scope: Scope, e: ServerElement, ret: ObjectExpression) {

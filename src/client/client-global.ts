@@ -15,8 +15,7 @@ export class ClientGlobal extends Global {
 
   override getElement(dom: number): dom.Element {
     const doc = this.doc as unknown as Document;
-    const ret = doc.querySelector(`*[${k.DOM_ID_ATTR}=${dom}]`)!;
+    const ret = doc.querySelector(`*[${k.DOM_ID_ATTR}="${dom}"]`)!;
     return ret as unknown as dom.Element;
-    // return this.doc!;
   }
 }

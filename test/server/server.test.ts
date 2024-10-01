@@ -272,7 +272,7 @@ describe('server', () => {
           '<!DOCTYPE html><html data-pl="0">'
           + '<head data-pl="1">\n'
           + '<meta name="color-scheme" content="light dark">\n'
-          + '</head>\n'
+          + '</head>'
           + (ssr
             ? '<body data-pl="2">hi <!---t0-->there<!---->!'
             : '<body data-pl="2">hi <!---t0--><!---->!')

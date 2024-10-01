@@ -195,7 +195,7 @@ export class ServerAttribute extends ServerNode implements Attribute {
 }
 
 export class ServerElement extends ServerNode implements Element {
-  name: string;
+  tagName: string;
   children: Node[];
   attributes: Attribute[];
 
@@ -205,7 +205,7 @@ export class ServerElement extends ServerNode implements Element {
     loc: SourceLocation
   ) {
     super(doc, 'element', loc);
-    this.name = name.toUpperCase();
+    this.tagName = name.toUpperCase();
     this.children = [];
     this.attributes = [];
   }
@@ -279,7 +279,7 @@ export class ServerElement extends ServerNode implements Element {
   toJSON(): object {
     return {
       type: this.type,
-      name: this.name,
+      name: this.tagName,
       attributes: this.attributes,
       children: this.children,
       loc: this.doc?.jsonLoc ? this.loc : null
@@ -287,24 +287,24 @@ export class ServerElement extends ServerNode implements Element {
   }
 
   toMarkup(ret: string[]): void {
-    if (this.name.startsWith(DIRECTIVE_TAG_PREFIX)) {
+    if (this.tagName.startsWith(DIRECTIVE_TAG_PREFIX)) {
       return;
     }
     ret.push('<');
-    ret.push(this.name.toLowerCase());
+    ret.push(this.tagName.toLowerCase());
     this.attributes.forEach(a => (a as ServerAttribute).toMarkup(ret));
     ret.push('>');
-    if (VOID_ELEMENTS.has(this.name)) {
+    if (VOID_ELEMENTS.has(this.tagName)) {
       return;
     }
     this.children.forEach(n => (n as ServerNode).toMarkup(ret));
     ret.push('</');
-    ret.push(this.name.toLowerCase());
+    ret.push(this.tagName.toLowerCase());
     ret.push('>');
   }
 
   clone(parent: ServerElement | null): ServerElement {
-    const ret = new ServerElement(this.doc, this.name, this.loc);
+    const ret = new ServerElement(this.doc, this.tagName, this.loc);
     parent && parent.appendChild(ret);// ret.linkTo(parent);
     this.attributes.forEach(a => (a as ServerAttribute).clone(ret));
     this.children.forEach(n => (n as ServerNode).clone(ret));
@@ -345,7 +345,7 @@ export class ServerDocument extends ServerElement implements Document {
     const root = this.documentElement;
     if (root) {
       for (const e of root.children ?? []) {
-        if (e.type === 'element' && (e as ServerElement).name === 'HEAD') {
+        if (e.type === 'element' && (e as ServerElement).tagName === 'HEAD') {
           return e as ServerElement;
         }
       }
@@ -357,7 +357,7 @@ export class ServerDocument extends ServerElement implements Document {
     const root = this.documentElement;
     if (root) {
       for (const e of root.children ?? []) {
-        if (e.type === 'element' && (e as ServerElement).name === 'BODY') {
+        if (e.type === 'element' && (e as ServerElement).tagName === 'BODY') {
           return e as ServerElement;
         }
       }

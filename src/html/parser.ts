@@ -33,8 +33,8 @@ export function parse(s: string, fname: string, ret?: Source, sanitize = true): 
     doc.documentElement!.children.forEach(n => {
       if (n.type === 'element') {
         const e = n as unknown as dom.ServerElement;
-        e.name === 'HEAD' && (head = e);
-        e.name === 'BODY' && (body = e);
+        e.tagName === 'HEAD' && (head = e);
+        e.tagName === 'BODY' && (body = e);
       }
     });
     body || doc.documentElement!.appendChild((body = new dom.ServerElement(doc, 'BODY', doc.loc)));
@@ -42,7 +42,7 @@ export function parse(s: string, fname: string, ret?: Source, sanitize = true): 
     !doc.domIdElements[0] && (doc.domIdElements[0] = doc.documentElement!);
     !doc.domIdElements[1] && (doc.domIdElements[1] = head);
     !doc.domIdElements[2] && (doc.domIdElements[2] = body);
-    doc.documentElement!.name = 'HTML';
+    doc.documentElement!.tagName = 'HTML';
   }
   return ret;
 }
@@ -62,14 +62,14 @@ function parseNodes(p: dom.ServerElement, src: Source, i: number, errors: PageEr
         const name = s.substring(i1, i2).toUpperCase();
         i2 = skipBlanks(s, i2);
         if (s.charCodeAt(i2) === GT) {
-          if (name === p.name) {
+          if (name === p.tagName) {
             i1 = i2 + 1;
             closetag = name;
             break;
           } else {
             errors.push(new PageError(
               'error',
-              `Found </${name}> instead of </${p.name}>`,
+              `Found </${name}> instead of </${p.tagName}>`,
               src.loc(i1, i1)
             ));
             throw Error();
@@ -102,10 +102,10 @@ function parseNodes(p: dom.ServerElement, src: Source, i: number, errors: PageEr
       i3 = i1 = i2;
     }
   }
-  if (!p.name.startsWith('#') && closetag !== p.name) {
+  if (!p.tagName.startsWith('#') && closetag !== p.tagName) {
     errors.push(new PageError(
       'error',
-      `expected </${p.name}>`,
+      `expected </${p.tagName}>`,
       src.loc(i1, i1)
     ));
     throw new Error();
@@ -129,19 +129,19 @@ function parseElement(p: dom.ServerElement, src: Source, i1: number, i2: number,
   if (s.charCodeAt(i1) != GT) {
     errors.push(new PageError(
       'error',
-      `Unterminated tag ${e.name}`,
+      `Unterminated tag ${e.tagName}`,
       src.loc(i1, i1)
     ));
     throw new Error();
   }
   i1++;
-  if (!selfclose && !dom.VOID_ELEMENTS.has(e.name)) {
-    if (SKIP_CONTENT_TAGS.has(e.name)) {
-      const res = skipContent(p, e.name, src, i1, errors);
+  if (!selfclose && !dom.VOID_ELEMENTS.has(e.tagName)) {
+    if (SKIP_CONTENT_TAGS.has(e.tagName)) {
+      const res = skipContent(p, e.tagName, src, i1, errors);
       if (!res) {
         errors.push(new PageError(
           'error',
-          `Unterminated tag ${e.name}`,
+          `Unterminated tag ${e.tagName}`,
           src.loc(i1, i1)
         ));
         throw new Error();
@@ -275,7 +275,7 @@ function parseExpressionValue(
 }
 
 function parseText(p: dom.ServerElement, src: Source, i1: number, i2: number, errors: PageError[]) {
-  if (ATOMIC_TEXT_TAGS.has(p.name)) {
+  if (ATOMIC_TEXT_TAGS.has(p.tagName)) {
     parseAtomicText(p, src, i1, i2, errors);
   } else {
     parseSplittableText(p, src, i1, i2, errors);

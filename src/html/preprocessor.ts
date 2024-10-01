@@ -53,7 +53,7 @@ export class Preprocessor {
       for (let i = 0; i < p.children.length;) {
         if (p.children[i].type === 'element') {
           const e = p.children[i] as dom.ServerElement;
-          if (e.name === GROUP_DIRECTIVE_TAG) {
+          if (e.tagName === GROUP_DIRECTIVE_TAG) {
             p.children.splice(i, 1, ...e.children);
             continue;
           }
@@ -129,8 +129,8 @@ export class Preprocessor {
       for (const n of p.children) {
         if (n.type === 'element') {
           const e = n as dom.ServerElement;
-          if (e.name === INCLUDE_DIRECTIVE_TAG) {
-            includes.push({ name: e.name, parent: p, node: e });
+          if (e.tagName === INCLUDE_DIRECTIVE_TAG) {
+            includes.push({ name: e.tagName, parent: p, node: e });
           } else {
             collectIncludes(e);
           }

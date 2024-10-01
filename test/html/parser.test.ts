@@ -135,7 +135,7 @@ describe('html/parser', () => {
     const doc = source.doc;
 
     const root = doc.documentElement!;
-    assert.equal(root.name, 'HTML');
+    assert.equal(root.tagName, 'HTML');
     assert.deepEqual(root.loc, {
       source: 'inline',
       start: { line: 1, column: 0 },
@@ -189,7 +189,7 @@ describe('html/parser', () => {
     });
 
     const head = root.children[1] as dom.Element;
-    assert.equal(head.name, 'HEAD');
+    assert.equal(head.tagName, 'HEAD');
     assert.deepEqual(head.loc, {
       source: 'inline',
       start: { line: 4, column: 2 },
@@ -200,7 +200,7 @@ describe('html/parser', () => {
 
     { // head content
       const style = head.children[0] as dom.Element;
-      assert.equal(style.name, 'STYLE');
+      assert.equal(style.tagName, 'STYLE');
       assert.deepEqual(style.loc, {
         source: 'inline',
         start: { line: 4, column: 8 },
@@ -233,7 +233,7 @@ describe('html/parser', () => {
     });
 
     const body = root.children[3] as dom.Element;
-    assert.equal(body.name, 'BODY');
+    assert.equal(body.tagName, 'BODY');
     assert.deepEqual(body.loc, {
       source: 'inline',
       start: { line: 9, column: 2 },

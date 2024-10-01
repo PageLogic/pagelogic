@@ -26,7 +26,7 @@ describe('runtime/base', () => {
     assert.equal(page.$id, 0);
     assert.equal(page.$name, 'page');
     assert.equal(page.$isolated, false);
-    assert.equal((page.$dom as Element).name, 'HTML');
+    assert.equal((page.$dom as Element).tagName, 'HTML');
     assert.equal((page.$children as Array<unknown>).length, 2);
 
     const head = (page.$children as Array<unknown>)[0] as ScopeObj;
@@ -34,14 +34,14 @@ describe('runtime/base', () => {
     assert.equal(head.$id, 1);
     assert.equal(head.$name, 'head');
     assert.equal(head.$isolated, false);
-    assert.equal((head.$dom as Element).name, 'HEAD');
+    assert.equal((head.$dom as Element).tagName, 'HEAD');
 
     const body = (page.$children as Array<unknown>)[1] as ScopeObj;
     assert.equal(head.$parent, page);
     assert.equal(body.$id, 2);
     assert.equal(body.$name, 'body');
     assert.equal(body.$isolated, false);
-    assert.equal((body.$dom as Element).name, 'BODY');
+    assert.equal((body.$dom as Element).tagName, 'BODY');
   });
 
   it('002', () => {
