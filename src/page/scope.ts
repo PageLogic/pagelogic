@@ -107,7 +107,18 @@ export class Scope {
       exp: function() { return that.children.map(child => child.obj); }
     });
     this.values[k.RT_SCOPE_VALUE_KEY] = page.newValue(page, this, k.RT_SCOPE_VALUE_KEY, {
-      exp: function() { return (key: string) => that.values[key]; }
+      exp: function() {
+        return (key: string) => {
+          let s: Scope | false | undefined = that;
+          do {
+            if (s.values[key]) {
+              return s.values[key];
+            }
+            s = !s.isolated && s.parent;
+          } while (s);
+          return undefined;
+        }
+      }
     });
 
     this.obj = new Proxy(this.values, {
@@ -117,10 +128,10 @@ export class Scope {
         if (v) {
           return v.get();
         }
-        const isolated = target[k.RT_SCOPE_ISOLATED_KEY];
-        const parent = !isolated && target[k.RT_SCOPE_PARENT_KEY];
+        const isolated = target[k.RT_SCOPE_ISOLATED_KEY].get();
+        const parent = !isolated && target[k.RT_SCOPE_PARENT_KEY].get();
         if (parent) {
-          return parent[key];
+          return (parent as { [key: string]: unknown })[key as string];
         }
         return undefined;
       },

@@ -133,4 +133,27 @@ describe('runtime/base', () => {
     );
   });
 
+  it('201', () => {
+    const page = load('<html :v="hi"><body>${v}</body></html>');
+    assert.equal(
+      (page.$dom as Element).toString(),
+      '<html data-pl="0">'
+        + '<head data-pl="1"></head>'
+        + '<body data-pl="2"><!---t0-->hi<!----></body>'
+        + '</html>'
+    );
+  });
+
+  it('202', () => {
+    const page = load('<html :v="hi"><body>${v}</body></html>');
+    page.v = ':-)';
+    assert.equal(
+      (page.$dom as Element).toString(),
+      '<html data-pl="0">'
+        + '<head data-pl="1"></head>'
+        + '<body data-pl="2"><!---t0-->:-)<!----></body>'
+        + '</html>'
+    );
+  });
+
 });
