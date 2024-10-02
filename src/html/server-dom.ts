@@ -1,6 +1,7 @@
 import * as acorn from 'acorn';
 import { Attribute, Element, Node, Text, Document, NodeType, Comment } from './dom';
 import { DIRECTIVE_TAG_PREFIX } from './parser';
+import { DOM_ID_ATTR } from '../page/consts';
 
 export const VOID_ELEMENTS = new Set([
   'AREA', 'BASE', 'BR', 'COL', 'EMBED', 'HR', 'IMG', 'INPUT',
@@ -30,11 +31,6 @@ export abstract class ServerNode implements Node {
     this.loc = loc;
   }
 
-  // protected linkTo(p: ServerElement, ref?: ServerNode): this {
-  //   p.insertBefore(this, ref ?? null);
-  //   return this;
-  // }
-
   unlink(): this {
     this.parent?.removeChild(this);
     return this;
@@ -63,7 +59,7 @@ export abstract class ServerNode implements Node {
   }
 
   abstract toMarkup(ret: string[]): void;
-  abstract clone(parent: ServerElement | null): ServerNode;
+  abstract clone(doc: ServerDocument | null, parent: ServerElement | null): ServerNode;
 }
 
 export class ServerText extends ServerNode implements Text {
@@ -99,9 +95,9 @@ export class ServerText extends ServerNode implements Text {
     }
   }
 
-  clone(parent: ServerElement | null): ServerText {
-    const ret = new ServerText(this.ownerDocument, this.textContent, this.loc, this.escaping);
-    parent && parent.appendChild(ret); // ret.linkTo(parent);
+  override clone(doc: ServerDocument | null, parent: ServerElement | null): ServerText {
+    const ret = new ServerText(doc, this.textContent, this.loc, this.escaping);
+    parent?.appendChild(ret);
     return ret;
   }
 }
@@ -132,9 +128,9 @@ export class ServerComment extends ServerNode implements Comment {
     ret.push('-->');
   }
 
-  clone(parent: ServerElement | null): ServerComment {
-    const ret = new ServerComment(this.ownerDocument, this.textContent, this.loc);
-    parent && parent.appendChild(ret); // ret.linkTo(parent);
+  override clone(doc: ServerDocument | null, parent: ServerElement | null): ServerComment {
+    const ret = new ServerComment(doc, this.textContent, this.loc);
+    parent?.appendChild(ret);
     return ret;
   }
 }
@@ -184,8 +180,8 @@ export class ServerAttribute extends ServerNode implements Attribute {
     ret.push(q);
   }
 
-  clone(parent: ServerElement | null): ServerAttribute {
-    const ret = new ServerAttribute(this.ownerDocument, parent, this.name, this.value, this.loc);
+  override clone(doc: ServerDocument | null, parent: ServerElement | null): ServerAttribute {
+    const ret = new ServerAttribute(doc, parent, this.name, this.value, this.loc);
     ret.valueLoc = this.valueLoc;
     ret.quote = this.quote;
     return ret;
@@ -301,11 +297,18 @@ export class ServerElement extends ServerNode implements Element {
     ret.push('>');
   }
 
-  clone(parent: ServerElement | null): ServerElement {
-    const ret = new ServerElement(this.ownerDocument, this.tagName, this.loc);
-    parent && parent.appendChild(ret);// ret.linkTo(parent);
-    this.attributes.forEach(a => (a as ServerAttribute).clone(ret));
-    this.childNodes.forEach(n => (n as ServerNode).clone(ret));
+  override clone(doc: ServerDocument | null, parent: ServerElement | null): ServerElement {
+    const ret = new ServerElement(doc, this.tagName, this.loc);
+    parent?.appendChild(ret);
+    this.attributes.forEach(a => {
+      (a as ServerAttribute).clone(doc, ret);
+      if (doc && a.name === DOM_ID_ATTR) {
+        doc.domIdElements[parseInt(a.value as string)] = ret;
+      }
+    });
+    this.childNodes.forEach(n => {
+      (n as ServerNode).clone(doc, ret);
+    });
     return ret;
   }
 }
@@ -382,6 +385,14 @@ export class ServerDocument extends ServerElement implements Document {
         break;
       }
     }
+  }
+
+  override clone(_: ServerDocument | null, __: ServerElement | null): ServerDocument {
+    const ret = new ServerDocument(this.loc);
+    this.childNodes.forEach(n => {
+      (n as ServerNode).clone(ret, ret);
+    });
+    return ret;
   }
 }
 

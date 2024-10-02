@@ -7,6 +7,7 @@ import { CLIENT_CODE_REQ, CLIENT_CODE_SRC } from '../page/consts';
 import { RuntimePage } from '../runtime/runtime-page';
 import { PageLogicLogger } from '../utils/logger';
 import { ServerGlobal } from './server-global';
+import { ServerDocument } from '../html/server-dom';
 
 export interface PageLogicConfig {
   docroot?: string;
@@ -36,7 +37,6 @@ export function pageLogic(config: PageLogicConfig) {
 
     // handle non-page requests
     if (req.path === CLIENT_CODE_REQ) {
-      //TODO: cache policy
       res.header('Content-Type', 'text/javascript;charset=UTF-8');
       res.send(js);
       return;
@@ -66,12 +66,14 @@ export function pageLogic(config: PageLogicConfig) {
       return serveErrorPage(comp.errors, res);
     }
 
+    let doc = comp.doc!;
     if (config.ssr) {
-      const glob = new ServerGlobal(comp.doc!, comp.props!);
+      doc = doc.clone(null, null) as ServerDocument;
+      const glob = new ServerGlobal(doc, comp.props!);
       new RuntimePage(glob);
     }
 
-    const html = comp.doc!.toString();
+    const html = doc.toString();
     res.header('Content-Type', 'text/html;charset=UTF-8');
     res.send('<!DOCTYPE html>' + html);
   };
