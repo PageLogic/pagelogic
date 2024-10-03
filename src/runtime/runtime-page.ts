@@ -15,7 +15,7 @@ export class RuntimePage extends Page {
       const s = this.newScope(props.dom, e)
         .setName(props.name)
         .setValues(this, props.values)
-        .activate(this)
+        .makeObj(this)
         .linkTo(this, p);
       props.children?.forEach(child => load(child, s));
       return s;
@@ -41,7 +41,7 @@ export class RuntimePage extends Page {
       };
     } else if (name.startsWith(k.RT_TEXT_VALUE_PREFIX)) {
       const key = name.substring(k.RT_TEXT_VALUE_PREFIX.length);
-      const t = scope.domText(key)!;
+      const t = scope.getText(key)!;
       ret.cb = (_, v) => {
         t.textContent = `${v != null ? v : ''}`;
         return v;

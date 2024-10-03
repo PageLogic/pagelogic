@@ -37,7 +37,19 @@ export abstract class Page {
     this.refreshLevel--;
   }
 
-  unlinkValues(scope: Scope) {
+  unlinkScope(scope: Scope): Scope {
+    this.unlinkValues(scope);
+    scope.unlink();
+    return scope;
+  }
+
+  relinkScope(scope: Scope, parent: Scope, ref?: Scope): Scope {
+    scope.linkTo(this, parent, ref);
+    this.linkValues(scope);
+    return scope;
+  }
+
+  protected unlinkValues(scope: Scope) {
     this.foreachValue(scope, v => {
       v.src.forEach(o => o.dst.delete(v));
     });

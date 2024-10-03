@@ -5,8 +5,9 @@ import { parse } from '../../src/html/parser';
 import { ScopeObj } from '../../src/page/scope';
 import { RuntimePage } from '../../src/runtime/runtime-page';
 import { ServerGlobal } from '../../src/server/server-global';
+import { Page } from '../../src/page/page';
 
-function load(html: string): ScopeObj {
+function load(html: string): { page: Page, root: ScopeObj } {
   // compile
   const src = parse(html, 'test');
   assert.equal(src.errors.length, 0);
@@ -15,13 +16,13 @@ function load(html: string): ScopeObj {
   // load
   const glob = new ServerGlobal(comp.glob.doc, comp.glob.props);
   const page = new RuntimePage(glob);
-  return page.root.obj;
+  return { page, root: page.root.obj };
 }
 
 describe('runtime/base', () => {
 
   it('001', () => {
-    const root = load('<html></html>');
+    const { root } = load('<html></html>');
     assert.isUndefined(root.$parent);
     assert.equal(root.$id, 0);
     assert.equal(root.$name, 'page');
@@ -45,12 +46,12 @@ describe('runtime/base', () => {
   });
 
   it('002', () => {
-    const root = load('<html :x=${1}></html>');
+    const { root } = load('<html :x=${1}></html>');
     assert.equal(root.x, 1);
   });
 
   it('003', () => {
-    const root = load('<html :x=${1} :y=${x * 2}></html>');
+    const { root } = load('<html :x=${1} :y=${x * 2}></html>');
     assert.equal(root.x, 1);
     assert.equal(root.y, 2);
     root.x = 3;
@@ -58,7 +59,7 @@ describe('runtime/base', () => {
   });
 
   it('004', () => {
-    const root = load('<html :x=${1} :y=${() => x * 2}></html>');
+    const { root } = load('<html :x=${1} :y=${() => x * 2}></html>');
     assert.equal(root.x, 1);
     assert.equal((root.y as () => unknown)(), 2);
     root.x = 3;
@@ -66,7 +67,7 @@ describe('runtime/base', () => {
   });
 
   it('101', () => {
-    const root = load('<html lang="en"></html>');
+    const { root } = load('<html lang="en"></html>');
     assert.notExists(root.attr$lang);
     assert.equal(
       (root.$dom as Element).toString(),
@@ -78,7 +79,7 @@ describe('runtime/base', () => {
   });
 
   it('102', () => {
-    const root = load('<html lang=${"en"}></html>');
+    const { root } = load('<html lang=${"en"}></html>');
     assert.equal(root.attr$lang, 'en');
     assert.equal(
       (root.$dom as Element).toString(),
@@ -90,7 +91,7 @@ describe('runtime/base', () => {
   });
 
   it('103', () => {
-    const root = load('<html><body> ${"hi"} </body></html>');
+    const { root } = load('<html><body> ${"hi"} </body></html>');
     assert.equal(
       (root.$dom as Element).toString(),
       '<html data-pl="0">'
@@ -101,7 +102,7 @@ describe('runtime/base', () => {
   });
 
   it('104', () => {
-    const root = load('<html><body>${"hi"} </body></html>');
+    const { root } = load('<html><body>${"hi"} </body></html>');
     assert.equal(
       (root.$dom as Element).toString(),
       '<html data-pl="0">'
@@ -112,7 +113,7 @@ describe('runtime/base', () => {
   });
 
   it('105', () => {
-    const root = load('<html><body> ${"hi"}</body></html>');
+    const { root } = load('<html><body> ${"hi"}</body></html>');
     assert.equal(
       (root.$dom as Element).toString(),
       '<html data-pl="0">'
@@ -123,7 +124,7 @@ describe('runtime/base', () => {
   });
 
   it('106', () => {
-    const root = load('<html><body>${"hi"}</body></html>');
+    const { root } = load('<html><body>${"hi"}</body></html>');
     assert.equal(
       (root.$dom as Element).toString(),
       '<html data-pl="0">'
@@ -134,7 +135,7 @@ describe('runtime/base', () => {
   });
 
   it('201', () => {
-    const root = load('<html :v="hi"><body>${v}</body></html>');
+    const { root } = load('<html :v="hi"><body>${v}</body></html>');
     assert.equal(
       (root.$dom as Element).toString(),
       '<html data-pl="0">'
@@ -145,7 +146,7 @@ describe('runtime/base', () => {
   });
 
   it('202', () => {
-    const root = load('<html :v="hi"><body>${v}</body></html>');
+    const { root } = load('<html :v="hi"><body>${v}</body></html>');
     root.v = ':-)';
     assert.equal(
       (root.$dom as Element).toString(),
@@ -157,12 +158,12 @@ describe('runtime/base', () => {
   });
 
   it('301', () => {
-    const root = load('<html :v=${body.v + "!"}><body :v="hi"></body></html>');
+    const { root } = load('<html :v=${body.v + "!"}><body :v="hi"></body></html>');
     assert.equal(root.v, 'hi!');
   });
 
   it('302', () => {
-    const root = load('<html><head :v="hi"></head><body>${head.v}!</body></html>');
+    const { root } = load('<html><head :v="hi"></head><body>${head.v}!</body></html>');
     assert.equal(
       (root.$dom as Element).toString(),
       '<html data-pl="0">'
@@ -182,13 +183,23 @@ describe('runtime/base', () => {
   });
 
   it('303', () => {
-    const root = load('<html><body><div ::name="div" :v="hi"></div></body></html>');
+    const { root } = load('<html><body><div ::name="div" :v="hi"></div></body></html>');
     // @ts-expect-error root is of type `unknown`
     assert.equal(root.body.div.v, 'hi');
   });
 
-  //TODO: test unlinking
-  // * name is removed from parent
-  // * etc.
+  it('304', () => {
+    const { page, root } = load('<html><body><div ::name="div" :v="hi"></div></body></html>');
+    // @ts-expect-error root is of type `unknown`
+    assert.exists(root.body.div?.v);
+    const bodyScope = page.root.children[1];
+    const divScope = bodyScope.children[0];
+    page.unlinkScope(divScope);
+    // @ts-expect-error root is of type `unknown`
+    assert.notExists(root.body.div?.v);
+    page.relinkScope(divScope, bodyScope);
+    // @ts-expect-error root is of type `unknown`
+    assert.exists(root.body.div?.v);
+  });
 
 });

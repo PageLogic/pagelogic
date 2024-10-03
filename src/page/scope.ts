@@ -72,31 +72,7 @@ export class Scope {
     return this;
   }
 
-  domText(id: string): Text | undefined {
-    const key = k.HTML_TEXT_MARKER1 + id;
-    const f = (e: Element): Text | undefined => {
-      for (let i = 0; i < e.childNodes.length; i++) {
-        const n = e.childNodes[i];
-        if (n.nodeType === NodeType.ELEMENT) {
-          const ret = f(n as Element);
-          if (ret) {
-            return ret;
-          }
-        } else if (n.nodeType === NodeType.COMMENT && (n as Comment).textContent === key) {
-          let ret = e.childNodes[i + 1] as Text;
-          if (ret.nodeType !== NodeType.TEXT) {
-            const t = e.ownerDocument?.createTextNode('');
-            e.insertBefore(t!, ret);
-            ret = t!;
-          }
-          return ret;
-        }
-      }
-    };
-    return f(this.e);
-  }
-
-  activate(page: Page): this {
+  makeObj(page: Page): this {
     const that = this;
 
     this.values[k.RT_SCOPE_ID_KEY] = page.newValue(page, this, k.RT_SCOPE_ID_KEY, {
@@ -169,5 +145,29 @@ export class Scope {
     });
 
     return this;
+  }
+
+  getText(id: string): Text | undefined {
+    const key = k.HTML_TEXT_MARKER1 + id;
+    const f = (e: Element): Text | undefined => {
+      for (let i = 0; i < e.childNodes.length; i++) {
+        const n = e.childNodes[i];
+        if (n.nodeType === NodeType.ELEMENT) {
+          const ret = f(n as Element);
+          if (ret) {
+            return ret;
+          }
+        } else if (n.nodeType === NodeType.COMMENT && (n as Comment).textContent === key) {
+          let ret = e.childNodes[i + 1] as Text;
+          if (ret.nodeType !== NodeType.TEXT) {
+            const t = e.ownerDocument?.createTextNode('');
+            e.insertBefore(t!, ret);
+            ret = t!;
+          }
+          return ret;
+        }
+      }
+    };
+    return f(this.e);
   }
 }
