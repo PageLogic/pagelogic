@@ -52,6 +52,7 @@ export abstract class Page {
   protected unlinkValues(scope: Scope) {
     this.foreachValue(scope, v => {
       v.src.forEach(o => o.dst.delete(v));
+      v.dst.forEach(o => o.src.delete(v));
     });
   }
 
