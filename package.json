@@ -10,8 +10,8 @@
     "build": "npm run build-server && npm run build-client",
     "build-client": "mkdir -p dist && browserify src/client/client.ts -p tsify -p tinyify > dist/client.js",
     "build-server": "tsc",
-    "count-lines": "wc `find src -name '*.ts'`",
-    "count-test-lines": "wc `find test -name '*.ts'`"
+    "count-src-lines": "wc -l `find src -name '*.ts'`",
+    "count-test-lines": "wc -l `find test -name '*.ts'`"
   },
   "engines": {
     "node": ">=16.0.0"

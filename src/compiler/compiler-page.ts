@@ -34,8 +34,9 @@ export class CompilerPage extends pg.Page {
         const l = e.loc;
         const id = this.scopes.length;
         e.setAttribute(k.DOM_ID_ATTR, `${id}`);
+        (e.ownerDocument as ServerDocument).domIdElements[id] = e;
 
-        s = this.newScope(id, e).linkTo(s);
+        s = this.newScope(id, e).linkTo(this, s);
         s.name = DEF_NAMES[e.tagName];
         this.scopes.push(s);
         const o = astObjectExpression(l);

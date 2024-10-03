@@ -16,7 +16,7 @@ export class RuntimePage extends Page {
         .setName(props.name)
         .setValues(this, props.values)
         .activate(this)
-        .linkTo(p);
+        .linkTo(this, p);
       props.children?.forEach(child => load(child, s));
       return s;
     };

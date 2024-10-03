@@ -40,8 +40,7 @@ export class Scope {
     return this;
   }
 
-  //TODO: add name to parent if not conflicting
-  linkTo(p: Scope, ref?: Scope): this {
+  linkTo(page: Page, p: Scope, ref?: Scope): this {
     let i = ref ? p.children.indexOf(ref) : -1;
     i = i < 0 ? p.children.length : i;
     p.children.splice(i, 0, this);
@@ -49,11 +48,23 @@ export class Scope {
     !this.e.parent
       && this.e.tagName !== 'HTML'
       && p.e.insertBefore(this.e, ref?.e ?? null);
+    if (this.name) {
+      if (!p.values[this.name]) {
+        const that = this;
+        // add name to parent scope
+        p.values[this.name] = new Value(page, p, {
+          exp: function() { return that.obj; }
+        });
+      }
+    }
     return this;
   }
 
-  //TODO: remove name from parent if it points to this
   unlink(): this {
+    if (this.name && this.parent && this.parent.obj[this.name] === this.obj) {
+      // remove name from parent scope
+      delete this.parent.values[this.name];
+    }
     this.e.unlink();
     const i = this.parent ? this.parent.children.indexOf(this) : -1;
     i >= 0 && this.parent!.children.splice(i, 1);
@@ -117,7 +128,7 @@ export class Scope {
             s = !s.isolated && s.parent;
           } while (s);
           return undefined;
-        }
+        };
       }
     });
 
