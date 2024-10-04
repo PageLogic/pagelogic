@@ -30,3 +30,19 @@ export class Observable<T> {
     return this;
   }
 }
+
+export function dashToCamel(s: string): string {
+  return s.replace(/-([a-z])/g, (_, up) => up.toUpperCase());
+}
+
+export function camelToDash(s: string): string {
+  return s.replace(/([a-z][A-Z])/g, (g) => g[0] + '-' + g[1].toLowerCase());
+}
+
+export function encodeEventName(s: string): string {
+  return s.replace('.', '__DOT__').replace('-', '__DASH__');
+}
+
+export function decodeEventName(s: string): string {
+  return s.replace('__DOT__', '.').replace('__DASH__', '-');
+}

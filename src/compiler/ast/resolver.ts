@@ -8,6 +8,7 @@ import { RT_SCOPE_PARENT_KEY, RT_SCOPE_VALUE_KEY } from '../../page/consts';
 import { CompilerPage } from '../compiler-page';
 import { Stack } from '../util';
 import { getProperty, getPropertyName, Path, PathItem } from './estree-utils';
+import { ArrowFunctionExpression } from 'acorn';
 
 interface Target {
   obj: ObjectExpression;
@@ -173,15 +174,44 @@ export function resolveValueDependencies(page: CompilerPage): void {
     };
   }
 
+  function isInFunctionBody(nodeStack: Stack<Node>): boolean {
+    for (let i = -1; (nodeStack.length + i) >= 2; i--) {
+      if (
+        nodeStack.peek(i - 1)?.type === 'ArrowFunctionExpression' &&
+        nodeStack.peek(i) === (nodeStack.peek(i - 1) as ArrowFunctionExpression)?.body
+      ) {
+        // in arrow function expression body
+        return true;
+      }
+      if (
+        nodeStack.peek(i - 1)?.type === 'FunctionExpression' &&
+        nodeStack.peek(i)?.type === 'BlockStatement'
+      ) {
+        // in classic function expression body
+        return true;
+      }
+      if (
+        nodeStack.peek(i - 1)?.type === 'FunctionDeclaration' &&
+        nodeStack.peek(i)?.type === 'BlockStatement'
+      ) {
+        // in classic function declaration body
+        return true;
+      }
+    }
+    return false;
+  }
+
   function makeValueDeps(
-    stack: Stack<ObjectExpression>,
+    scopeStack: Stack<ObjectExpression>,
     name: string,
     exp: FunctionExpression
   ): Property | null {
     // 1. collect dependencies
     const paths = new Array<Path>();
+    const stack = new Stack<Node>();
     estraverse.traverse(exp as Node, {
       enter(node) {
+        stack.push(node);
         if (node.type !== 'MemberExpression') {
           return;
         }
@@ -197,12 +227,18 @@ export function resolveValueDependencies(page: CompilerPage): void {
             return;
           }
         }
+        if (isInFunctionBody(stack)) {
+          return;
+        }
         paths.push(path);
+      },
+      leave() {
+        stack.pop();
       }
     });
     // 2. refine dependencies
     removeSpuriousPaths(paths);
-    paths.forEach(path => refinePath(stack, name, path));
+    paths.forEach(path => refinePath(scopeStack, name, path));
     removeSpuriousPaths(paths);
     // 3. remove duplicates
     const map = new Map<string, Path>();
@@ -229,20 +265,20 @@ export function resolveValueDependencies(page: CompilerPage): void {
     };
   }
 
-  function resolveScope(stack: Stack<ObjectExpression>) {
-    const scope = stack.peek()!;
+  function resolveScope(scopeStack: Stack<ObjectExpression>) {
+    const scope = scopeStack.peek()!;
     const values = getProperty(scope, 'values') as ObjectExpression;
     values?.properties.forEach(p => {
       if (p.type === 'Property' && p.key.type === 'Identifier') {
         const value = p.value as ObjectExpression;
         const exp = getProperty(value, 'exp') as FunctionExpression;
-        const deps = makeValueDeps(stack, p.key.name, exp);
+        const deps = makeValueDeps(scopeStack, p.key.name, exp);
         deps && value.properties.push(deps);
       }
     });
     const children = getProperty(scope, 'children') as ArrayExpression;
     children?.elements.forEach(e => {
-      resolveScope(new Stack(...stack, e as ObjectExpression));
+      resolveScope(new Stack(...scopeStack, e as ObjectExpression));
     });
   }
 

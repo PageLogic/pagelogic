@@ -3,17 +3,6 @@
     {
       dom: 0,
       name: 'page',
-      values: {
-        y: {
-          exp: function() { return 2; }
-        },
-        v: {
-          exp: function() { return () => {
-            let x = 1;
-            return this.y;
-          } }
-        },
-      },
       children: [
         {
           dom: 1,
@@ -23,6 +12,14 @@
         {
           dom: 2,
           name: 'body',
+          values: {
+            n: {
+              exp: function() { return 0; },
+            },
+            ev$click: {
+              exp: function() { return () => this.n++ },
+            },
+          },
           children: []
         }
       ]

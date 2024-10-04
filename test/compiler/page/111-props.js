@@ -11,10 +11,7 @@
           exp: function() { return function () {
             const f = (y) => y;
             return f(this.y);
-          } },
-          deps: [
-            function() { return this.$value('y'); }
-          ]
+          } }
         },
       },
       children: [

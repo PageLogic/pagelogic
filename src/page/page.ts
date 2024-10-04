@@ -60,14 +60,11 @@ export abstract class Page {
     this.foreachValue(scope, v => {
       const scope = v.scope;
       v.props.deps?.forEach(dep => {
-        let o: Value | undefined;
         try {
-          o = dep.apply(scope.obj);
-        } catch (ignored) { /* nop */ }
-        if (o) {
-          v.src.add(o);
+          const o = dep.apply(scope.obj);
           o.dst.add(v);
-        }
+          v.src.add(o);
+        } catch (ignored) { /* nop */ }
       });
     });
   }

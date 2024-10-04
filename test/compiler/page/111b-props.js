@@ -8,9 +8,9 @@
           exp: function() { return 2; }
         },
         v: {
-          exp: function() { return () => {
-            let x = 1;
-            return this.y;
+          exp: function() { return function () {
+            const f = (x) => x;
+            return f(this.y);
           } }
         },
       },

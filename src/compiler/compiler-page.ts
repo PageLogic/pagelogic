@@ -14,6 +14,7 @@ import {
 } from './ast/acorn-utils';
 import { qualifyPageIdentifiers } from './ast/qualifier';
 import { resolveValueDependencies } from './ast/resolver';
+import { dashToCamel, encodeEventName } from './util';
 
 const DEF_NAMES: { [key: string]: string } = {
   HTML: 'page',
@@ -141,6 +142,8 @@ export class CompilerPage extends pg.Page {
       }
       if (a.name.startsWith(k.SRC_SYSTEM_ATTR_PREFIX)) {
         this.collectSystemAttribute(scope, a, ret);
+      } else if (a.name.startsWith(k.SRC_EVENT_ATTR_PREFIX)) {
+        this.collectEventAttribute(a, ret);
       } else if (a.name.startsWith(k.SRC_LOGIC_ATTR_PREFIX)) {
         this.collectValueAttribute(a, ret);
       } else {
@@ -158,7 +161,7 @@ export class CompilerPage extends pg.Page {
       this.checkLiteralAttribute(a) && (scope.name = a.value as string);
       break;
     }
-    const value = this.makeValue(name, a.value, a.valueLoc!);
+    const value = this.makeValue('', name, a.value, a.loc, a.valueLoc!);
     ret.properties.push(value);
   }
 
@@ -176,13 +179,27 @@ export class CompilerPage extends pg.Page {
 
   collectValueAttribute(a: ServerAttribute, ret: ObjectExpression) {
     const name = a.name.substring(k.SRC_LOGIC_ATTR_PREFIX.length);
-    const value = this.makeValue(name, a.value, a.valueLoc!);
+    const loc: SourceLocation = {
+      source: a.loc.source,
+      start: { ...a.loc.start },
+      end: { ...a.loc.end },
+      i1: a.loc.i1,
+      i2: a.loc.i2,
+    };
+    loc.start.column += k.SRC_LOGIC_ATTR_PREFIX.length;
+    const value = this.makeValue('', name, a.value, loc, a.valueLoc!);
     ret.properties.push(value);
   }
 
   collectNativeAttribute(a: ServerAttribute, ret: ObjectExpression) {
-    const name = k.RT_ATTR_VALUE_PREFIX + a.name;
-    const value = this.makeValue(name, a.value, a.valueLoc!);
+    const name = dashToCamel(a.name);
+    const value = this.makeValue(k.RT_ATTR_VALUE_PREFIX, name, a.value, a.loc, a.valueLoc!);
+    ret.properties.push(value);
+  }
+
+  collectEventAttribute(a: ServerAttribute, ret: ObjectExpression) {
+    const name = encodeEventName(a.name.substring(k.SRC_EVENT_ATTR_PREFIX.length));
+    const value = this.makeValue(k.RT_EVENT_VALUE_PREFIX, name, a.value, a.loc, a.valueLoc!);
     ret.properties.push(value);
   }
 
@@ -195,7 +212,7 @@ export class CompilerPage extends pg.Page {
           f(n as ServerElement);
         } else if (n.nodeType === dom.NodeType.TEXT && typeof (n as ServerText).textContent !== 'string') {
           const name = k.RT_TEXT_VALUE_PREFIX + count;
-          const value = this.makeValue(name, (n as ServerText).textContent, n.loc);
+          const value = this.makeValue('', name, (n as ServerText).textContent, n.loc, n.loc);
           v.properties.push(value);
           const c1 = new ServerComment(e.ownerDocument, k.HTML_TEXT_MARKER1 + (count++), n.loc);
           e.insertBefore(c1, n);
@@ -209,11 +226,12 @@ export class CompilerPage extends pg.Page {
     f(e);
   }
 
-  makeValue(name: string, value: string | Expression | null, l: SourceLocation) {
-    const o = astObjectExpression(l);
-    const p = astProperty('exp', this.makeValueFunction(value, l), l);
+  makeValue(prefix: string, name: string, value: string | Expression | null, loc1: SourceLocation, loc2: SourceLocation) {
+    this.checkName(name, loc1);
+    const o = astObjectExpression(loc2);
+    const p = astProperty('exp', this.makeValueFunction(value, loc2), loc2);
     o.properties.push(p);
-    return astProperty(name, o, l);
+    return astProperty(prefix + name, o, loc2);
   }
 
   makeValueFunction(value: string | Expression | null, l: SourceLocation): Expression {
@@ -240,5 +258,13 @@ export class CompilerPage extends pg.Page {
       body,
       ...astLocation(l)
     };
+  }
+
+  checkName(name: string, loc: SourceLocation): boolean {
+    if (!/^[a-zA-Z_$][0-9a-zA-Z_$]*$/.test(name)) {
+      this.errors.push(new PageError('error', `invalid value name "${name}"`, loc));
+      return false;
+    }
+    return true;
   }
 }

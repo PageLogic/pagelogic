@@ -67,6 +67,13 @@ describe('client', () => {
         assert.equal(text, 'hi');
       });
 
+      it('/ev001', async () => {
+        const page = await goto('/ev001');
+        const div = await page.$('button');
+        const text = await div?.textContent();
+        assert.equal(text, '0');
+      });
+
     });
   }
 

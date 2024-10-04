@@ -113,7 +113,7 @@ export function compile(src: Source, csr?: boolean): CompilerPage {
     doc.body!.appendChild(script1);
     script1.setAttribute('id', k.CLIENT_PROPS_SCRIPT_ID);
     const code = `\n${k.CLIENT_PROPS_SCRIPT_GLOBAL} = ${glob.js}\n`;
-    script1.appendChild(new dom.ServerText(doc, code, doc.loc));
+    script1.appendChild(new dom.ServerText(doc, code, doc.loc, false));
 
     const script2 = new dom.ServerElement(doc, 'script', doc.loc);
     doc.body!.appendChild(script2);
