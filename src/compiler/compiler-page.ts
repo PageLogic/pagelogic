@@ -2,7 +2,7 @@ import {
   ArrayExpression, BlockStatement, Expression, ObjectExpression
 } from 'acorn';
 import * as dom from '../html/dom';
-import { DIRECTIVE_TAG_PREFIX, PageError } from '../html/parser';
+import { PageError } from '../html/parser';
 import {
   ServerAttribute, ServerComment, ServerDocument, ServerElement, ServerNode,
   ServerText, SourceLocation
@@ -21,8 +21,6 @@ import { resolveValueDependencies } from './ast/resolver';
 import { dashToCamel, encodeEventName } from './util';
 import { ELEMENT_NODE } from 'trillo/preprocessor/dom';
 
-const FOREACH_TAG = DIRECTIVE_TAG_PREFIX + 'FOREACH';
-
 const DEF_NAMES: { [key: string]: string } = {
   HTML: 'page',
   HEAD: 'head',
@@ -38,9 +36,11 @@ export class CompilerPage extends pg.Page {
 
   override init() {
     const load = (
-      e: ServerElement, s: Scope, p: ArrayExpression, v?: ObjectExpression
+      e: ServerElement, s: Scope, p: ArrayExpression,
+      forceOwnScope = true,
+      v?: ObjectExpression
     ) => {
-      if (this.needsScope(e)) {
+      if (forceOwnScope || this.needsScope(e)) {
         const l = e.loc;
         const id = this.scopes.length;
         e.setAttribute(k.DOM_ID_ATTR, `${id}`);
@@ -53,12 +53,15 @@ export class CompilerPage extends pg.Page {
         this.objects.push(o);
 
         o.properties.push(astProperty('dom', astLiteral(id, l), l));
+        if (s.type) {
+          o.properties.push(astProperty('type', astLiteral(s.type, l), l));
+        }
         const name = this.getName(e);
         name && o.properties.push(astProperty('name', astLiteral(name, l), l));
 
         v = astObjectExpression(l);
         this.collectAttributes(s, e, v);
-        this.collectTexts(e, v);
+        s.type !== 'foreach' && this.collectTexts(e, v);
         v.properties.length && o.properties.push(astProperty('values', v, l));
 
         p.elements.push(o);
@@ -67,7 +70,7 @@ export class CompilerPage extends pg.Page {
       }
       e.childNodes.forEach((n: dom.Node) => {
         if (n.nodeType === dom.NodeType.ELEMENT) {
-          load(n as ServerElement, s, p, v);
+          load(n as ServerElement, s, p, s.type === 'foreach', v);
         }
       });
       return s;
@@ -86,10 +89,10 @@ export class CompilerPage extends pg.Page {
   }
 
   override newScope(id: number, e: dom.Element, _?: ScopeType): Scope {
-    if (e.tagName === FOREACH_TAG) {
+    if (e.tagName === k.SRC_FOREACH_TAG) {
       return this.newForeachScope(id, e);
     }
-    if (e.tagName.startsWith(DIRECTIVE_TAG_PREFIX)) {
+    if (e.tagName.startsWith(dom.DIRECTIVE_TAG_PREFIX)) {
       this.errors.push(new PageError(
         'error', 'unknown directive ' + e.tagName, e.loc as SourceLocation
       ));
@@ -98,14 +101,19 @@ export class CompilerPage extends pg.Page {
   }
 
   protected newForeachScope(id: number, e: dom.Element): Scope {
+    const l = e.loc as SourceLocation;
     e.tagName = 'template';
     const ret = new ForeachScope(id, e, this.global);
     let count = 0;
     e.childNodes.forEach(n => n.nodeType === ELEMENT_NODE ? count++ : null);
     if (count !== 1) {
-      const loc = e.loc as SourceLocation;
       this.errors.push(new PageError(
-        'error', '<:foreach> should contain a single element', loc
+        'error', '<:foreach> should contain a single element', l
+      ));
+    }
+    if (!(e as ServerElement).getAttributeNode(k.SRC_FOREACH_ITEM_ATTR)) {
+      this.errors.push(new PageError(
+        'error', `missing ${k.SRC_FOREACH_ITEM_ATTR} attribute in <:foreach>`, l
       ));
     }
     return ret;
@@ -128,7 +136,7 @@ export class CompilerPage extends pg.Page {
 
   needsScope(e: ServerElement) {
     // 1) `:`-prefixed directive tags
-    if (e.tagName.startsWith(DIRECTIVE_TAG_PREFIX)) {
+    if (e.tagName.startsWith(dom.DIRECTIVE_TAG_PREFIX)) {
       return true;
     }
     // 2) special tagnames

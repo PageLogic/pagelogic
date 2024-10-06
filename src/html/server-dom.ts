@@ -1,7 +1,10 @@
 import * as acorn from 'acorn';
 import { DOM_ID_ATTR } from '../page/consts';
-import { Attribute, Comment, Document, Element, Node, NodeType, Text } from './dom';
-import { DIRECTIVE_TAG_PREFIX } from './parser';
+import {
+  Attribute, Comment,
+  DIRECTIVE_TAG_PREFIX,
+  Document, Element, Node, NodeType, Text
+} from './dom';
 
 export const VOID_ELEMENTS = new Set([
   'AREA', 'BASE', 'BR', 'COL', 'EMBED', 'HR', 'IMG', 'INPUT',

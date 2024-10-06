@@ -3,8 +3,6 @@ import { DOM_ID_ATTR } from '../page/consts';
 import * as dom from './server-dom';
 import { NodeType } from './dom';
 
-export const DIRECTIVE_TAG_PREFIX = ':';
-
 const SKIP_CONTENT_TAGS = new Set(['SCRIPT', 'CODE']);
 const ATOMIC_TEXT_TAGS = new Set(['STYLE', 'TITLE']);
 // const NON_NORMALIZED_TAGS = { PRE: true, SCRIPT: true };

@@ -26,9 +26,13 @@
                   dom: 4,
                   values: {
                     t$0: {
-                      exp: function() { return this.item; }
+                      exp: function() { return this.item; },
+                      deps: [
+                        function() { return this.$value('item'); }
+                      ]
                     }
-                  }
+                  },
+                  children: []
                 }
               ]
             }

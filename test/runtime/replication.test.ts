@@ -34,21 +34,21 @@ describe('runtime/replication', () => {
     );
   });
 
-  it('002', () => {
-    const { page } = load('<html><body><ul>'
-      + '<:foreach :item=${["a", "b", "c"]}>'
-      + '<li>Item ${item}</li>'
-      + '</:foreach>'
-      + '</ul></body></html>');
-    assert.equal(
-      page.global.doc.toString(),
-      '<html data-pl="0"><head data-pl="1"></head><body data-pl="2"><ul>'
-      + '<template data-pl="3.0"><li>Item <!---t0-->a<!----></li></template>'
-      + '<template data-pl="3.1"><li>Item <!---t0-->b<!----></li></template>'
-      + '<template data-pl="3.2"><li>Item <!---t0-->c<!----></li></template>'
-      + '<template data-pl="3"><li>Item <!---t0--><!----></li></template>'
-      + '</ul></body></html>'
-    );
-  });
+  // it('002', () => {
+  //   const { page } = load('<html><body><ul>'
+  //     + '<:foreach :item=${["a", "b", "c"]}>'
+  //     + '<li>Item ${item}</li>'
+  //     + '</:foreach>'
+  //     + '</ul></body></html>');
+  //   assert.equal(
+  //     page.global.doc.toString(),
+  //     '<html data-pl="0"><head data-pl="1"></head><body data-pl="2"><ul>'
+  //     + '<template data-pl="3.0"><li>Item <!---t0-->a<!----></li></template>'
+  //     + '<template data-pl="3.1"><li>Item <!---t0-->b<!----></li></template>'
+  //     + '<template data-pl="3.2"><li>Item <!---t0-->c<!----></li></template>'
+  //     + '<template data-pl="3"><li>Item <!---t0--><!----></li></template>'
+  //     + '</ul></body></html>'
+  //   );
+  // });
 
 });

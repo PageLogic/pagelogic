@@ -1,3 +1,5 @@
+import { DIRECTIVE_TAG_PREFIX } from '../html/dom';
+
 export const SRC_LOGIC_ATTR_PREFIX = ':';
 export const SRC_SYS_ATTR_PREFIX = '::';
 export const SRC_ATTR_NAME_REGEX = /^:{0,2}[a-zA-Z_][a-zA-Z0-9_$-]*$/;
@@ -30,3 +32,7 @@ export const CLIENT_PROPS_SCRIPT_ID = 'pl-props';
 export const CLIENT_PROPS_SCRIPT_GLOBAL = '__pagelogicProps__';
 export const CLIENT_CODE_SCRIPT_ID = 'pl-client';
 export const CLIENT_GLOBAL = 'pagelogic';
+
+export const SRC_FOREACH_TAG = DIRECTIVE_TAG_PREFIX + 'FOREACH';
+export const SRC_FOREACH_ITEM_ATTR = SRC_LOGIC_ATTR_PREFIX + 'item';
+export const RT_FOREACH_ITEM_VALUE = 'item';

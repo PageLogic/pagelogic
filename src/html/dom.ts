@@ -1,3 +1,5 @@
+export const DIRECTIVE_TAG_PREFIX = ':';
+
 export const NodeType = {
   ELEMENT: 1,
   ATTRIBUTE: 2,

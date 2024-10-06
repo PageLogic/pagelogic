@@ -1,5 +1,5 @@
-import { NodeType } from './dom';
-import { DIRECTIVE_TAG_PREFIX, parse, Source } from './parser';
+import { DIRECTIVE_TAG_PREFIX, NodeType } from './dom';
+import { parse, Source } from './parser';
 import * as dom from './server-dom';
 import fs from 'fs';
 import path from 'path';
