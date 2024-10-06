@@ -1,6 +1,9 @@
 /* istanbul ignore file */
 
-export type PageLogicLogger = (type: 'error' | 'warn' | 'info' | 'debug', msg: unknown) => void;
+export type PageLogicLogger = (
+  type: 'error' | 'warn' | 'info' | 'debug',
+  msg: unknown
+) => void;
 
 export const defaultLogger: PageLogicLogger = (type, msg) => {
   const ts = getTimestamp();

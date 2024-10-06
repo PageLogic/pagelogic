@@ -108,7 +108,7 @@ export function compile(src: Source, csr?: boolean): CompilerPage {
   }
   if (csr) {
     const doc = glob.doc as dom.ServerDocument;
-    
+
     const script1 = new dom.ServerElement(doc, 'script', doc.loc);
     doc.body!.appendChild(script1);
     script1.setAttribute('id', k.CLIENT_PROPS_SCRIPT_ID);
