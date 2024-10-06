@@ -4,8 +4,11 @@ export interface PageProps {
   root: ScopeProps[];
 }
 
+export type ScopeType = 'foreach';
+
 export interface ScopeProps {
   dom: number;
+  type?: ScopeType;
   name?: string;
   isolated?: boolean; // only present if true
   children?: ScopeProps[];

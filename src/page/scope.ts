@@ -2,7 +2,7 @@ import { Comment, Element, NodeType, Text } from '../html/dom';
 import * as k from './consts';
 import { Page } from './page';
 import { Global } from './global';
-import { ValueProps } from './props';
+import { ScopeType, ValueProps } from './props';
 import { Value } from './value';
 
 export type ScopeValues = { [key: string]: Value };
@@ -13,16 +13,18 @@ export class Scope {
   id: number;
   e: Element;
   global?: Global;
+  type?: ScopeType;
   name?: string;
   isolated?: boolean;
   values: ScopeValues;
   obj!: ScopeObj;
   children: Scope[];
 
-  constructor(id: number, e: Element, global?: Global) {
+  constructor(id: number, e: Element, global?: Global, type?: ScopeType) {
     this.id = id;
     this.e = e;
     this.global = global;
+    this.type = type;
     this.values = {};
     this.children = [];
   }

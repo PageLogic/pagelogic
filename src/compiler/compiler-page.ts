@@ -4,16 +4,14 @@ import {
 import * as dom from '../html/dom';
 import { DIRECTIVE_TAG_PREFIX, PageError } from '../html/parser';
 import {
-  ServerAttribute, ServerComment,
-  ServerDocument,
-  ServerElement, ServerNode,
-  ServerText,
-  SourceLocation
+  ServerAttribute, ServerComment, ServerDocument, ServerElement, ServerNode,
+  ServerText, SourceLocation
 } from '../html/server-dom';
 import * as k from '../page/consts';
 import * as pg from '../page/page';
-import { ValueProps } from '../page/props';
+import { ScopeType, ValueProps } from '../page/props';
 import { Scope } from '../page/scope';
+import { ForeachScope } from '../page/scopes/foreach-scope';
 import { Value } from '../page/value';
 import {
   astArrayExpression, astLiteral, astLocation, astObjectExpression, astProperty
@@ -21,6 +19,7 @@ import {
 import { qualifyPageIdentifiers } from './ast/qualifier';
 import { resolveValueDependencies } from './ast/resolver';
 import { dashToCamel, encodeEventName } from './util';
+import { ELEMENT_NODE } from 'trillo/preprocessor/dom';
 
 const FOREACH_TAG = DIRECTIVE_TAG_PREFIX + 'FOREACH';
 
@@ -86,7 +85,7 @@ export class CompilerPage extends pg.Page {
     !this.hasErrors() && resolveValueDependencies(this);
   }
 
-  override newScope(id: number, e: dom.Element): Scope {
+  override newScope(id: number, e: dom.Element, _?: ScopeType): Scope {
     if (e.tagName === FOREACH_TAG) {
       return this.newForeachScope(id, e);
     }
@@ -100,7 +99,15 @@ export class CompilerPage extends pg.Page {
 
   protected newForeachScope(id: number, e: dom.Element): Scope {
     e.tagName = 'template';
-    const ret = new Scope(id, e, this.global);
+    const ret = new ForeachScope(id, e, this.global);
+    let count = 0;
+    e.childNodes.forEach(n => n.nodeType === ELEMENT_NODE ? count++ : null);
+    if (count !== 1) {
+      const loc = e.loc as SourceLocation;
+      this.errors.push(new PageError(
+        'error', '<:foreach> should contain a single element', loc
+      ));
+    }
     return ret;
   }
 
