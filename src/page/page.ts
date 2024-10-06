@@ -5,11 +5,12 @@ import { Scope } from './scope';
 import { Value } from './value';
 
 export abstract class Page {
-  glob: Global;
+  global: Global;
   root!: Scope;
 
-  constructor(glob: Global) {
-    this.glob = glob;
+  constructor(global: Global) {
+    this.global = global;
+    global.makeObj(this);
     this.init();
   }
 

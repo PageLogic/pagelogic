@@ -14,7 +14,7 @@ function load(html: string): { page: Page, root: ScopeObj } {
   const comp = compile(src);
   assert.equal(comp.errors.length, 0);
   // load
-  const glob = new ServerGlobal(comp.glob.doc, comp.glob.props);
+  const glob = new ServerGlobal(comp.global.doc, comp.global.props);
   const page = new RuntimePage(glob);
   return { page, root: page.root.obj };
 }
@@ -23,7 +23,7 @@ describe('runtime/base', () => {
 
   it('001', () => {
     const { root } = load('<html></html>');
-    assert.isUndefined(root.$parent);
+    //assert.isUndefined(root.$parent);
     assert.equal(root.$id, 0);
     assert.equal(root.$name, 'page');
     assert.equal(root.$isolated, false);

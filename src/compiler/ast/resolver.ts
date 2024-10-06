@@ -11,8 +11,8 @@ import { getProperty, getPropertyName, Path, PathItem } from './estree-utils';
 import { ArrowFunctionExpression } from 'acorn';
 
 interface Target {
-  obj: ObjectExpression;
-  type: 'scope' | 'value';
+  obj?: ObjectExpression;
+  type: 'scope' | 'value' | 'global';
 }
 
 /**
@@ -91,6 +91,12 @@ export function resolveValueDependencies(page: CompilerPage): void {
       }
       obj = getParentScope(obj);
     }
+    // 5. global
+    if (Reflect.ownKeys(page.global.values).includes(item.name)) {
+      return {
+        type: 'global'
+      };
+    }
     return null;
   }
 
@@ -104,7 +110,7 @@ export function resolveValueDependencies(page: CompilerPage): void {
       type: 'scope'
     };
     let i = 1;
-    for (; i < path.length; i++) {
+    for (; target.obj && i < path.length; i++) {
       const t = resolveName(target.obj, path[i]);
       if (t?.type === 'scope') {
         target = t;
@@ -113,6 +119,10 @@ export function resolveValueDependencies(page: CompilerPage): void {
       } else {
         while (path.length > (i + 1)) {
           path.pop();
+        }
+        if (t?.type === 'global') {
+          path.okDependency = false;
+          break;
         }
         page.errors.push(new PageError(
           'error',
@@ -130,7 +140,11 @@ export function resolveValueDependencies(page: CompilerPage): void {
   function removeSpuriousPaths(paths: Path[]) {
     for (let i = 0; i < paths.length;) {
       const path = paths[i];
-      if (path.length < 2 || (path.length > 0 && path[0].name !== 'this')) {
+      if (
+        !path.okDependency ||
+        path.length < 2 ||
+        (path.length > 0 && path[0].name !== 'this')
+      ) {
         paths.splice(i, 1);
         continue;
       }

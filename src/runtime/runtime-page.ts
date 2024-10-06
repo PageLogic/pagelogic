@@ -8,8 +8,7 @@ export class RuntimePage extends Page {
 
   override init() {
     const load = (props: ScopeProps, p: Scope) => {
-      // const e = (this.glob.doc as ServerDocument).domIdElements[props.dom];
-      const e = this.glob.getElement(props.dom);
+      const e = this.global.getElement(props.dom);
       const s = this.newScope(props.dom, e)
         .setName(props.name)
         .setValues(this, props.values)
@@ -18,7 +17,7 @@ export class RuntimePage extends Page {
       props.children?.forEach(child => load(child, s));
       return s;
     };
-    this.root = load(this.glob.props!.root[0], this.glob);
+    this.root = load(this.global.props!.root[0], this.global);
     this.refresh(this.root);
   }
 
@@ -30,7 +29,7 @@ export class RuntimePage extends Page {
     page: Page, scope: Scope, name: string, props: ValueProps
   ): Value {
     const ret = new Value(page, scope, props);
-    this.glob.setValueCB(name, ret, scope);
+    this.global.setValueCB(name, ret, scope);
     return ret;
   }
 }

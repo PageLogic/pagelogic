@@ -57,12 +57,12 @@ export class Scope {
         });
       }
     }
-    page.glob.addEventListeners(this);
+    page.global.addEventListeners(this);
     return this;
   }
 
   unlink(page: Page): this {
-    page.glob.removeEventListeners(this);
+    page.global.removeEventListeners(this);
     if (this.name && this.parent && this.parent.obj[this.name] === this.obj) {
       // remove name from parent scope
       delete this.parent.values[this.name];

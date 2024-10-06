@@ -69,8 +69,8 @@ export function pageLogic(config: PageLogicConfig) {
     let doc = comp.doc!;
     if (config.ssr) {
       doc = doc.clone(null, null) as ServerDocument;
-      const glob = new ServerGlobal(doc, comp.props!);
-      new RuntimePage(glob);
+      const global = new ServerGlobal(doc, comp.props!);
+      new RuntimePage(global);
     }
 
     const html = doc.toString();

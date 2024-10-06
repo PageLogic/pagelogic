@@ -72,14 +72,14 @@ export class CompilerPage extends pg.Page {
       return s;
     };
 
-    const doc = this.glob.doc as ServerDocument;
+    const doc = this.global.doc as ServerDocument;
     this.ast = astObjectExpression(doc.loc);
     const p = astArrayExpression(doc.loc);
     this.ast.properties.push(astProperty('root', p, doc.loc));
     this.scopes = [];
     this.objects = [];
     this.errors = [];
-    this.root = load(doc.documentElement! as ServerElement, this.glob, p);
+    this.root = load(doc.documentElement! as ServerElement, this.global, p);
     !this.hasErrors() && qualifyPageIdentifiers(this);
     !this.hasErrors() && resolveValueDependencies(this);
   }

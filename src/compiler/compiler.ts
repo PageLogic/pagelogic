@@ -84,35 +84,35 @@ export class Compiler {
     const comp = compile(source, this.props.csr);
     return {
       errors: comp.errors,
-      doc: comp.glob.doc as dom.ServerDocument,
-      props: comp.glob.props
+      doc: comp.global.doc as dom.ServerDocument,
+      props: comp.global.props
     };
   }
 }
 
 export function compile(src: Source, csr?: boolean): CompilerPage {
-  const glob = new ServerGlobal(src.doc, { root: [{ dom: 0 }]} );
-  const page = new CompilerPage(glob);
+  const global = new ServerGlobal(src.doc, { root: [{ dom: 0 }]} );
+  const page = new CompilerPage(global);
   if (page.errors.length) {
     return page;
   }
   try {
-    glob.js = generate(page.ast, {
+    global.js = generate(page.ast, {
       format: { compact: true }
     });
-    glob.props = eval(`(${glob.js})`);
+    global.props = eval(`(${global.js})`);
   } catch (err) {
     page.errors.push(new PageError(
       'error', `compiler internal error: ${err}`, src.doc.loc
     ));
   }
   if (csr) {
-    const doc = glob.doc as dom.ServerDocument;
+    const doc = global.doc as dom.ServerDocument;
 
     const script1 = new dom.ServerElement(doc, 'script', doc.loc);
     doc.body!.appendChild(script1);
     script1.setAttribute('id', k.CLIENT_PROPS_SCRIPT_ID);
-    const code = `\n${k.CLIENT_PROPS_SCRIPT_GLOBAL} = ${glob.js}\n`;
+    const code = `\n${k.CLIENT_PROPS_SCRIPT_GLOBAL} = ${global.js}\n`;
     script1.appendChild(new dom.ServerText(doc, code, doc.loc, false));
 
     const script2 = new dom.ServerElement(doc, 'script', doc.loc);

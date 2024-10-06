@@ -1,5 +1,6 @@
 import { Document, Element } from '../html/dom';
 import * as k from './consts';
+import { Page } from './page';
 import { PageProps } from './props';
 import { Scope } from './scope';
 import { Value } from './value';
@@ -19,6 +20,13 @@ export abstract class Global extends Scope {
 
   abstract init(): void;
   abstract getElement(dom: number): Element;
+
+  override makeObj(page: Page): this {
+    this.values['console'] = page.newValue(page, this, 'console', {
+      exp: function() { return console; }
+    });
+    return super.makeObj(page);
+  }
 
   setValueCB(name: string, value: Value, scope: Scope) {
     if (name.startsWith(k.RT_ATTR_VALUE_PREFIX)) {

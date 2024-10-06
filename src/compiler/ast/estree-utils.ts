@@ -44,6 +44,7 @@ export function getPropertyName(e: es.MemberExpression): string | undefined {
 export type PathItem = { name: string, node: es.Node }
 
 export class Path extends Array<PathItem> {
+  okDependency = true;
 
   startsWith(other: Path): boolean {
     const len = Math.min(this.length, other.length);
