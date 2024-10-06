@@ -3,7 +3,9 @@
 <head></head>
 
 <body>
-  <button :n=${0} :on-click=${() => n++}>${n}</button>
+  <button :n=${0} :on-click=${() => n++}>
+    Clicked ${n} time${n === 1 ? '' : 's'}
+  </button>
 </body>
 
 </html>

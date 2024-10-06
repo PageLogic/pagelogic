@@ -202,4 +202,37 @@ describe('runtime/base', () => {
     assert.exists(root.body.div?.v);
   });
 
+  it('401', () => {
+    const { page, root } = load('<html :v=${1}></html>');
+    const v = root.v;
+    assert.exists(v);
+    try {
+      delete root.v;
+    } catch (ignored) { /* nop */ }
+    // values cannot be deleted
+    assert.equal(root.v, v);
+
+    root.v = 2;
+    // values can be written
+    assert.notEqual(root.v, v);
+  });
+
+  it('402', () => {
+    const { page } = load('<html :v=${1}></html>');
+
+    const console = page.global.obj.console;
+    assert.exists(console);
+    try {
+      delete page.global.obj['console'];
+    } catch (ignored) { /* nop */ }
+    // global values cannot be deleted
+    assert.equal(page.global.obj.console, console);
+
+    try {
+      page.global.obj.console = () => {};
+    } catch (ignored) { /* nop */ }
+    // global values cannot be written
+    assert.equal(page.global.obj.console, console);
+  });
+
 });

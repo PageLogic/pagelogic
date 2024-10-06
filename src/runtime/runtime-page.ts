@@ -22,7 +22,7 @@ export class RuntimePage extends Page {
   }
 
   override newScope(id: number, e: dom.Element): Scope {
-    return new Scope(id, e);
+    return new Scope(id, e, this.global);
   }
 
   override newValue(

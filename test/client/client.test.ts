@@ -70,9 +70,22 @@ describe('client', () => {
       it('/ev001', async () => {
         const page = await goto('/ev001');
         const e = await page.$('button');
-        assert.equal(await e?.textContent(), '0');
+        assert.equal((await e?.textContent())?.trim(), 'Clicked 0 times');
         await e?.click();
-        assert.equal(await e?.textContent(), '1');
+        assert.equal((await e?.textContent())?.trim(), 'Clicked 1 time');
+        await e?.click();
+        assert.equal((await e?.textContent())?.trim(), 'Clicked 2 times');
+      });
+
+      it('/glob001', async () => {
+        const page = await goto('/glob001');
+        const messages: string[] = [];
+        page.once('console', msg => messages.push(msg.text()));
+        const e = await page.$('button');
+        assert.equal((await e?.textContent())?.trim(), '0');
+        await e?.click();
+        assert.equal((await e?.textContent())?.trim(), '1');
+        assert.deepEqual(messages, ['on-click: 1']);
       });
 
     });

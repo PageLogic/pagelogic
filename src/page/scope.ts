@@ -1,6 +1,7 @@
 import { Comment, Element, NodeType, Text } from '../html/dom';
 import * as k from './consts';
 import { Page } from './page';
+import { Global } from './global';
 import { ValueProps } from './props';
 import { Value } from './value';
 
@@ -11,15 +12,17 @@ export class Scope {
   parent?: Scope;
   id: number;
   e: Element;
+  global?: Global;
   name?: string;
   isolated?: boolean;
   values: ScopeValues;
   obj!: ScopeObj;
   children: Scope[];
 
-  constructor(id: number, e: Element) {
+  constructor(id: number, e: Element, global?: Global) {
     this.id = id;
     this.e = e;
+    this.global = global;
     this.values = {};
     this.children = [];
   }
@@ -121,11 +124,22 @@ export class Scope {
         const parent = !isolated && target[k.RT_SCOPE_PARENT_KEY].get();
         if (parent) {
           return (parent as { [key: string]: unknown })[key as string];
+        } else if (this.global) {
+          return this.global.obj[key as string];
         }
         return undefined;
       },
 
-      set: (target: { [key: string]: Value }, key: string | symbol, val: unknown) => {
+      set: (
+        target: { [key: string]: Value },
+        key: string | symbol,
+        val: unknown
+      ) => {
+        if (!this.global) {
+          // this is the global object and it's write protected
+          // (it's got no reference to global cause it's the global itself)
+          return false;
+        }
         const v = target[key as string];
         if (v) {
           v.set(val);
@@ -144,9 +158,20 @@ export class Scope {
         return false;
       },
 
+      defineProperty: (_: { [key: string]: Value }, __: string | symbol) => {
+        return false;
+      },
+
+      deleteProperty: (_: { [key: string]: Value }, __: string | symbol) => {
+        return false;
+      },
     });
 
     return this;
+  }
+
+  protected addValue(page: Page, name: string, exp: () => unknown) {
+    this.values[name] = page.newValue(page, this, name, { exp });
   }
 
   getText(id: string): Text | undefined {
@@ -159,7 +184,10 @@ export class Scope {
           if (ret) {
             return ret;
           }
-        } else if (n.nodeType === NodeType.COMMENT && (n as Comment).textContent === key) {
+        } else if (
+          n.nodeType === NodeType.COMMENT &&
+          (n as Comment).textContent === key
+        ) {
           let ret = e.childNodes[i + 1] as Text;
           if (ret.nodeType !== NodeType.TEXT) {
             const t = e.ownerDocument?.createTextNode('');
