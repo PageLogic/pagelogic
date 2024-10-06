@@ -39,7 +39,7 @@ export abstract class Page {
 
   unlinkScope(scope: Scope): Scope {
     this.unlinkValues(scope);
-    scope.unlink();
+    scope.unlink(this);
     return scope;
   }
 

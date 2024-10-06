@@ -11,7 +11,7 @@ export class ServerGlobal extends Global {
   }
 
   override init() {
-    //TODO
+    //TODO add server globals
   }
 
   override getElement(dom: number): ServerElement {

@@ -20,7 +20,7 @@ export interface Text extends Node {
 }
 
 export interface Comment extends Node {
-  textContent: string;  
+  textContent: string;
 }
 
 export interface Element extends Node {
@@ -30,11 +30,13 @@ export interface Element extends Node {
   appendChild(n: Node): Node;
   insertBefore(n: Node, ref: Node | null): Node;
   setAttribute(name: string, value: string): void;
+  addEventListener(evname: string, listener: unknown): void;
+  removeEventListener(evname: string, listener: unknown): void;
 }
 
 export interface Attribute extends Node {
   name: string;
-  value: unknown;  
+  value: unknown;
   valueLoc?: unknown;
 }
 

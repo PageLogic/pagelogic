@@ -1,7 +1,7 @@
 import * as acorn from 'acorn';
-import { Attribute, Element, Node, Text, Document, NodeType, Comment } from './dom';
-import { DIRECTIVE_TAG_PREFIX } from './parser';
 import { DOM_ID_ATTR } from '../page/consts';
+import { Attribute, Comment, Document, Element, Node, NodeType, Text } from './dom';
+import { DIRECTIVE_TAG_PREFIX } from './parser';
 
 export const VOID_ELEMENTS = new Set([
   'AREA', 'BASE', 'BR', 'COL', 'EMBED', 'HR', 'IMG', 'INPUT',
@@ -58,6 +58,9 @@ export abstract class ServerNode implements Node {
     return sb.join('');
   }
 
+  addEventListener(_: string, __: unknown): void {}
+  removeEventListener(_: string, __: unknown): void {}
+
   abstract toMarkup(ret: string[]): void;
   abstract clone(doc: ServerDocument | null, parent: ServerElement | null): ServerNode;
 }
@@ -103,7 +106,7 @@ export class ServerText extends ServerNode implements Text {
 }
 
 export class ServerComment extends ServerNode implements Comment {
-  textContent: string;  
+  textContent: string;
 
   constructor(
     doc: ServerDocument | null,

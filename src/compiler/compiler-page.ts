@@ -1,9 +1,15 @@
 import {
   ArrayExpression, BlockStatement, Expression, ObjectExpression
 } from 'acorn';
-import { ServerAttribute, ServerComment, SourceLocation, ServerText, ServerDocument, ServerElement, ServerNode } from '../html/server-dom';
 import * as dom from '../html/dom';
 import { PageError } from '../html/parser';
+import {
+  ServerAttribute, ServerComment,
+  ServerDocument,
+  ServerElement, ServerNode,
+  ServerText,
+  SourceLocation
+} from '../html/server-dom';
 import * as k from '../page/consts';
 import * as pg from '../page/page';
 import { ValueProps } from '../page/props';
@@ -30,7 +36,9 @@ export class CompilerPage extends pg.Page {
   errors!: PageError[];
 
   override init() {
-    const load = (e: ServerElement, s: Scope, p: ArrayExpression, v?: ObjectExpression) => {
+    const load = (
+      e: ServerElement, s: Scope, p: ArrayExpression, v?: ObjectExpression
+    ) => {
       if (this.needsScope(e)) {
         const l = e.loc;
         const id = this.scopes.length;
@@ -80,7 +88,9 @@ export class CompilerPage extends pg.Page {
     return new Scope(id, e);
   }
 
-  override newValue(page: pg.Page, scope: Scope, name: string, props: ValueProps): Value {
+  override newValue(
+    page: pg.Page, scope: Scope, name: string, props: ValueProps
+  ): Value {
     return new Value(page, scope, props);
   }
 
@@ -140,8 +150,8 @@ export class CompilerPage extends pg.Page {
         i++;
         continue;
       }
-      if (a.name.startsWith(k.SRC_SYSTEM_ATTR_PREFIX)) {
-        this.collectSystemAttribute(scope, a, ret);
+      if (a.name.startsWith(k.SRC_SYS_ATTR_PREFIX)) {
+        this.collectSysAttribute(scope, a, ret);
       } else if (a.name.startsWith(k.SRC_EVENT_ATTR_PREFIX)) {
         this.collectEventAttribute(a, ret);
       } else if (a.name.startsWith(k.SRC_LOGIC_ATTR_PREFIX)) {
@@ -153,9 +163,9 @@ export class CompilerPage extends pg.Page {
     }
   }
 
-  collectSystemAttribute(scope: Scope, a: ServerAttribute, ret: ObjectExpression) {
+  collectSysAttribute(scope: Scope, a: ServerAttribute, ret: ObjectExpression) {
     const name = k.RT_SYS_VALUE_PREFIX
-      + a.name.substring(k.SRC_SYSTEM_ATTR_PREFIX.length);
+      + a.name.substring(k.SRC_SYS_ATTR_PREFIX.length);
     switch (name) {
     case '$name':
       this.checkLiteralAttribute(a) && (scope.name = a.value as string);
@@ -193,13 +203,27 @@ export class CompilerPage extends pg.Page {
 
   collectNativeAttribute(a: ServerAttribute, ret: ObjectExpression) {
     const name = dashToCamel(a.name);
-    const value = this.makeValue(k.RT_ATTR_VALUE_PREFIX, name, a.value, a.loc, a.valueLoc!);
+    const value = this.makeValue(
+      k.RT_ATTR_VALUE_PREFIX, name, a.value, a.loc, a.valueLoc!
+    );
     ret.properties.push(value);
   }
 
   collectEventAttribute(a: ServerAttribute, ret: ObjectExpression) {
-    const name = encodeEventName(a.name.substring(k.SRC_EVENT_ATTR_PREFIX.length));
-    const value = this.makeValue(k.RT_EVENT_VALUE_PREFIX, name, a.value, a.loc, a.valueLoc!);
+    // attribute value must be a function expression
+    if (
+      typeof a.value !== 'object' ||
+      a.value?.type !== 'ArrowFunctionExpression'
+    ) {
+      this.errors.push(new PageError(
+        'error', 'event listeners must be arrow functions', a.valueLoc
+      ));
+    }
+    // make value
+    const n = encodeEventName(a.name.substring(k.SRC_EVENT_ATTR_PREFIX.length));
+    const value = this.makeValue(
+      k.RT_EVENT_VALUE_PREFIX, n, a.value, a.loc, a.valueLoc!
+    );
     ret.properties.push(value);
   }
 
@@ -208,15 +232,27 @@ export class CompilerPage extends pg.Page {
     const f = (e: ServerElement) => {
       for (let i = 0; i < e.childNodes.length;) {
         const n = e.childNodes[i] as ServerNode;
-        if (n.nodeType === dom.NodeType.ELEMENT && !this.needsScope(n as ServerElement)) {
+        if (
+          n.nodeType === dom.NodeType.ELEMENT &&
+          !this.needsScope(n as ServerElement)
+        ) {
           f(n as ServerElement);
-        } else if (n.nodeType === dom.NodeType.TEXT && typeof (n as ServerText).textContent !== 'string') {
+        } else if (
+          n.nodeType === dom.NodeType.TEXT &&
+          typeof (n as ServerText).textContent !== 'string'
+        ) {
           const name = k.RT_TEXT_VALUE_PREFIX + count;
-          const value = this.makeValue('', name, (n as ServerText).textContent, n.loc, n.loc);
+          const value = this.makeValue(
+            '', name, (n as ServerText).textContent, n.loc, n.loc
+          );
           v.properties.push(value);
-          const c1 = new ServerComment(e.ownerDocument, k.HTML_TEXT_MARKER1 + (count++), n.loc);
+          const c1 = new ServerComment(
+            e.ownerDocument, k.HTML_TEXT_MARKER1 + (count++), n.loc
+          );
           e.insertBefore(c1, n);
-          const c2 = new ServerComment(e.ownerDocument, k.HTML_TEXT_MARKER2, n.loc);
+          const c2 = new ServerComment(
+            e.ownerDocument, k.HTML_TEXT_MARKER2, n.loc
+          );
           e.insertBefore(c2, (n.nextSibling as ServerNode) ?? null);
           i += 2;
         }
@@ -226,7 +262,13 @@ export class CompilerPage extends pg.Page {
     f(e);
   }
 
-  makeValue(prefix: string, name: string, value: string | Expression | null, loc1: SourceLocation, loc2: SourceLocation) {
+  makeValue(
+    prefix: string,
+    name: string,
+    value: string | Expression | null,
+    loc1: SourceLocation,
+    loc2: SourceLocation
+  ) {
     this.checkName(name, loc1);
     const o = astObjectExpression(loc2);
     const p = astProperty('exp', this.makeValueFunction(value, loc2), loc2);
@@ -234,7 +276,10 @@ export class CompilerPage extends pg.Page {
     return astProperty(prefix + name, o, loc2);
   }
 
-  makeValueFunction(value: string | Expression | null, l: SourceLocation): Expression {
+  makeValueFunction(
+    value: string | Expression | null,
+    l: SourceLocation
+  ): Expression {
     const body: BlockStatement = {
       type: 'BlockStatement',
       body: [
@@ -262,7 +307,9 @@ export class CompilerPage extends pg.Page {
 
   checkName(name: string, loc: SourceLocation): boolean {
     if (!/^[a-zA-Z_$][0-9a-zA-Z_$]*$/.test(name)) {
-      this.errors.push(new PageError('error', `invalid value name "${name}"`, loc));
+      this.errors.push(new PageError(
+        'error', `invalid value name "${name}"`, loc
+      ));
       return false;
     }
     return true;

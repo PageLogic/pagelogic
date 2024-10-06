@@ -45,7 +45,7 @@ export class Value {
       try {
         this.val = this.exp.apply(this.scope.obj);
       } catch (err) {
-        //TODO
+        //TODO runtime logging
         console.error(err);
       }
       if (old == null ? this.val != null : this.val !== old) {

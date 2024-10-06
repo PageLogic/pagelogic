@@ -62,16 +62,17 @@ describe('client', () => {
 
       it('/index', async () => {
         const page = await goto('/index');
-        const div = await page.$('div');
-        const text = await div?.textContent();
+        const e = await page.$('div');
+        const text = await e?.textContent();
         assert.equal(text, 'hi');
       });
 
       it('/ev001', async () => {
         const page = await goto('/ev001');
-        const div = await page.$('button');
-        const text = await div?.textContent();
-        assert.equal(text, '0');
+        const e = await page.$('button');
+        assert.equal(await e?.textContent(), '0');
+        await e?.click();
+        assert.equal(await e?.textContent(), '1');
       });
 
     });

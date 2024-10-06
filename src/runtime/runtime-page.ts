@@ -1,11 +1,9 @@
 import * as dom from '../html/dom';
-import * as k from '../page/consts';
 import { Page } from '../page/page';
 import { ScopeProps, ValueProps } from '../page/props';
 import { Scope } from '../page/scope';
 import { Value } from '../page/value';
 
-//TODO: add values to parent scope for named scopes, if they don't conflict
 export class RuntimePage extends Page {
 
   override init() {
@@ -32,21 +30,7 @@ export class RuntimePage extends Page {
     page: Page, scope: Scope, name: string, props: ValueProps
   ): Value {
     const ret = new Value(page, scope, props);
-    if (name.startsWith(k.RT_ATTR_VALUE_PREFIX)) {
-      const key = name.substring(k.RT_ATTR_VALUE_PREFIX.length);
-      ret.cb = (scope, v) => {
-        //TODO: batch DOM changes
-        scope.e.setAttribute(key, `${v != null ? v : ''}`);
-        return v;
-      };
-    } else if (name.startsWith(k.RT_TEXT_VALUE_PREFIX)) {
-      const key = name.substring(k.RT_TEXT_VALUE_PREFIX.length);
-      const t = scope.getText(key)!;
-      ret.cb = (_, v) => {
-        t.textContent = `${v != null ? v : ''}`;
-        return v;
-      };
-    }
+    this.glob.setValueCB(name, ret, scope);
     return ret;
   }
 }

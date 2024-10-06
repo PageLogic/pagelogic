@@ -57,10 +57,12 @@ export class Scope {
         });
       }
     }
+    page.glob.addEventListeners(this);
     return this;
   }
 
-  unlink(): this {
+  unlink(page: Page): this {
+    page.glob.removeEventListeners(this);
     if (this.name && this.parent && this.parent.obj[this.name] === this.obj) {
       // remove name from parent scope
       delete this.parent.values[this.name];
