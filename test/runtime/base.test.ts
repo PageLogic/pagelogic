@@ -203,7 +203,7 @@ describe('runtime/base', () => {
   });
 
   it('401', () => {
-    const { page, root } = load('<html :v=${1}></html>');
+    const { root } = load('<html :v=${1}></html>');
     const v = root.v;
     assert.exists(v);
     try {

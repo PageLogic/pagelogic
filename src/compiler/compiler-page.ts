@@ -2,7 +2,7 @@ import {
   ArrayExpression, BlockStatement, Expression, ObjectExpression
 } from 'acorn';
 import * as dom from '../html/dom';
-import { PageError } from '../html/parser';
+import { DIRECTIVE_TAG_PREFIX, PageError } from '../html/parser';
 import {
   ServerAttribute, ServerComment,
   ServerDocument,
@@ -22,13 +22,15 @@ import { qualifyPageIdentifiers } from './ast/qualifier';
 import { resolveValueDependencies } from './ast/resolver';
 import { dashToCamel, encodeEventName } from './util';
 
+const FOREACH_TAG = DIRECTIVE_TAG_PREFIX + 'FOREACH';
+
 const DEF_NAMES: { [key: string]: string } = {
   HTML: 'page',
   HEAD: 'head',
   BODY: 'body'
 };
 
-//TODO: check that no classic functions are used in ${} expressions (error if they are)
+//TODO: prevent classic functions ${} expressions (error if there are)
 export class CompilerPage extends pg.Page {
   ast!: ObjectExpression;
   scopes!: Array<Scope>;
@@ -85,7 +87,21 @@ export class CompilerPage extends pg.Page {
   }
 
   override newScope(id: number, e: dom.Element): Scope {
+    if (e.tagName === FOREACH_TAG) {
+      return this.newForeachScope(id, e);
+    }
+    if (e.tagName.startsWith(DIRECTIVE_TAG_PREFIX)) {
+      this.errors.push(new PageError(
+        'error', 'unknown directive ' + e.tagName, e.loc as SourceLocation
+      ));
+    }
     return new Scope(id, e, this.global);
+  }
+
+  protected newForeachScope(id: number, e: dom.Element): Scope {
+    e.tagName = 'template';
+    const ret = new Scope(id, e, this.global);
+    return ret;
   }
 
   override newValue(
@@ -104,11 +120,15 @@ export class CompilerPage extends pg.Page {
   }
 
   needsScope(e: ServerElement) {
-    // 1) special tagnames
+    // 1) `:`-prefixed directive tags
+    if (e.tagName.startsWith(DIRECTIVE_TAG_PREFIX)) {
+      return true;
+    }
+    // 2) special tagnames
     if (DEF_NAMES[e.tagName]) {
       return true;
     }
-    // 2) `:`-prefixed attributes & attribute expressions
+    // 3) `:`-prefixed attributes & attribute expressions
     for (const attr of e.attributes) {
       if (
         attr.name.startsWith(k.SRC_LOGIC_ATTR_PREFIX) ||

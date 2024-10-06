@@ -92,14 +92,11 @@ function parseNodes(p: dom.ServerElement, src: Source, i: number, errors: PageEr
       if (i4 > i3) {
         parseText(p, src, i3, i4, errors);
       }
-      // if (s.charCodeAt(i1 + 3) != DASH) {
-      //   // if it doesn't start with `<!---`, store the comment
       const a = i1 + 3; const b = i2 - 3;
       p.appendChild(new dom.ServerComment(
         p.ownerDocument, s.substring(a, b),
         src.loc(a, b)
       ));
-      // }
       i3 = i1 = i2;
     }
   }
