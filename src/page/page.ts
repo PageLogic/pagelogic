@@ -14,6 +14,16 @@ export abstract class Page {
     this.init();
   }
 
+  unlinkScope(scope: Scope): Scope {
+    scope.unlink(this);
+    return scope;
+  }
+
+  relinkScope(scope: Scope, parent: Scope, ref?: Scope): Scope {
+    scope.linkTo(this, parent, ref);
+    return scope;
+  }
+
   abstract init(): void;
   abstract newScope(id: number, e: ServerElement, type?: ScopeType): Scope;
   abstract newValue(page: Page, scope: Scope, name: string, props: ValueProps): Value;
@@ -36,15 +46,5 @@ export abstract class Page {
       console.error('Context.refresh()', err);
     }
     this.refreshLevel--;
-  }
-
-  unlinkScope(scope: Scope): Scope {
-    scope.unlink(this);
-    return scope;
-  }
-
-  relinkScope(scope: Scope, parent: Scope, ref?: Scope): Scope {
-    scope.linkTo(this, parent, ref);
-    return scope;
   }
 }
