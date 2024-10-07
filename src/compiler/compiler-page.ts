@@ -21,12 +21,6 @@ import { resolveValueDependencies } from './ast/resolver';
 import { dashToCamel, encodeEventName } from './util';
 import { ELEMENT_NODE } from 'trillo/preprocessor/dom';
 
-const DEF_NAMES: { [key: string]: string } = {
-  HTML: 'page',
-  HEAD: 'head',
-  BODY: 'body'
-};
-
 //TODO: prevent classic functions ${} expressions (error if there are)
 export class CompilerPage extends pg.Page {
   ast!: ObjectExpression;
@@ -47,7 +41,7 @@ export class CompilerPage extends pg.Page {
         (e.ownerDocument as ServerDocument).domIdElements[id] = e;
 
         s = this.newScope(id, e).linkTo(this, s);
-        s.name = DEF_NAMES[e.tagName];
+        s.name = k.DEF_SCOPE_NAMES[e.tagName];
         this.scopes.push(s);
         const o = astObjectExpression(l);
         this.objects.push(o);
@@ -140,7 +134,7 @@ export class CompilerPage extends pg.Page {
       return true;
     }
     // 2) special tagnames
-    if (DEF_NAMES[e.tagName]) {
+    if (k.DEF_SCOPE_NAMES[e.tagName]) {
       return true;
     }
     // 3) `:`-prefixed attributes & attribute expressions
@@ -166,7 +160,7 @@ export class CompilerPage extends pg.Page {
         this.errors.push(err);
       }
     }
-    return DEF_NAMES[e.tagName];
+    return k.DEF_SCOPE_NAMES[e.tagName];
   }
 
   collectAttributes(scope: Scope, e: ServerElement, ret: ObjectExpression) {

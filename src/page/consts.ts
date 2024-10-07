@@ -23,7 +23,7 @@ export const RT_SCOPE_VALUE_KEY = '$value';
 export const HTML_TEXT_MARKER1 = '-t';
 export const HTML_TEXT_MARKER2 = '';
 
-export const DOM_ID_ATTR = 'data-pl';
+export const DOM_ID_ATTR = 'data-pl'; // <scope-id>[,<origin-id>]
 
 export const CLIENT_CODE_SRC = '../client.js';
 export const CLIENT_CODE_REQ = '/.pagelogic.js';
@@ -31,8 +31,14 @@ export const CLIENT_CODE_REQ = '/.pagelogic.js';
 export const CLIENT_PROPS_SCRIPT_ID = 'pl-props';
 export const CLIENT_PROPS_SCRIPT_GLOBAL = '__pagelogicProps__';
 export const CLIENT_CODE_SCRIPT_ID = 'pl-client';
-export const CLIENT_GLOBAL = 'pagelogic';
+export const CLIENT_DEFAULT_GLOBAL = 'pagelogic';
 
 export const SRC_FOREACH_TAG = DIRECTIVE_TAG_PREFIX + 'FOREACH';
 export const SRC_FOREACH_ITEM_ATTR = SRC_LOGIC_ATTR_PREFIX + 'item';
 export const RT_FOREACH_ITEM_VALUE = 'item';
+
+export const DEF_SCOPE_NAMES: { [key: string]: string } = {
+  HTML: 'page',
+  HEAD: 'head',
+  BODY: 'body'
+};
