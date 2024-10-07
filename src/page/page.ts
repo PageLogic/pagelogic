@@ -29,9 +29,9 @@ export abstract class Page {
     this.refreshLevel++;
     try {
       nextCycle && this.cycle++;
-      this.unlinkValues(scope);
-      this.linkValues(scope);
-      this.updateValues(scope);
+      scope.unlinkValues();
+      scope.linkValues();
+      scope.updateValues();
     } catch (err) {
       console.error('Context.refresh()', err);
     }
@@ -39,46 +39,12 @@ export abstract class Page {
   }
 
   unlinkScope(scope: Scope): Scope {
-    this.unlinkValues(scope);
     scope.unlink(this);
     return scope;
   }
 
   relinkScope(scope: Scope, parent: Scope, ref?: Scope): Scope {
     scope.linkTo(this, parent, ref);
-    this.linkValues(scope);
     return scope;
-  }
-
-  protected unlinkValues(scope: Scope) {
-    this.foreachValue(scope, v => {
-      v.src.forEach(o => o.dst.delete(v));
-      v.dst.forEach(o => o.src.delete(v));
-    });
-  }
-
-  protected linkValues(scope: Scope) {
-    this.foreachValue(scope, v => {
-      const scope = v.scope;
-      v.props.deps?.forEach(dep => {
-        try {
-          const o = dep.apply(scope.obj);
-          o.dst.add(v);
-          v.src.add(o);
-        } catch (ignored) { /* nop */ }
-      });
-    });
-  }
-
-  protected updateValues(scope: Scope) {
-    this.foreachValue(scope, v => {
-      v.get();
-    });
-  }
-
-  protected foreachValue(scope: Scope, cb: (v: Value) => void) {
-    const values = scope.values;
-    (Reflect.ownKeys(values) as string[]).forEach(k => cb(values[k]));
-    scope.children.forEach(s => this.foreachValue(s, cb));
   }
 }

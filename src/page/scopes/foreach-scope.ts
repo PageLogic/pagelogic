@@ -18,4 +18,16 @@ export class ForeachScope extends Scope {
     };
     return super.makeObj(page);
   }
+
+  unlinkValues(recur = true) {
+    super.unlinkValues(false);
+  }
+
+  linkValues(recur = true) {
+    super.linkValues(false);
+  }
+
+  updateValues(recur = true) {
+    super.updateValues(false);
+  }
 }

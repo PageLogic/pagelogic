@@ -63,10 +63,12 @@ export class Scope {
       }
     }
     page.global.addEventListeners(this);
+    this.linkValues();
     return this;
   }
 
   unlink(page: Page): this {
+    this.unlinkValues();
     page.global.removeEventListeners(this);
     if (this.name && this.parent && this.parent.obj[this.name] === this.obj) {
       // remove name from parent scope
@@ -78,6 +80,41 @@ export class Scope {
     delete this.parent;
     return this;
   }
+
+  protected addValue(page: Page, name: string, exp: () => unknown) {
+    this.values[name] = page.newValue(page, this, name, { exp });
+  }
+
+  getText(id: string): Text | undefined {
+    const key = k.HTML_TEXT_MARKER1 + id;
+    const f = (e: Element): Text | undefined => {
+      for (let i = 0; i < e.childNodes.length; i++) {
+        const n = e.childNodes[i];
+        if (n.nodeType === NodeType.ELEMENT) {
+          const ret = f(n as Element);
+          if (ret) {
+            return ret;
+          }
+        } else if (
+          n.nodeType === NodeType.COMMENT &&
+          (n as Comment).textContent === key
+        ) {
+          let ret = e.childNodes[i + 1] as Text;
+          if (ret.nodeType !== NodeType.TEXT) {
+            const t = e.ownerDocument?.createTextNode('');
+            e.insertBefore(t!, ret);
+            ret = t!;
+          }
+          return ret;
+        }
+      }
+    };
+    return f(this.e);
+  }
+
+  // ===========================================================================
+  // proxy
+  // ===========================================================================
 
   makeObj(page: Page): this {
     const that = this;
@@ -172,34 +209,38 @@ export class Scope {
     return this;
   }
 
-  protected addValue(page: Page, name: string, exp: () => unknown) {
-    this.values[name] = page.newValue(page, this, name, { exp });
+  // ===========================================================================
+  // refresh
+  // ===========================================================================
+
+  unlinkValues(recur = true) {
+    this.foreachValue(v => {
+      v.src.forEach(o => o.dst.delete(v));
+      v.dst.forEach(o => o.src.delete(v));
+    });
+    recur && this.children.forEach(s => s.unlinkValues());
   }
 
-  getText(id: string): Text | undefined {
-    const key = k.HTML_TEXT_MARKER1 + id;
-    const f = (e: Element): Text | undefined => {
-      for (let i = 0; i < e.childNodes.length; i++) {
-        const n = e.childNodes[i];
-        if (n.nodeType === NodeType.ELEMENT) {
-          const ret = f(n as Element);
-          if (ret) {
-            return ret;
-          }
-        } else if (
-          n.nodeType === NodeType.COMMENT &&
-          (n as Comment).textContent === key
-        ) {
-          let ret = e.childNodes[i + 1] as Text;
-          if (ret.nodeType !== NodeType.TEXT) {
-            const t = e.ownerDocument?.createTextNode('');
-            e.insertBefore(t!, ret);
-            ret = t!;
-          }
-          return ret;
-        }
-      }
-    };
-    return f(this.e);
+  linkValues(recur = true) {
+    this.foreachValue(v => {
+      v.props.deps?.forEach(dep => {
+        try {
+          const o = dep.apply(this.obj);
+          o.dst.add(v);
+          v.src.add(o);
+        } catch (ignored) { /* nop */ }
+      });
+    });
+    recur && this.children.forEach(s => s.linkValues());
+  }
+
+  updateValues(recur = true) {
+    this.foreachValue(v => v.get());
+    recur && this.children.forEach(s => s.updateValues());
+  }
+
+  protected foreachValue(cb: (v: Value) => void) {
+    const values = this.values;
+    (Reflect.ownKeys(values) as string[]).forEach(k => cb(values[k]));
   }
 }
