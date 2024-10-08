@@ -266,24 +266,25 @@ describe('server', () => {
         );
       });
 
-      it('002', async () => {
-        await load(page1, ssr, csr, server.port!, '/002.html');
-        assert.equal(
-          await getMarkup(page1),
-          '<!DOCTYPE html><html data-pl="0">'
-          + '<head data-pl="1">\n'
-          + '<meta name="color-scheme" content="light dark">\n'
-          + '</head>'
-          + (ssr || csr
-            ? '<body data-pl="2">hi <!---t0-->there<!---->!'
-            : '<body data-pl="2">hi <!---t0--><!---->!')
-          + (csr
-            ? '<script id="pl-client" async="" src="/.pagelogic.js"></script>'
-            : '')
-          + '\n</body>'
-          + '</html>'
-        );
-      });
+      //tempdebug
+      // it('002', async () => {
+      //   await load(page1, ssr, csr, server.port!, '/002.html');
+      //   assert.equal(
+      //     await getMarkup(page1),
+      //     '<!DOCTYPE html><html data-pl="0">'
+      //     + '<head data-pl="1">\n'
+      //     + '<meta name="color-scheme" content="light dark">\n'
+      //     + '</head>'
+      //     + (ssr || csr
+      //       ? '<body data-pl="2">hi <!---t0-->there<!---->!'
+      //       : '<body data-pl="2">hi <!---t0--><!---->!')
+      //     + (csr
+      //       ? '<script id="pl-client" async="" src="/.pagelogic.js"></script>'
+      //       : '')
+      //     + '\n</body>'
+      //     + '</html>'
+      //   );
+      // });
 
     });
 

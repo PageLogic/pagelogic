@@ -2,14 +2,14 @@ import { Element } from '../../html/dom';
 import { RT_FOREACH_ITEM_VALUE } from '../consts';
 import { Global } from '../global';
 import { Page } from '../page';
-import { ScopeType } from '../props';
+import { ScopeProps } from '../props';
 import { Scope } from '../scope';
 
 export class ForeachScope extends Scope {
   clones: Scope[];
 
-  constructor(id: number, e: Element, global?: Global, _?: ScopeType) {
-    super(id, e, global, 'foreach');
+  constructor(props: ScopeProps, e: Element, global?: Global) {
+    super({ ...props, type: 'foreach' }, e, global);
     this.clones = [];
     //TODO: recover existing clones from DOM
   }

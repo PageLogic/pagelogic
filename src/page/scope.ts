@@ -2,7 +2,7 @@ import { Comment, Element, NodeType, Text } from '../html/dom';
 import * as k from './consts';
 import { Page } from './page';
 import { Global } from './global';
-import { ScopeType, ValueProps } from './props';
+import { ScopeProps, ScopeType, ValueProps } from './props';
 import { Value } from './value';
 
 export type ScopeValues = { [key: string]: Value };
@@ -10,7 +10,7 @@ export type ScopeObj = { [key: string]: unknown };
 
 export class Scope {
   parent?: Scope;
-  id: number;
+  props: ScopeProps;
   e: Element;
   global?: Global;
   type?: ScopeType;
@@ -20,11 +20,11 @@ export class Scope {
   obj!: ScopeObj;
   children: Scope[];
 
-  constructor(id: number, e: Element, global?: Global, type?: ScopeType) {
-    this.id = id;
+  constructor(props: ScopeProps, e: Element, global?: Global) {
+    this.props = props;
     this.e = e;
     this.global = global;
-    this.type = type;
+    this.type = props.type;
     this.values = {};
     this.children = [];
   }
@@ -120,7 +120,7 @@ export class Scope {
     const that = this;
 
     this.values[k.RT_SCOPE_ID_KEY] = page.newValue(page, this, k.RT_SCOPE_ID_KEY, {
-      exp: function() { return that.id; }
+      exp: function() { return that.props.dom; }
     });
     this.values[k.RT_SCOPE_NAME_KEY] = page.newValue(page, this, k.RT_SCOPE_NAME_KEY, {
       exp: function() { return that.name; }

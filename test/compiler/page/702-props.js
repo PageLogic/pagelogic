@@ -25,6 +25,9 @@
                 {
                   dom: 4,
                   values: {
+                    item: {
+                      exp: function() { return ''; }
+                    },
                     t$0: {
                       exp: function() { return this.item; },
                       deps: [

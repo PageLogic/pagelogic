@@ -1,6 +1,7 @@
 import {
   ArrayExpression, BlockStatement, Expression, ObjectExpression
 } from 'acorn';
+import { ELEMENT_NODE } from 'trillo/preprocessor/dom';
 import * as dom from '../html/dom';
 import { PageError } from '../html/parser';
 import {
@@ -9,7 +10,7 @@ import {
 } from '../html/server-dom';
 import * as k from '../page/consts';
 import * as pg from '../page/page';
-import { ScopeType, ValueProps } from '../page/props';
+import { ScopeProps, ValueProps } from '../page/props';
 import { Scope } from '../page/scope';
 import { ForeachScope } from '../page/scopes/foreach-scope';
 import { Value } from '../page/value';
@@ -19,7 +20,6 @@ import {
 import { qualifyPageIdentifiers } from './ast/qualifier';
 import { resolveValueDependencies } from './ast/resolver';
 import { dashToCamel, encodeEventName } from './util';
-import { ELEMENT_NODE } from 'trillo/preprocessor/dom';
 
 //TODO: prevent classic functions ${} expressions (error if there are)
 export class CompilerPage extends pg.Page {
@@ -31,16 +31,15 @@ export class CompilerPage extends pg.Page {
   override init() {
     const load = (
       e: ServerElement, s: Scope, p: ArrayExpression,
-      forceOwnScope = true,
       v?: ObjectExpression
     ) => {
-      if (forceOwnScope || this.needsScope(e)) {
+      if (this.needsScope(e)) {
         const l = e.loc;
         const id = this.scopes.length;
         e.setAttribute(k.DOM_ID_ATTR, `${id}`);
         (e.ownerDocument as ServerDocument).domIdElements[id] = e;
 
-        s = this.newScope(id, e).linkTo(this, s);
+        s = this.newScope({ dom: id }, e).linkTo(this, s);
         s.name = k.DEF_SCOPE_NAMES[e.tagName];
         this.scopes.push(s);
         const o = astObjectExpression(l);
@@ -64,7 +63,7 @@ export class CompilerPage extends pg.Page {
       }
       e.childNodes.forEach((n: dom.Node) => {
         if (n.nodeType === dom.NodeType.ELEMENT) {
-          load(n as ServerElement, s, p, s.type === 'foreach', v);
+          load(n as ServerElement, s, p, v);
         }
       });
       return s;
@@ -82,28 +81,34 @@ export class CompilerPage extends pg.Page {
     !this.hasErrors() && resolveValueDependencies(this);
   }
 
-  override newScope(id: number, e: dom.Element, _?: ScopeType): Scope {
+  override newScope(props: ScopeProps, e: dom.Element): Scope {
     if (e.tagName === k.SRC_FOREACH_TAG) {
-      return this.newForeachScope(id, e);
+      return this.newForeachScope(props, e);
     }
     if (e.tagName.startsWith(dom.DIRECTIVE_TAG_PREFIX)) {
       this.errors.push(new PageError(
         'error', 'unknown directive ' + e.tagName, e.loc as SourceLocation
       ));
     }
-    return new Scope(id, e, this.global);
+    return new Scope(props, e, this.global);
   }
 
-  protected newForeachScope(id: number, e: dom.Element): Scope {
+  protected newForeachScope(props: ScopeProps, e: dom.Element): Scope {
     const l = e.loc as SourceLocation;
-    e.tagName = 'template';
-    const ret = new ForeachScope(id, e, this.global);
-    let count = 0;
-    e.childNodes.forEach(n => n.nodeType === ELEMENT_NODE ? count++ : null);
-    if (count !== 1) {
+    e.tagName = 'TEMPLATE';
+    const ret = new ForeachScope(props, e, this.global);
+    const ee = e.childNodes.filter(n => n.nodeType === ELEMENT_NODE);
+    if (ee.length !== 1) {
       this.errors.push(new PageError(
         'error', '<:foreach> should contain a single element', l
       ));
+    }
+    const child = ee[0] as ServerElement;
+    // ensure child element has `:item` attribute and its own scope
+    if (child && !child.getAttributeNode(k.SRC_FOREACH_ITEM_ATTR)) {
+      child.setAttribute(k.SRC_FOREACH_ITEM_ATTR, '');
+      const a = child.getAttributeNode(k.SRC_FOREACH_ITEM_ATTR)!;
+      a.loc = a.valueLoc = child.loc;
     }
     if (!(e as ServerElement).getAttributeNode(k.SRC_FOREACH_ITEM_ATTR)) {
       this.errors.push(new PageError(
@@ -129,15 +134,15 @@ export class CompilerPage extends pg.Page {
   }
 
   needsScope(e: ServerElement) {
-    // 1) `:`-prefixed directive tags
+    // `:`-prefixed directive tags
     if (e.tagName.startsWith(dom.DIRECTIVE_TAG_PREFIX)) {
       return true;
     }
-    // 2) special tagnames
+    // special tagnames
     if (k.DEF_SCOPE_NAMES[e.tagName]) {
       return true;
     }
-    // 3) `:`-prefixed attributes & attribute expressions
+    // `:`-prefixed attributes & attribute expressions
     for (const attr of e.attributes) {
       if (
         attr.name.startsWith(k.SRC_LOGIC_ATTR_PREFIX) ||

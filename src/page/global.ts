@@ -6,11 +6,11 @@ import { Scope } from './scope';
 import { Value } from './value';
 
 export abstract class Global extends Scope {
-  props: PageProps;
+  pageProps: PageProps;
 
   constructor(doc: Document, props: PageProps) {
-    super(-1, doc);
-    this.props = props;
+    super({ dom: -1 }, doc);
+    this.pageProps = props;
     this.init();
   }
 

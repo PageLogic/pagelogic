@@ -85,7 +85,7 @@ export class Compiler {
     return {
       errors: comp.errors,
       doc: comp.global.doc as dom.ServerDocument,
-      props: comp.global.props
+      props: comp.global.pageProps
     };
   }
 }
