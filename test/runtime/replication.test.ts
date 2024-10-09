@@ -5,29 +5,33 @@ import { Page } from '../../src/page/page';
 import { ScopeObj } from '../../src/page/scope';
 import { RuntimePage } from '../../src/runtime/runtime-page';
 import { ServerGlobal } from '../../src/server/server-global';
+import { ServerDocument } from '../../src/html/server-dom';
 
-function load(html: string): { page: Page, root: ScopeObj } {
+function load(html: string): { page: Page, root: ScopeObj, doc: ServerDocument } {
   // compile
   const src = parse(html, 'test');
   assert.equal(src.errors.length, 0);
   const comp = compile(src);
   assert.equal(comp.errors.length, 0);
   // load
-  const glob = new ServerGlobal(comp.global.doc, comp.global.pageProps);
+  const doc = (comp.global.doc as ServerDocument).clone(null, null);
+  console.log((comp.global.doc as ServerDocument).toString());//tempdebug
+  console.log(doc.toString());//tempdebug
+  const glob = new ServerGlobal(doc, comp.global.pageProps);
   const page = new RuntimePage(glob);
-  return { page, root: page.root.obj };
+  return { page, root: page.root.obj, doc };
 }
 
 describe('runtime/replication', () => {
 
   it('001', () => {
-    const { page } = load('<html><body><ul>'
+    const { doc } = load('<html><body><ul>'
       + '<:foreach :item=${[]}>'
       + '<li>Item ${item}</li>'
       + '</:foreach>'
       + '</ul></body></html>');
     assert.equal(
-      page.global.doc.toString(),
+      doc.toString(),
       '<html data-pl="0"><head data-pl="1"></head><body data-pl="2"><ul>'
       + '<template data-pl="3"><li data-pl="4">Item <!---t0--><!----></li></template>'
       + '</ul></body></html>'

@@ -10,7 +10,7 @@ export class ClientGlobal extends Global {
     this.domIdElements = [];
     doc.querySelectorAll(`*[${k.DOM_ID_ATTR}]`).forEach(e => {
       const id = parseInt(e.getAttribute(k.DOM_ID_ATTR)!);
-      this.domIdElements[id] = e as unknown as dom.Element;
+      id >= 0 && (this.domIdElements[id] = e as unknown as dom.Element);
     });
   }
 

@@ -184,7 +184,8 @@ function parseAttributes(e: dom.ServerElement, src: Source, i2: number, errors: 
       if (a && (quote === QUOT || quote === APOS)) {
         i1 = parseValue(e, a, src, i1 + 1, quote, String.fromCharCode(quote), errors);
         if (name === DOM_ID_ATTR) {
-          src.doc.domIdElements[parseInt(a.value as string)] = e;
+          const id = parseInt(a.value as string);
+          id >= 0 && (src.doc.domIdElements[id] = e);
         }
       } else if (
         a &&

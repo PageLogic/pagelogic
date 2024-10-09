@@ -1,3 +1,4 @@
+import { ELEMENT_NODE } from 'trillo/preprocessor/dom';
 import { Document, Element } from '../html/dom';
 import * as k from './consts';
 import { Page } from './page';
@@ -20,6 +21,25 @@ export abstract class Global extends Scope {
 
   abstract init(): void;
   abstract getElement(dom: number): Element;
+
+  getLocalElements(root: Element, dom: number): Element[] {
+    const ret = new Array<Element>();
+    const s = `${dom}`;
+    function f(e: Element) {
+      e.childNodes.forEach(n => {
+        if (n.nodeType !== ELEMENT_NODE) {
+          return;
+        }
+        if ((n as Element).getAttribute(k.DOM_ID_ATTR) === s) {
+          ret.push(e);
+          return;
+        }
+        f(n as Element);
+      });
+    }
+    f(root);
+    return ret;
+  }
 
   override makeObj(page: Page): this {
     this.values['console'] = page.newValue(page, this, 'console', {

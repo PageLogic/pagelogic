@@ -2,12 +2,13 @@ import { NextFunction, Request, Response } from 'express';
 import fs from 'fs';
 import path from 'path';
 import { Compiler } from '../compiler/compiler';
+import { Document } from '../html/dom';
 import { PageError } from '../html/parser';
+import { ServerDocument } from '../html/server-dom';
 import { CLIENT_CODE_REQ, CLIENT_CODE_SRC } from '../page/consts';
 import { RuntimePage } from '../runtime/runtime-page';
 import { PageLogicLogger } from '../utils/logger';
 import { ServerGlobal } from './server-global';
-import { ServerDocument } from '../html/server-dom';
 
 export interface PageLogicConfig {
   docroot?: string;
@@ -66,9 +67,9 @@ export function pageLogic(config: PageLogicConfig) {
       return serveErrorPage(comp.errors, res);
     }
 
-    let doc = comp.doc!;
+    let doc: Document = comp.doc!;
     if (config.ssr) {
-      doc = doc.clone(null, null) as ServerDocument;
+      doc = (doc as ServerDocument).clone(null, null);
       const global = new ServerGlobal(doc, comp.props!);
       new RuntimePage(global);
     }
