@@ -21,6 +21,7 @@ export abstract class Global extends Scope {
 
   abstract init(): void;
   abstract getElement(dom: number): Element;
+  abstract cloneTemplateImpl(template: Element): Element;
 
   getLocalElements(root: Element, dom: number): Element[] {
     const ret = new Array<Element>();
@@ -39,6 +40,18 @@ export abstract class Global extends Scope {
     }
     f(root);
     return ret;
+  }
+
+  cloneTemplate(template: Element): Element {
+    function fixDomIds(e: Element) {
+      const id = e.getAttribute(k.DOM_ID_ATTR);
+      id && e.setAttribute(k.DOM_ID_ATTR, `${-parseInt(id)}`);
+      e.childNodes.forEach(n => {
+        n.nodeType === ELEMENT_NODE && fixDomIds(n as Element);
+      });
+      return e;
+    }
+    return fixDomIds(this.cloneTemplateImpl(template));
   }
 
   override makeObj(page: Page): this {

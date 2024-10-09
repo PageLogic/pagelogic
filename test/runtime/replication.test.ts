@@ -15,8 +15,6 @@ function load(html: string): { page: Page, root: ScopeObj, doc: ServerDocument }
   assert.equal(comp.errors.length, 0);
   // load
   const doc = (comp.global.doc as ServerDocument).clone(null, null);
-  console.log((comp.global.doc as ServerDocument).toString());//tempdebug
-  console.log(doc.toString());//tempdebug
   const glob = new ServerGlobal(doc, comp.global.pageProps);
   const page = new RuntimePage(glob);
   return { page, root: page.root.obj, doc };

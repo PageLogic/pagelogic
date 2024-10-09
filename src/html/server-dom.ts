@@ -3,7 +3,9 @@ import { DOM_ID_ATTR } from '../page/consts';
 import {
   Attribute, Comment,
   DIRECTIVE_TAG_PREFIX,
-  Document, DocumentFragment, Element, Node, NodeType, TemplateElement, Text
+  Document,
+  Element, Node, NodeType,
+  Text
 } from './dom';
 
 export const VOID_ELEMENTS = new Set([
@@ -339,34 +341,28 @@ export class ServerElement extends ServerNode implements Element {
   }
 }
 
-export class ServerTemplateElement extends ServerElement implements TemplateElement {
-  content: ServerDocumentFragment;
+// export class ServerTemplateElement extends ServerElement implements TemplateElement {
+//   content: ServerDocumentFragment;
 
-  constructor(
-    doc: ServerDocument | null,
-    name: string,
-    loc: SourceLocation
-  ) {
-    super(doc, name, loc);
-    this.content = new ServerDocumentFragment(loc);
-  }
+//   constructor(
+//     doc: ServerDocument | null,
+//     name: string,
+//     loc: SourceLocation
+//   ) {
+//     super(doc, name, loc);
+//     this.content = new ServerDocumentFragment(loc);
+//   }
 
-  override appendChild(n: Node): Node {
-    return this.content.insertBefore(n, null);
-  }
+//   override appendChild(n: Node): Node {
+//     return this.content.insertBefore(n, null);
+//   }
 
-  toMarkup(ret: string[]): void {
-    super.toMarkup2(ret, () => {
-      this.content.toMarkup(ret);
-    })
-    // for (const n of this.childNodes) {
-    //   if (n.nodeType === NodeType.ELEMENT) {
-    //     (n as ServerNode).toMarkup(ret);
-    //     break;
-    //   }
-    // }
-  }
-}
+//   toMarkup(ret: string[]): void {
+//     super.toMarkup2(ret, () => {
+//       this.content.toMarkup(ret);
+//     })
+//   }
+// }
 
 export class ServerDocument extends ServerElement implements Document {
   jsonLoc = true;
@@ -451,12 +447,12 @@ export class ServerDocument extends ServerElement implements Document {
   }
 }
 
-export class ServerDocumentFragment extends ServerDocument implements DocumentFragment {
-  cloneNode(deep?: boolean): Node {
-    const ret = this.documentElement!.clone(this, null);
-    return ret;
-  }
-}
+// export class ServerDocumentFragment extends ServerDocument implements DocumentFragment {
+//   cloneNode(deep?: boolean): Node {
+//     const ret = this.documentElement!.clone(this, null);
+//     return ret;
+//   }
+// }
 
 function escape(text: string, chars = ''): string {
   let r = text;

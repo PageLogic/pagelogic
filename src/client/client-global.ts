@@ -17,4 +17,9 @@ export class ClientGlobal extends Global {
   override getElement(dom: number): dom.Element {
     return this.domIdElements[dom];
   }
+
+  override cloneTemplateImpl(t: dom.Element): dom.Element {
+    return (t as unknown as HTMLTemplateElement).content
+      .cloneNode(true) as unknown as dom.Element;
+  }
 }

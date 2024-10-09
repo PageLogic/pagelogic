@@ -16,4 +16,11 @@ export class ServerGlobal extends Global {
   override getElement(dom: number): ServerElement {
     return (this.doc as ServerDocument).domIdElements[dom];
   }
+
+  override cloneTemplateImpl(template: ServerElement): ServerElement {
+    return (template.childNodes[0] as ServerElement).clone(
+      template.ownerDocument,
+      null
+    );
+  }
 }

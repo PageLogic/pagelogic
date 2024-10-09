@@ -37,9 +37,9 @@ export interface Element extends Node {
   removeEventListener(evname: string, listener: unknown): void;
 }
 
-export interface TemplateElement extends Element {
-  content: DocumentFragment;
-}
+// export interface TemplateElement extends Element {
+//   content: DocumentFragment;
+// }
 
 export interface Attribute extends Node {
   name: string;
@@ -52,6 +52,6 @@ export interface Document extends Element {
   createTextNode(text: string): Text;
 }
 
-export interface DocumentFragment extends Document {
-  cloneNode(deep?: boolean): Node;
-}
+// export interface DocumentFragment extends Document {
+//   cloneNode(deep?: boolean): Node;
+// }
