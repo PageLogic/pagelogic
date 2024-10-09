@@ -13,7 +13,7 @@ function load(html: string): { page: Page, root: ScopeObj } {
   const comp = compile(src);
   assert.equal(comp.errors.length, 0);
   // load
-  const glob = new ServerGlobal(comp.global.doc, comp.global.props);
+  const glob = new ServerGlobal(comp.global.doc, comp.global.pageProps);
   const page = new RuntimePage(glob);
   return { page, root: page.root.obj };
 }
@@ -43,10 +43,10 @@ describe('runtime/replication', () => {
   //   assert.equal(
   //     page.global.doc.toString(),
   //     '<html data-pl="0"><head data-pl="1"></head><body data-pl="2"><ul>'
-  //     + '<template data-pl="3.0"><li>Item <!---t0-->a<!----></li></template>'
-  //     + '<template data-pl="3.1"><li>Item <!---t0-->b<!----></li></template>'
-  //     + '<template data-pl="3.2"><li>Item <!---t0-->c<!----></li></template>'
-  //     + '<template data-pl="3"><li>Item <!---t0--><!----></li></template>'
+  //     + '<li data-pl="5/4">Item <!---t0-->a<!----></li>'
+  //     + '<li data-pl="6/4">Item <!---t0-->b<!----></li>'
+  //     + '<li data-pl="7/4">Item <!---t0-->c<!----></li>'
+  //     + '<template data-pl="3"><li data-pl="4">Item <!---t0--><!----></li></template>'
   //     + '</ul></body></html>'
   //   );
   // });

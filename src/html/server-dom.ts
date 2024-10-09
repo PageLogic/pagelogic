@@ -3,7 +3,7 @@ import { DOM_ID_ATTR } from '../page/consts';
 import {
   Attribute, Comment,
   DIRECTIVE_TAG_PREFIX,
-  Document, Element, Node, NodeType, Text
+  Document, DocumentFragment, Element, Node, NodeType, TemplateElement, Text
 } from './dom';
 
 export const VOID_ELEMENTS = new Set([
@@ -287,6 +287,24 @@ export class ServerElement extends ServerNode implements Element {
   }
 
   toMarkup(ret: string[]): void {
+    // if (this.tagName.startsWith(DIRECTIVE_TAG_PREFIX)) {
+    //   return;
+    // }
+    // ret.push('<');
+    // ret.push(this.tagName.toLowerCase());
+    // this.attributes.forEach(a => (a as ServerAttribute).toMarkup(ret));
+    // ret.push('>');
+    // if (VOID_ELEMENTS.has(this.tagName)) {
+    //   return;
+    // }
+    // this.childNodes.forEach(n => (n as ServerNode).toMarkup(ret));
+    // ret.push('</');
+    // ret.push(this.tagName.toLowerCase());
+    // ret.push('>');
+    this.toMarkup2(ret);
+  }
+
+  toMarkup2(ret: string[], cb?: (ret: string[]) => void): void {
     if (this.tagName.startsWith(DIRECTIVE_TAG_PREFIX)) {
       return;
     }
@@ -297,7 +315,9 @@ export class ServerElement extends ServerNode implements Element {
     if (VOID_ELEMENTS.has(this.tagName)) {
       return;
     }
-    this.childNodes.forEach(n => (n as ServerNode).toMarkup(ret));
+    cb
+      ? cb(ret)
+      : this.childNodes.forEach(n => (n as ServerNode).toMarkup(ret));
     ret.push('</');
     ret.push(this.tagName.toLowerCase());
     ret.push('>');
@@ -316,6 +336,35 @@ export class ServerElement extends ServerNode implements Element {
       (n as ServerNode).clone(doc, ret);
     });
     return ret;
+  }
+}
+
+export class ServerTemplateElement extends ServerElement implements TemplateElement {
+  content: ServerDocumentFragment;
+
+  constructor(
+    doc: ServerDocument | null,
+    name: string,
+    loc: SourceLocation
+  ) {
+    super(doc, name, loc);
+    this.content = new ServerDocumentFragment(loc);
+  }
+
+  override appendChild(n: Node): Node {
+    return this.content.insertBefore(n, null);
+  }
+
+  toMarkup(ret: string[]): void {
+    super.toMarkup2(ret, () => {
+      this.content.toMarkup(ret);
+    })
+    // for (const n of this.childNodes) {
+    //   if (n.nodeType === NodeType.ELEMENT) {
+    //     (n as ServerNode).toMarkup(ret);
+    //     break;
+    //   }
+    // }
   }
 }
 
@@ -398,6 +447,13 @@ export class ServerDocument extends ServerElement implements Document {
     this.childNodes.forEach(n => {
       (n as ServerNode).clone(ret, ret);
     });
+    return ret;
+  }
+}
+
+export class ServerDocumentFragment extends ServerDocument implements DocumentFragment {
+  cloneNode(deep?: boolean): Node {
+    const ret = this.documentElement!.clone(this, null);
     return ret;
   }
 }

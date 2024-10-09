@@ -36,6 +36,10 @@ export interface Element extends Node {
   removeEventListener(evname: string, listener: unknown): void;
 }
 
+export interface TemplateElement extends Element {
+  content: DocumentFragment;
+}
+
 export interface Attribute extends Node {
   name: string;
   value: unknown;
@@ -45,4 +49,8 @@ export interface Attribute extends Node {
 export interface Document extends Element {
   // documentElement: Element | null;
   createTextNode(text: string): Text;
+}
+
+export interface DocumentFragment extends Document {
+  cloneNode(deep?: boolean): Node;
 }

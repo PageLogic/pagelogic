@@ -1,8 +1,8 @@
 import { Comment, Element, NodeType, Text } from '../html/dom';
 import * as k from './consts';
-import { Page } from './page';
 import { Global } from './global';
-import { ScopeProps, ScopeType, ValueProps } from './props';
+import { Page } from './page';
+import { ScopeProps, ValueProps } from './props';
 import { Value } from './value';
 
 export type ScopeValues = { [key: string]: Value };
@@ -13,7 +13,6 @@ export class Scope {
   props: ScopeProps;
   e: Element;
   global?: Global;
-  type?: ScopeType;
   name?: string;
   isolated?: boolean;
   values: ScopeValues;
@@ -24,7 +23,6 @@ export class Scope {
     this.props = props;
     this.e = e;
     this.global = global;
-    this.type = props.type;
     this.values = {};
     this.children = [];
   }

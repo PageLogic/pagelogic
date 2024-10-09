@@ -46,15 +46,15 @@ export class CompilerPage extends pg.Page {
         this.objects.push(o);
 
         o.properties.push(astProperty('dom', astLiteral(id, l), l));
-        if (s.type) {
-          o.properties.push(astProperty('type', astLiteral(s.type, l), l));
+        if (s.props.type) {
+          o.properties.push(astProperty('type', astLiteral(s.props.type, l), l));
         }
         const name = this.getName(e);
         name && o.properties.push(astProperty('name', astLiteral(name, l), l));
 
         v = astObjectExpression(l);
         this.collectAttributes(s, e, v);
-        s.type !== 'foreach' && this.collectTexts(e, v);
+        s.props.type !== 'foreach' && this.collectTexts(e, v);
         v.properties.length && o.properties.push(astProperty('values', v, l));
 
         p.elements.push(o);
@@ -102,6 +102,10 @@ export class CompilerPage extends pg.Page {
       this.errors.push(new PageError(
         'error', '<:foreach> should contain a single element', l
       ));
+    }
+    const nn = e.childNodes.filter(n => n.nodeType !== ELEMENT_NODE);
+    while (nn.length) {
+      nn.pop()?.unlink();
     }
     const child = ee[0] as ServerElement;
     // ensure child element has `:item` attribute and its own scope

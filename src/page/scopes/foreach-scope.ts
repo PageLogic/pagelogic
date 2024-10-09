@@ -64,22 +64,29 @@ export class ForeachScope extends Scope {
     for (; di < (offset + length - 1); ci++, di++) {
       if (ci < this.clones.length) {
         // update existing clone
-        this.clones[ci].obj[RT_FOREACH_ITEM_VALUE] = vv[di];
+        this.updateClone(this.clones[ci], vv[di]);
       } else {
         // create new clone
-        //FIXME
+        this.addClone(vv[di]);
       }
-      // remove excess clones
-      this.removeClones(length - 1);
+    }
+    // remove excess clones
+    while (this.clones.length > length) {
+      this.removeClone(this.clones.length - 1);
     }
   }
 
-  removeClones(maxCount: number) {
-    if (this.clones) {
-      while (this.clones.length > maxCount) {
-        const clone = this.clones.pop()!;
-        //FIXME
-      }
-    }
+  addClone(data: unknown) {
+    //TODO
+  }
+
+  updateClone(clone: Scope, data: unknown) {
+    clone.obj[RT_FOREACH_ITEM_VALUE] = data;
+  }
+
+  removeClone(i: number) {
+    const clone = this.clones.splice(i, 1)[0];
+    // clone.unlink()
+    //TODO
   }
 }
