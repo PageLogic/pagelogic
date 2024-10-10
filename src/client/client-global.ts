@@ -1,27 +1,11 @@
 import * as dom from '../html/dom';
 import * as k from '../page/consts';
 import { Global } from '../page/global';
-import { Scope } from '../page/scope';
 
 export class ClientGlobal extends Global {
-  domIdElements!: dom.Element[];
 
   override init() {
-    const doc = this.doc as unknown as Document;
-    this.domIdElements = [];
-    doc.querySelectorAll(`*[${k.DOM_ID_ATTR}]`).forEach(e => {
-      const id = parseInt(e.getAttribute(k.DOM_ID_ATTR)!);
-      id >= 0 && (this.domIdElements[id] = e as unknown as dom.Element);
-    });
-  }
-
-  override getElement(dom: number): dom.Element {
-    return this.domIdElements[dom];
-  }
-
-  override injectLogic(scope: Scope, e: dom.Element): void {
-    // @ts-expect-error add DOM global
-    e[k.CLIENT_DEFAULT_GLOBAL] = scope.obj;
+    // nop
   }
 
   override cloneTemplateImpl(t: dom.Element): dom.Element {

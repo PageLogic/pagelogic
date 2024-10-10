@@ -20,9 +20,27 @@ export abstract class Global extends Scope {
   }
 
   abstract init(): void;
-  abstract getElement(dom: number): Element;
-  abstract injectLogic(scope: Scope, e: Element): void;
   abstract cloneTemplateImpl(template: Element): Element;
+
+  getElement(id: number, root: Element): Element | null {
+    const v = root.nodeType === ELEMENT_NODE
+      ? root.getAttribute(k.DOM_ID_ATTR)
+      : null;
+    if (v !== null && Math.abs(parseInt(v)) === id) {
+      return root;
+    }
+    let ret = null;
+    for (const n of root.childNodes) {
+      if (n.nodeType !== ELEMENT_NODE) {
+        continue;
+      }
+      ret = this.getElement(id, n as Element);
+      if (ret !== null) {
+        return ret;
+      }
+    }
+    return null;
+  }
 
   getLocalElements(root: Element, dom: number): Element[] {
     const ret = new Array<Element>();

@@ -37,7 +37,6 @@ export class CompilerPage extends pg.Page {
         const l = e.loc;
         const id = this.scopes.length;
         e.setAttribute(k.DOM_ID_ATTR, `${id}`);
-        (e.ownerDocument as ServerDocument).domIdElements[id] = e;
 
         s = this.newScope({ dom: id }, e).linkTo(s);
         s.name = k.DEF_SCOPE_NAMES[e.tagName];
@@ -79,6 +78,11 @@ export class CompilerPage extends pg.Page {
     this.root = load(doc.documentElement! as ServerElement, this.global, p);
     !this.hasErrors() && qualifyPageIdentifiers(this);
     !this.hasErrors() && resolveValueDependencies(this);
+  }
+
+  override load(props: ScopeProps, p: Scope): Scope {
+    // nop
+    return p;
   }
 
   override newScope(props: ScopeProps, e: dom.Element): Scope {

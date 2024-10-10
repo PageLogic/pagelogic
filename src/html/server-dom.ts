@@ -330,9 +330,6 @@ export class ServerElement extends ServerNode implements Element {
     parent?.appendChild(ret);
     this.attributes.forEach(a => {
       (a as ServerAttribute).clone(doc, ret);
-      if (doc && a.name === DOM_ID_ATTR) {
-        doc.domIdElements[parseInt(a.value as string)] = ret;
-      }
     });
     this.childNodes.forEach(n => {
       (n as ServerNode).clone(doc, ret);
@@ -366,7 +363,6 @@ export class ServerElement extends ServerNode implements Element {
 
 export class ServerDocument extends ServerElement implements Document {
   jsonLoc = true;
-  domIdElements: ServerElement[] = [];
 
   constructor(loc: string | SourceLocation) {
     super(null, '#document',

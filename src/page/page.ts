@@ -25,6 +25,7 @@ export abstract class Page {
   }
 
   abstract init(): void;
+  abstract load(props: ScopeProps, p: Scope): Scope;
   abstract newScope(props: ScopeProps, e: ServerElement): Scope;
   abstract newValue(page: Page, scope: Scope, name: string, props: ValueProps): Value;
 

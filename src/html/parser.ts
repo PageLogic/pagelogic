@@ -1,7 +1,6 @@
 import * as acorn from 'acorn';
-import { DOM_ID_ATTR } from '../page/consts';
-import * as dom from './server-dom';
 import { NodeType } from './dom';
+import * as dom from './server-dom';
 
 const SKIP_CONTENT_TAGS = new Set(['SCRIPT', 'CODE']);
 const ATOMIC_TEXT_TAGS = new Set(['STYLE', 'TITLE']);
@@ -38,9 +37,6 @@ export function parse(s: string, fname: string, ret?: Source, sanitize = true): 
     });
     body || doc.documentElement!.appendChild((body = new dom.ServerElement(doc, 'BODY', doc.loc)));
     head || doc.documentElement!.insertBefore((head = new dom.ServerElement(doc, 'HEAD', doc.loc)), body);
-    !doc.domIdElements[0] && (doc.domIdElements[0] = doc.documentElement!);
-    !doc.domIdElements[1] && (doc.domIdElements[1] = head);
-    !doc.domIdElements[2] && (doc.domIdElements[2] = body);
     doc.documentElement!.tagName = 'HTML';
   }
   return ret;
@@ -181,10 +177,6 @@ function parseAttributes(e: dom.ServerElement, src: Source, i2: number, errors: 
       a.valueLoc = src.loc(i1, i1);
       if (a && (quote === QUOT || quote === APOS)) {
         i1 = parseValue(e, a, src, i1 + 1, quote, String.fromCharCode(quote), errors);
-        if (name === DOM_ID_ATTR) {
-          const id = parseInt(a.value as string);
-          id >= 0 && (src.doc.domIdElements[id] = e);
-        }
       } else if (
         a &&
         s.startsWith(LEXP, i1)

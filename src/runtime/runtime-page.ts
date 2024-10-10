@@ -8,18 +8,19 @@ import { Value } from '../page/value';
 export class RuntimePage extends Page {
 
   override init() {
-    const load = (props: ScopeProps, p: Scope) => {
-      const e = this.global.getElement(props.dom);
-      const s = this.newScope(props, e)
-        .setName(props.name)
-        .setValues(props.values)
-        .makeObj()
-        .linkTo(p);
-      props.children?.forEach(child => load(child, s));
-      return s;
-    };
-    this.root = load(this.global.pageProps!.root[0], this.global);
+    this.root = this.load(this.global.pageProps!.root[0], this.global);
     this.refresh(this.root);
+  }
+
+  override load(props: ScopeProps, p: Scope): Scope {
+    const e = this.global.getElement(props.dom, p.e)!;
+    const s = this.newScope(props, e)
+      .setName(props.name)
+      .setValues(props.values)
+      .makeObj()
+      .linkTo(p);
+    props.children?.forEach(child => this.load(child, s));
+    return s;
   }
 
   override newScope(props: ScopeProps, e: dom.Element): Scope {
