@@ -8,33 +8,33 @@ import { Scope } from '../scope';
 export class ForeachScope extends Scope {
   clones: Scope[];
 
-  constructor(props: ScopeProps, e: Element, global?: Global) {
-    super({ ...props, type: 'foreach' }, e, global);
+  constructor(page: Page, props: ScopeProps, e: Element, global?: Global) {
+    super(page, { ...props, type: 'foreach' }, e, global);
     this.clones = [];
     //TODO: recover existing clones from DOM
   }
 
-  override linkTo(page: Page, p: Scope, ref?: Scope): this {
-    super.linkTo(page, p, ref);
+  override linkTo(p: Scope, ref?: Scope): this {
+    super.linkTo(p, ref);
     //TODO: unlink clones
     return this;
   }
 
-  override unlink(page: Page): this {
+  override unlink(): this {
     //TODO: link clones
-    return super.unlink(page);
+    return super.unlink();
   }
 
   // ===========================================================================
   // proxy object
   // ===========================================================================
 
-  override makeObj(page: Page): this {
+  override makeObj(): this {
     this.values[RT_FOREACH_ITEM_VALUE].cb = (_, v) => {
       this.replicateFor(Array.isArray(v) ? v : []);
       return v;
     };
-    return super.makeObj(page);
+    return super.makeObj();
   }
 
   // ===========================================================================

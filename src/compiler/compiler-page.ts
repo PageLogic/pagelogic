@@ -39,7 +39,7 @@ export class CompilerPage extends pg.Page {
         e.setAttribute(k.DOM_ID_ATTR, `${id}`);
         (e.ownerDocument as ServerDocument).domIdElements[id] = e;
 
-        s = this.newScope({ dom: id }, e).linkTo(this, s);
+        s = this.newScope({ dom: id }, e).linkTo(s);
         s.name = k.DEF_SCOPE_NAMES[e.tagName];
         this.scopes.push(s);
         const o = astObjectExpression(l);
@@ -90,13 +90,13 @@ export class CompilerPage extends pg.Page {
         'error', 'unknown directive ' + e.tagName, e.loc as SourceLocation
       ));
     }
-    return new Scope(props, e, this.global);
+    return new Scope(this, props, e, this.global);
   }
 
   protected newForeachScope(props: ScopeProps, e: dom.Element): Scope {
     const l = e.loc as SourceLocation;
     e.tagName = 'TEMPLATE';
-    const ret = new ForeachScope(props, e, this.global);
+    const ret = new ForeachScope(this, props, e, this.global);
     const ee = e.childNodes.filter(n => n.nodeType === ELEMENT_NODE);
     if (ee.length !== 1) {
       this.errors.push(new PageError(

@@ -28,8 +28,9 @@ describe('compiler/page', () => {
         const inSource = parser.parse(inText.toString(), file);
         assert.equal(inSource.errors.length, 0);
 
-        const glob = new ServerGlobal(inSource.doc, { root: [] });
-        const page = new CompilerPage(glob);
+        const page = new CompilerPage(
+          page => new ServerGlobal(page, inSource.doc, { root: [] })
+        );
 
         const errPath = path.join(docroot, name + errSuffix);
         if (fs.existsSync(errPath)) {

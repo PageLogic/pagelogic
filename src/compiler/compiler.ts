@@ -91,8 +91,10 @@ export class Compiler {
 }
 
 export function compile(src: Source, csr?: boolean): CompilerPage {
-  const global = new ServerGlobal(src.doc, { root: [{ dom: 0 }]} );
-  const page = new CompilerPage(global);
+  const page = new CompilerPage(
+    page => new ServerGlobal(page, src.doc, { root: [{ dom: 0 }]} )
+  );
+  const global = page.global as ServerGlobal;
   if (page.errors.length) {
     return page;
   }

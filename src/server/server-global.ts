@@ -1,13 +1,14 @@
 import { Document } from '../html/dom';
 import { ServerDocument, ServerElement } from '../html/server-dom';
 import { Global } from '../page/global';
+import { Page } from '../page/page';
 import { PageProps } from '../page/props';
 
 export class ServerGlobal extends Global {
   js?: string;
 
-  constructor(doc: Document, props: PageProps) {
-    super(doc, props);
+  constructor(page: Page, doc: Document, props: PageProps) {
+    super(page, doc, props);
   }
 
   override init() {

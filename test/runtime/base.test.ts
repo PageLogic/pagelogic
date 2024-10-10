@@ -6,6 +6,8 @@ import { ScopeObj } from '../../src/page/scope';
 import { RuntimePage } from '../../src/runtime/runtime-page';
 import { ServerGlobal } from '../../src/server/server-global';
 import { Page } from '../../src/page/page';
+import { PageProps } from '../../src/page/props';
+import { ServerDocument } from '../../src/html/server-dom';
 
 function load(html: string): { page: Page, root: ScopeObj } {
   // compile
@@ -14,8 +16,12 @@ function load(html: string): { page: Page, root: ScopeObj } {
   const comp = compile(src);
   assert.equal(comp.errors.length, 0);
   // load
-  const glob = new ServerGlobal(comp.global.doc, comp.global.props);
-  const page = new RuntimePage(glob);
+  const doc = (comp.global.doc as ServerDocument).clone(null, null);
+  const page = new RuntimePage(page => {
+    return new ServerGlobal(
+      page, doc, comp.global.props as unknown as PageProps
+    )
+  });
   return { page, root: page.root.obj };
 }
 

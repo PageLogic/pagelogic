@@ -6,7 +6,8 @@ import { ClientGlobal } from './client-global';
 
 // @ts-expect-error get global var
 const props = window[CLIENT_PROPS_SCRIPT_GLOBAL] as PageProps;
-const global = new ClientGlobal(document as unknown as dom.Document, props);
-const page = new RuntimePage(global);
+const page = new RuntimePage(
+  page => new ClientGlobal(page, document as unknown as dom.Document, props)
+);
 // @ts-expect-error add global var
 window[page.root.name ?? CLIENT_DEFAULT_GLOBAL] = page.root.obj;

@@ -9,8 +9,8 @@ import { Value } from './value';
 export abstract class Global extends Scope {
   pageProps: PageProps;
 
-  constructor(doc: Document, props: PageProps) {
-    super({ dom: -1 }, doc);
+  constructor(page: Page, doc: Document, props: PageProps) {
+    super(page, { dom: -1 }, doc);
     this.pageProps = props;
     this.init();
   }
@@ -54,11 +54,11 @@ export abstract class Global extends Scope {
     return fixDomIds(this.cloneTemplateImpl(template));
   }
 
-  override makeObj(page: Page): this {
-    this.values['console'] = page.newValue(page, this, 'console', {
+  override makeObj(): this {
+    this.values['console'] = this.page.newValue(this.page, this, 'console', {
       exp: function() { return console; }
     });
-    return super.makeObj(page);
+    return super.makeObj();
   }
 
   setValueCB(name: string, value: Value, scope: Scope) {

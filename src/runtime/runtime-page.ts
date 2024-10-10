@@ -12,9 +12,9 @@ export class RuntimePage extends Page {
       const e = this.global.getElement(props.dom);
       const s = this.newScope(props, e)
         .setName(props.name)
-        .setValues(this, props.values)
-        .makeObj(this)
-        .linkTo(this, p);
+        .setValues(props.values)
+        .makeObj()
+        .linkTo(p);
       props.children?.forEach(child => load(child, s));
       return s;
     };
@@ -24,9 +24,9 @@ export class RuntimePage extends Page {
 
   override newScope(props: ScopeProps, e: dom.Element): Scope {
     if (props.type === 'foreach') {
-      return new ForeachScope(props, e, this.global);
+      return new ForeachScope(this, props, e, this.global);
     }
-    return new Scope(props, e, this.global);
+    return new Scope(this, props, e, this.global);
   }
 
   override newValue(

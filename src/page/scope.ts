@@ -9,6 +9,7 @@ export type ScopeValues = { [key: string]: Value };
 export type ScopeObj = { [key: string]: unknown };
 
 export class Scope {
+  page: Page;
   parent?: Scope;
   props: ScopeProps;
   e: Element;
@@ -19,7 +20,8 @@ export class Scope {
   obj!: ScopeObj;
   children: Scope[];
 
-  constructor(props: ScopeProps, e: Element, global?: Global) {
+  constructor(page: Page, props: ScopeProps, e: Element, global?: Global) {
+    this.page = page;
     this.props = props;
     this.e = e;
     this.global = global;
@@ -32,18 +34,18 @@ export class Scope {
     return this;
   }
 
-  setValues(page: Page, values?: { [key: string]: ValueProps }): this {
+  setValues(values?: { [key: string]: ValueProps }): this {
     if (values) {
       Reflect.ownKeys(values).forEach(key => {
         const name = key as string;
-        const v = page.newValue(page, this, name, values![name]);
+        const v = this.page.newValue(this.page, this, name, values![name]);
         this.values[name] = v;
       });
     }
     return this;
   }
 
-  linkTo(page: Page, p: Scope, ref?: Scope): this {
+  linkTo(p: Scope, ref?: Scope): this {
     let i = ref ? p.children.indexOf(ref) : -1;
     i = i < 0 ? p.children.length : i;
     p.children.splice(i, 0, this);
@@ -55,19 +57,19 @@ export class Scope {
       if (!p.values[this.name]) {
         const that = this;
         // add name to parent scope
-        p.values[this.name] = new Value(page, p, {
+        p.values[this.name] = new Value(this.page, p, {
           exp: function() { return that.obj; }
         });
       }
     }
-    page.global.addEventListeners(this);
+    this.page.global.addEventListeners(this);
     this.linkValues();
     return this;
   }
 
-  unlink(page: Page): this {
+  unlink(): this {
     this.unlinkValues();
-    page.global.removeEventListeners(this);
+    this.page.global.removeEventListeners(this);
     if (this.name && this.parent && this.parent.obj[this.name] === this.obj) {
       // remove name from parent scope
       delete this.parent.values[this.name];
@@ -79,8 +81,8 @@ export class Scope {
     return this;
   }
 
-  protected addValue(page: Page, name: string, exp: () => unknown) {
-    this.values[name] = page.newValue(page, this, name, { exp });
+  protected addValue(name: string, exp: () => unknown) {
+    this.values[name] = this.page.newValue(this.page, this, name, { exp });
   }
 
   getText(id: string): Text | undefined {
@@ -114,8 +116,9 @@ export class Scope {
   // proxy object
   // ===========================================================================
 
-  makeObj(page: Page): this {
+  makeObj(): this {
     const that = this;
+    const page = this.page;
 
     this.values[k.RT_SCOPE_ID_KEY] = page.newValue(page, this, k.RT_SCOPE_ID_KEY, {
       exp: function() { return that.props.dom; }

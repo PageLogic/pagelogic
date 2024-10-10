@@ -8,19 +8,19 @@ export abstract class Page {
   global: Global;
   root!: Scope;
 
-  constructor(global: Global) {
-    this.global = global;
-    global.makeObj(this);
+  constructor(cb: (page: Page) => Global) {
+    this.global = cb(this);
+    this.global.makeObj();
     this.init();
   }
 
   unlinkScope(scope: Scope): Scope {
-    scope.unlink(this);
+    scope.unlink();
     return scope;
   }
 
   relinkScope(scope: Scope, parent: Scope, ref?: Scope): Scope {
-    scope.linkTo(this, parent, ref);
+    scope.linkTo(parent, ref);
     return scope;
   }
 
