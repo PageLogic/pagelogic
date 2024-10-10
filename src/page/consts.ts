@@ -31,7 +31,7 @@ export const CLIENT_CODE_REQ = '/.pagelogic.js';
 export const CLIENT_PROPS_SCRIPT_ID = 'pl-props';
 export const CLIENT_PROPS_SCRIPT_GLOBAL = '__pagelogicProps__';
 export const CLIENT_CODE_SCRIPT_ID = 'pl-client';
-export const CLIENT_DEFAULT_GLOBAL = 'pagelogic';
+export const CLIENT_DEFAULT_GLOBAL = 'logic';
 
 export const SRC_FOREACH_TAG = DIRECTIVE_TAG_PREFIX + 'FOREACH';
 export const SRC_FOREACH_ITEM_ATTR = SRC_LOGIC_ATTR_PREFIX + 'item';

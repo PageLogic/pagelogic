@@ -21,6 +21,7 @@ export abstract class Global extends Scope {
 
   abstract init(): void;
   abstract getElement(dom: number): Element;
+  abstract injectLogic(scope: Scope, e: Element): void;
   abstract cloneTemplateImpl(template: Element): Element;
 
   getLocalElements(root: Element, dom: number): Element[] {

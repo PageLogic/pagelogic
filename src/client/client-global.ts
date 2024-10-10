@@ -1,6 +1,7 @@
 import * as dom from '../html/dom';
 import * as k from '../page/consts';
 import { Global } from '../page/global';
+import { Scope } from '../page/scope';
 
 export class ClientGlobal extends Global {
   domIdElements!: dom.Element[];
@@ -16,6 +17,11 @@ export class ClientGlobal extends Global {
 
   override getElement(dom: number): dom.Element {
     return this.domIdElements[dom];
+  }
+
+  override injectLogic(scope: Scope, e: dom.Element): void {
+    // @ts-expect-error add DOM global
+    e[k.CLIENT_DEFAULT_GLOBAL] = scope.obj;
   }
 
   override cloneTemplateImpl(t: dom.Element): dom.Element {

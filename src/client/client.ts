@@ -10,4 +10,6 @@ const page = new RuntimePage(
   page => new ClientGlobal(page, document as unknown as dom.Document, props)
 );
 // @ts-expect-error add global var
-window[page.root.name ?? CLIENT_DEFAULT_GLOBAL] = page.root.obj;
+window[CLIENT_DEFAULT_GLOBAL] = page.root.obj;
+// @ts-expect-error add global var
+document[CLIENT_DEFAULT_GLOBAL] = page.root.obj;

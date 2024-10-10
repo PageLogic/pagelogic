@@ -40,7 +40,7 @@ describe('runtime/replication', () => {
     );
   });
 
-  // it('002', () => {
+  // it.only('002', () => {
   //   const { page } = load('<html><body><ul>'
   //     + '<:foreach :item=${["a", "b", "c"]}>'
   //     + '<li>Item ${item}</li>'
@@ -49,9 +49,9 @@ describe('runtime/replication', () => {
   //   assert.equal(
   //     page.global.doc.toString(),
   //     '<html data-pl="0"><head data-pl="1"></head><body data-pl="2"><ul>'
-  //     + '<li data-pl="5/4">Item <!---t0-->a<!----></li>'
-  //     + '<li data-pl="6/4">Item <!---t0-->b<!----></li>'
-  //     + '<li data-pl="7/4">Item <!---t0-->c<!----></li>'
+  //     + '<li data-pl="-4">Item <!---t0-->a<!----></li>'
+  //     + '<li data-pl="-4">Item <!---t0-->b<!----></li>'
+  //     + '<li data-pl="-4">Item <!---t0-->c<!----></li>'
   //     + '<template data-pl="3"><li data-pl="4">Item <!---t0--><!----></li></template>'
   //     + '</ul></body></html>'
   //   );

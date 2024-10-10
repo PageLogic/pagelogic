@@ -55,7 +55,7 @@ describe('client', () => {
         const res = await page.goto(`http://127.0.0.1:${server.port}${fname}`);
         assert.equal(res?.status(), 200);
         await page.waitForLoadState();
-        const globalName = k.DEF_SCOPE_NAMES['HTML'];
+        const globalName = k.CLIENT_DEFAULT_GLOBAL;
         const globalFound = await page.evaluate(`!!window.${globalName}`);
         assert.isTrue(globalFound);
         return page;

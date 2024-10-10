@@ -207,6 +207,8 @@ export class Scope {
       },
     });
 
+    // @ts-expect-error inject DOM logic object
+    this.e[k.CLIENT_DEFAULT_GLOBAL] = this.obj;
     return this;
   }
 

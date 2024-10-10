@@ -61,7 +61,7 @@ export class ForeachScope extends Scope {
     const offset = 0, length = vv.length;
     // add/update clones
     let ci = 0, di = offset;
-    for (; di < (offset + length - 1); ci++, di++) {
+    for (; di < (offset + length); ci++, di++) {
       if (ci < this.clones.length) {
         // update existing clone
         this.updateClone(this.clones[ci], vv[di]);
@@ -77,6 +77,9 @@ export class ForeachScope extends Scope {
   }
 
   addClone(data: unknown) {
+    console.log('addClone()', data);//tempdebug
+    const dom = this.global!.cloneTemplate(this.e);
+    this.e.parent!.insertBefore(dom, this.e);
     //TODO
   }
 
