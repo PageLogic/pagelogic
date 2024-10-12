@@ -20,9 +20,9 @@ export class RuntimePage extends Page {
       .setValues(props.values)
       .makeObj()
       .linkTo(p);
-    // if (s instanceof ForeachScope) {
-    //   return s;
-    // }
+    if (s instanceof ForeachScope) {
+      return s;
+    }
     props.children?.forEach(child => {
       const e = this.global.getElement(`${child.dom}`, s.e)!;
       this.load(child, s, e);

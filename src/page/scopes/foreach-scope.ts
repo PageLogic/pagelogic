@@ -1,27 +1,44 @@
+import { ELEMENT_NODE } from 'trillo/preprocessor/dom';
 import { Element } from '../../html/dom';
-import { RT_FOREACH_ITEM_VALUE } from '../consts';
+import { DOM_ID_ATTR, RT_FOREACH_ITEM_VALUE } from '../consts';
 import { Global } from '../global';
 import { Page } from '../page';
 import { ScopeProps } from '../props';
 import { Scope } from '../scope';
 
 export class ForeachScope extends Scope {
-  clones: Scope[];
+  clones!: Scope[];
 
   constructor(page: Page, props: ScopeProps, e: Element, global?: Global) {
     super(page, { ...props, type: 'foreach' }, e, global);
-    this.clones = [];
-    //TODO: recover existing clones from DOM
   }
 
   override linkTo(p: Scope, ref?: Scope): this {
     super.linkTo(p, ref);
-    //TODO: link clones
+    if (!this.clones) {
+      this.clones = [];
+      // recover existing clones from DOM
+      if (this.props.children) {
+        const clonesProps = this.props.children![0];
+        const clonesID = `-${clonesProps.dom}`;
+        const ee = this.e.parent?.childNodes.filter(n =>
+          n.nodeType === ELEMENT_NODE &&
+          (n as Element).getAttribute(DOM_ID_ATTR) === clonesID
+        ) as Element[];
+        ee.forEach(e => {
+          const clone = this.page.load(clonesProps, p, e);
+          this.clones.push(clone);
+        });
+      }
+    }
+    // link clones
+    this.clones.forEach(clone => clone.linkTo(p, this));
     return this;
   }
 
   override unlink(): this {
-    //TODO: unlink clones
+    // unlink clones
+    this.clones?.forEach(clone => clone.unlink());
     return super.unlink();
   }
 
@@ -79,7 +96,7 @@ export class ForeachScope extends Scope {
   addClone(data: unknown) {
     const dom = this.global!.cloneTemplate(this.e);
     this.e.parent!.insertBefore(dom, this.e);
-    const clone = this.page.load(this.children[0].props, this.parent!, dom);
+    const clone = this.page.load(this.props.children![0], this.parent!, dom);
     clone.obj[RT_FOREACH_ITEM_VALUE] = data;
     this.page.refresh(clone);
     this.clones.push(clone);

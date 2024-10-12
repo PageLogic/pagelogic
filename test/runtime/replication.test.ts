@@ -63,7 +63,7 @@ describe('runtime/replication', () => {
       + '<li>Item ${item}</li>'
       + '</:foreach>'
       + '</ul></body></html>');
-    root.list = ["a", "y", "z"];
+    root.list = ['a', 'y', 'z'];
     assert.equal(
       page.global.doc.toString(),
       '<html data-pl="0"><head data-pl="1"></head><body data-pl="2"><ul>'
@@ -81,7 +81,7 @@ describe('runtime/replication', () => {
       + '<li>Item ${item}</li>'
       + '</:foreach>'
       + '</ul></body></html>');
-    root.list = ["a", "b", "c", "x", "y"];
+    root.list = ['a', 'b', 'c', 'x', 'y'];
     assert.equal(
       page.global.doc.toString(),
       '<html data-pl="0"><head data-pl="1"></head><body data-pl="2"><ul>'
@@ -101,7 +101,7 @@ describe('runtime/replication', () => {
       + '<li>Item ${item}</li>'
       + '</:foreach>'
       + '</ul></body></html>');
-    root.list = ["b", "c"];
+    root.list = ['b', 'c'];
     assert.equal(
       page.global.doc.toString(),
       '<html data-pl="0"><head data-pl="1"></head><body data-pl="2"><ul>'
@@ -112,38 +112,149 @@ describe('runtime/replication', () => {
     );
   });
 
-  // it('006 rehydration', () => {
-  //   const { page } = load('<html :list=${["a", "b", "c"]}><body><ul>'
-  //     + '<:foreach :item=${list}>'
-  //     + '<li>Item ${item}</li>'
-  //     + '</:foreach>'
-  //     + '</ul></body></html>');
-  //   // assert.equal(
-  //   //   page.global.doc.toString(),
-  //   //   '<html data-pl="0"><head data-pl="1"></head><body data-pl="2"><ul>'
-  //   //   + '<li data-pl="-4">Item <!---t0-->a<!----></li>'
-  //   //   + '<li data-pl="-4">Item <!---t0-->b<!----></li>'
-  //   //   + '<li data-pl="-4">Item <!---t0-->c<!----></li>'
-  //   //   + '<template data-pl="3"><li data-pl="4">Item <!---t0--><!----></li></template>'
-  //   //   + '</ul></body></html>'
-  //   // );
+  it('006 rehydration', () => {
+    const { page } = load('<html :list=${["a", "b", "c"]}><body><ul>'
+      + '<:foreach :item=${list}>'
+      + '<li>Item ${item}</li>'
+      + '</:foreach>'
+      + '</ul></body></html>');
+    // reload
+    const doc2 = (page.global.doc as ServerDocument).clone(null, null);
+    const page2 = new RuntimePage(p => {
+      return new ServerGlobal(
+        p, doc2, page.global.pageProps
+      );
+    });
+    assert.equal(
+      page2.global.doc.toString(),
+      '<html data-pl="0"><head data-pl="1"></head><body data-pl="2"><ul>'
+      + '<li data-pl="-4">Item <!---t0-->a<!----></li>'
+      + '<li data-pl="-4">Item <!---t0-->b<!----></li>'
+      + '<li data-pl="-4">Item <!---t0-->c<!----></li>'
+      + '<template data-pl="3"><li data-pl="4">Item <!---t0--><!----></li></template>'
+      + '</ul></body></html>'
+    );
+  });
 
-  //   // reload
-  //   const doc2 = (page.global.doc as ServerDocument).clone(null, null);
-  //   const page2 = new RuntimePage(p => {
-  //     return new ServerGlobal(
-  //       p, doc2, page.global.pageProps
-  //     );
-  //   });
-  //   assert.equal(
-  //     page2.global.doc.toString(),
-  //     '<html data-pl="0"><head data-pl="1"></head><body data-pl="2"><ul>'
-  //     + '<li data-pl="-4">Item <!---t0-->a<!----></li>'
-  //     + '<li data-pl="-4">Item <!---t0-->b<!----></li>'
-  //     + '<li data-pl="-4">Item <!---t0-->c<!----></li>'
-  //     + '<template data-pl="3"><li data-pl="4">Item <!---t0--><!----></li></template>'
-  //     + '</ul></body></html>'
-  //   );
-  // });
+  it('101 rehydration - empty list', () => {
+    const { page } = load('<html :list=${[]}><body><ul>'
+      + '<:foreach :item=${list}>'
+      + '<li>Item ${item}</li>'
+      + '</:foreach>'
+      + '</ul></body></html>');
+    // reload
+    const doc2 = (page.global.doc as ServerDocument).clone(null, null);
+    const page2 = new RuntimePage(p => {
+      return new ServerGlobal(
+        p, doc2, page.global.pageProps
+      );
+    });
+    assert.equal(
+      page2.global.doc.toString(),
+      '<html data-pl="0"><head data-pl="1"></head><body data-pl="2"><ul>'
+      + '<template data-pl="3"><li data-pl="4">Item <!---t0--><!----></li></template>'
+      + '</ul></body></html>'
+    );
+  });
+
+  it('102 rehydration - initial list', () => {
+    const { page } = load('<html :list=${["a", "b", "c"]}><body><ul>'
+      + '<:foreach :item=${list}>'
+      + '<li>Item ${item}</li>'
+      + '</:foreach>'
+      + '</ul></body></html>');
+    // reload
+    const doc2 = (page.global.doc as ServerDocument).clone(null, null);
+    const page2 = new RuntimePage(p => {
+      return new ServerGlobal(
+        p, doc2, page.global.pageProps
+      );
+    });
+    assert.equal(
+      page2.global.doc.toString(),
+      '<html data-pl="0"><head data-pl="1"></head><body data-pl="2"><ul>'
+      + '<li data-pl="-4">Item <!---t0-->a<!----></li>'
+      + '<li data-pl="-4">Item <!---t0-->b<!----></li>'
+      + '<li data-pl="-4">Item <!---t0-->c<!----></li>'
+      + '<template data-pl="3"><li data-pl="4">Item <!---t0--><!----></li></template>'
+      + '</ul></body></html>'
+    );
+  });
+
+  it('103 rehydration - items update', () => {
+    const { page } = load('<html :list=${["a", "b", "c"]}><body><ul>'
+      + '<:foreach :item=${list}>'
+      + '<li>Item ${item}</li>'
+      + '</:foreach>'
+      + '</ul></body></html>');
+    // reload
+    const doc2 = (page.global.doc as ServerDocument).clone(null, null);
+    const page2 = new RuntimePage(p => {
+      return new ServerGlobal(
+        p, doc2, page.global.pageProps
+      );
+    });
+    page2.root.obj.list = ['a', 'y', 'z'];
+    assert.equal(
+      page2.global.doc.toString(),
+      '<html data-pl="0"><head data-pl="1"></head><body data-pl="2"><ul>'
+      + '<li data-pl="-4">Item <!---t0-->a<!----></li>'
+      + '<li data-pl="-4">Item <!---t0-->y<!----></li>'
+      + '<li data-pl="-4">Item <!---t0-->z<!----></li>'
+      + '<template data-pl="3"><li data-pl="4">Item <!---t0--><!----></li></template>'
+      + '</ul></body></html>'
+    );
+  });
+
+  it('104 rehydration - items addition', () => {
+    const { page } = load('<html :list=${["a", "b", "c"]}><body><ul>'
+      + '<:foreach :item=${list}>'
+      + '<li>Item ${item}</li>'
+      + '</:foreach>'
+      + '</ul></body></html>');
+    // reload
+    const doc2 = (page.global.doc as ServerDocument).clone(null, null);
+    const page2 = new RuntimePage(p => {
+      return new ServerGlobal(
+        p, doc2, page.global.pageProps
+      );
+    });
+    page2.root.obj.list = ['a', 'y', 'z', 'x', 'y'];
+    assert.equal(
+      page2.global.doc.toString(),
+      '<html data-pl="0"><head data-pl="1"></head><body data-pl="2"><ul>'
+      + '<li data-pl="-4">Item <!---t0-->a<!----></li>'
+      + '<li data-pl="-4">Item <!---t0-->y<!----></li>'
+      + '<li data-pl="-4">Item <!---t0-->z<!----></li>'
+      + '<li data-pl="-4">Item <!---t0-->x<!----></li>'
+      + '<li data-pl="-4">Item <!---t0-->y<!----></li>'
+      + '<template data-pl="3"><li data-pl="4">Item <!---t0--><!----></li></template>'
+      + '</ul></body></html>'
+    );
+  });
+
+  it('105 rehydration - items removal', () => {
+    const { page } = load('<html :list=${["a", "b", "c"]}><body><ul>'
+      + '<:foreach :item=${list}>'
+      + '<li>Item ${item}</li>'
+      + '</:foreach>'
+      + '</ul></body></html>');
+    // reload
+    const doc2 = (page.global.doc as ServerDocument).clone(null, null);
+    const page2 = new RuntimePage(p => {
+      return new ServerGlobal(
+        p, doc2, page.global.pageProps
+      );
+    });
+    page2.root.obj.list = ['b', 'c'];
+    assert.equal(
+      page2.global.doc.toString(),
+      '<html data-pl="0"><head data-pl="1"></head><body data-pl="2"><ul>'
+      + '<li data-pl="-4">Item <!---t0-->b<!----></li>'
+      + '<li data-pl="-4">Item <!---t0-->c<!----></li>'
+      + '<template data-pl="3"><li data-pl="4">Item <!---t0--><!----></li></template>'
+      + '</ul></body></html>'
+    );
+  });
 
 });
