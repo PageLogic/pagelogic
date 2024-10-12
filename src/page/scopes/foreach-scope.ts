@@ -16,12 +16,12 @@ export class ForeachScope extends Scope {
 
   override linkTo(p: Scope, ref?: Scope): this {
     super.linkTo(p, ref);
-    //TODO: unlink clones
+    //TODO: link clones
     return this;
   }
 
   override unlink(): this {
-    //TODO: link clones
+    //TODO: unlink clones
     return super.unlink();
   }
 

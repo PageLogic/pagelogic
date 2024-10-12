@@ -38,6 +38,13 @@ export class CompilerPage extends pg.Page {
         const id = this.scopes.length;
         e.setAttribute(k.DOM_ID_ATTR, `${id}`);
 
+        const name = this.getName(e);
+        if (name && s instanceof ForeachScope) {
+          this.errors.push(new PageError(
+            'error', 'foreach content cannot have a name', e.loc
+          ));
+        }
+
         s = this.newScope({ dom: id }, e).linkTo(s);
         s.name = k.DEF_SCOPE_NAMES[e.tagName];
         this.scopes.push(s);
@@ -48,7 +55,6 @@ export class CompilerPage extends pg.Page {
         if (s.props.type) {
           o.properties.push(astProperty('type', astLiteral(s.props.type, l), l));
         }
-        const name = this.getName(e);
         name && o.properties.push(astProperty('name', astLiteral(name, l), l));
 
         v = astObjectExpression(l);

@@ -4,6 +4,7 @@ import path from 'path';
 import { Browser, chromium, Page } from 'playwright';
 import * as k from '../../src/page/consts';
 import { Server } from '../../src/server/server';
+import { normalizeText } from '../../src/html/parser';
 
 process.env.NODE_ENV = 'test';
 
@@ -89,6 +90,14 @@ describe('client', () => {
         assert.deepEqual(messages, ['on-click: 1']);
       });
 
+      // it.only('/repl001', async () => {
+      //   const page = await goto('/repl001');
+      //   const html = await page.content();
+      //   assert.equal(
+      //     normalizeText(html),
+      //     normalizeText(``)
+      //   );
+      // });
     });
   }
 

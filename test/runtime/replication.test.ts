@@ -112,4 +112,38 @@ describe('runtime/replication', () => {
     );
   });
 
+  // it('006 rehydration', () => {
+  //   const { page } = load('<html :list=${["a", "b", "c"]}><body><ul>'
+  //     + '<:foreach :item=${list}>'
+  //     + '<li>Item ${item}</li>'
+  //     + '</:foreach>'
+  //     + '</ul></body></html>');
+  //   // assert.equal(
+  //   //   page.global.doc.toString(),
+  //   //   '<html data-pl="0"><head data-pl="1"></head><body data-pl="2"><ul>'
+  //   //   + '<li data-pl="-4">Item <!---t0-->a<!----></li>'
+  //   //   + '<li data-pl="-4">Item <!---t0-->b<!----></li>'
+  //   //   + '<li data-pl="-4">Item <!---t0-->c<!----></li>'
+  //   //   + '<template data-pl="3"><li data-pl="4">Item <!---t0--><!----></li></template>'
+  //   //   + '</ul></body></html>'
+  //   // );
+
+  //   // reload
+  //   const doc2 = (page.global.doc as ServerDocument).clone(null, null);
+  //   const page2 = new RuntimePage(p => {
+  //     return new ServerGlobal(
+  //       p, doc2, page.global.pageProps
+  //     );
+  //   });
+  //   assert.equal(
+  //     page2.global.doc.toString(),
+  //     '<html data-pl="0"><head data-pl="1"></head><body data-pl="2"><ul>'
+  //     + '<li data-pl="-4">Item <!---t0-->a<!----></li>'
+  //     + '<li data-pl="-4">Item <!---t0-->b<!----></li>'
+  //     + '<li data-pl="-4">Item <!---t0-->c<!----></li>'
+  //     + '<template data-pl="3"><li data-pl="4">Item <!---t0--><!----></li></template>'
+  //     + '</ul></body></html>'
+  //   );
+  // });
+
 });

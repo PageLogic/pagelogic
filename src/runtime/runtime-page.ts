@@ -15,12 +15,14 @@ export class RuntimePage extends Page {
   }
 
   override load(props: ScopeProps, p: Scope, e: dom.Element): Scope {
-    // const e = this.global.getElement(`${props.dom}`, p.e)!;
     const s = this.newScope(props, e)
       .setName(props.name)
       .setValues(props.values)
       .makeObj()
       .linkTo(p);
+    // if (s instanceof ForeachScope) {
+    //   return s;
+    // }
     props.children?.forEach(child => {
       const e = this.global.getElement(`${child.dom}`, s.e)!;
       this.load(child, s, e);
