@@ -91,7 +91,6 @@ export class ForeachScope extends Scope {
 
   removeClone(i: number) {
     const clone = this.clones.splice(i, 1)[0];
-    // clone.unlink()
-    //TODO
+    clone.unlink();
   }
 }

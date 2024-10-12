@@ -26,9 +26,9 @@ function load(html: string): { page: Page, root: ScopeObj, doc: ServerDocument }
 
 describe('runtime/replication', () => {
 
-  it('001', () => {
-    const { doc } = load('<html><body><ul>'
-      + '<:foreach :item=${[]}>'
+  it('001 empty list', () => {
+    const { doc } = load('<html :list=${[]}><body><ul>'
+      + '<:foreach :item=${list}>'
       + '<li>Item ${item}</li>'
       + '</:foreach>'
       + '</ul></body></html>');
@@ -40,9 +40,9 @@ describe('runtime/replication', () => {
     );
   });
 
-  it('002', () => {
-    const { page } = load('<html><body><ul>'
-      + '<:foreach :item=${["a", "b", "c"]}>'
+  it('002 initial list', () => {
+    const { page } = load('<html :list=${["a", "b", "c"]}><body><ul>'
+      + '<:foreach :item=${list}>'
       + '<li>Item ${item}</li>'
       + '</:foreach>'
       + '</ul></body></html>');
@@ -50,6 +50,61 @@ describe('runtime/replication', () => {
       page.global.doc.toString(),
       '<html data-pl="0"><head data-pl="1"></head><body data-pl="2"><ul>'
       + '<li data-pl="-4">Item <!---t0-->a<!----></li>'
+      + '<li data-pl="-4">Item <!---t0-->b<!----></li>'
+      + '<li data-pl="-4">Item <!---t0-->c<!----></li>'
+      + '<template data-pl="3"><li data-pl="4">Item <!---t0--><!----></li></template>'
+      + '</ul></body></html>'
+    );
+  });
+
+  it('003 items update', () => {
+    const { page, root } = load('<html :list=${["a", "b", "c"]}><body><ul>'
+      + '<:foreach :item=${list}>'
+      + '<li>Item ${item}</li>'
+      + '</:foreach>'
+      + '</ul></body></html>');
+    root.list = ["a", "y", "z"];
+    assert.equal(
+      page.global.doc.toString(),
+      '<html data-pl="0"><head data-pl="1"></head><body data-pl="2"><ul>'
+      + '<li data-pl="-4">Item <!---t0-->a<!----></li>'
+      + '<li data-pl="-4">Item <!---t0-->y<!----></li>'
+      + '<li data-pl="-4">Item <!---t0-->z<!----></li>'
+      + '<template data-pl="3"><li data-pl="4">Item <!---t0--><!----></li></template>'
+      + '</ul></body></html>'
+    );
+  });
+
+  it('004 items addition', () => {
+    const { page, root } = load('<html :list=${["a", "b", "c"]}><body><ul>'
+      + '<:foreach :item=${list}>'
+      + '<li>Item ${item}</li>'
+      + '</:foreach>'
+      + '</ul></body></html>');
+    root.list = ["a", "b", "c", "x", "y"];
+    assert.equal(
+      page.global.doc.toString(),
+      '<html data-pl="0"><head data-pl="1"></head><body data-pl="2"><ul>'
+      + '<li data-pl="-4">Item <!---t0-->a<!----></li>'
+      + '<li data-pl="-4">Item <!---t0-->b<!----></li>'
+      + '<li data-pl="-4">Item <!---t0-->c<!----></li>'
+      + '<li data-pl="-4">Item <!---t0-->x<!----></li>'
+      + '<li data-pl="-4">Item <!---t0-->y<!----></li>'
+      + '<template data-pl="3"><li data-pl="4">Item <!---t0--><!----></li></template>'
+      + '</ul></body></html>'
+    );
+  });
+
+  it('005 items removal', () => {
+    const { page, root } = load('<html :list=${["a", "b", "c"]}><body><ul>'
+      + '<:foreach :item=${list}>'
+      + '<li>Item ${item}</li>'
+      + '</:foreach>'
+      + '</ul></body></html>');
+    root.list = ["b", "c"];
+    assert.equal(
+      page.global.doc.toString(),
+      '<html data-pl="0"><head data-pl="1"></head><body data-pl="2"><ul>'
       + '<li data-pl="-4">Item <!---t0-->b<!----></li>'
       + '<li data-pl="-4">Item <!---t0-->c<!----></li>'
       + '<template data-pl="3"><li data-pl="4">Item <!---t0--><!----></li></template>'
