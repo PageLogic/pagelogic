@@ -13,7 +13,7 @@ export class RuntimePage extends Page {
   }
 
   override load(props: ScopeProps, p: Scope): Scope {
-    const e = this.global.getElement(props.dom, p.e)!;
+    const e = this.global.getElement(`${props.dom}`, p.e)!;
     const s = this.newScope(props, e)
       .setName(props.name)
       .setValues(props.values)

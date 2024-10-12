@@ -22,11 +22,11 @@ export abstract class Global extends Scope {
   abstract init(): void;
   abstract cloneTemplateImpl(template: Element): Element;
 
-  getElement(id: number, root: Element): Element | null {
+  getElement(id: string, root: Element): Element | null {
     const v = root.nodeType === ELEMENT_NODE
       ? root.getAttribute(k.DOM_ID_ATTR)
       : null;
-    if (v !== null && Math.abs(parseInt(v)) === id) {
+    if (v === id) {
       return root;
     }
     let ret = null;
@@ -42,15 +42,14 @@ export abstract class Global extends Scope {
     return null;
   }
 
-  getLocalElements(root: Element, dom: number): Element[] {
+  getLocalElements(root: Element, id: string): Element[] {
     const ret = new Array<Element>();
-    const s = `${dom}`;
     function f(e: Element) {
       e.childNodes.forEach(n => {
         if (n.nodeType !== ELEMENT_NODE) {
           return;
         }
-        if ((n as Element).getAttribute(k.DOM_ID_ATTR) === s) {
+        if ((n as Element).getAttribute(k.DOM_ID_ATTR) === id) {
           ret.push(e);
           return;
         }
@@ -62,6 +61,7 @@ export abstract class Global extends Scope {
   }
 
   cloneTemplate(template: Element): Element {
+    const ret = this.cloneTemplateImpl(template);
     function fixDomIds(e: Element) {
       const id = e.getAttribute(k.DOM_ID_ATTR);
       id && e.setAttribute(k.DOM_ID_ATTR, `${-parseInt(id)}`);
@@ -70,7 +70,8 @@ export abstract class Global extends Scope {
       });
       return e;
     }
-    return fixDomIds(this.cloneTemplateImpl(template));
+    fixDomIds(ret);
+    return ret;
   }
 
   override makeObj(): this {
