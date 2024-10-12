@@ -77,10 +77,10 @@ export class ForeachScope extends Scope {
   }
 
   addClone(data: unknown) {
-    console.log('addClone()', data);//tempdebug
     const dom = this.global!.cloneTemplate(this.e);
     this.e.parent!.insertBefore(dom, this.e);
-    const clone = this.page.load(this.children[0].props, this.parent!);
+    const clone = this.page.load(this.children[0].props, this.parent!, dom);
+    clone.obj[RT_FOREACH_ITEM_VALUE] = data;
     this.page.refresh(clone);
     this.clones.push(clone);
   }

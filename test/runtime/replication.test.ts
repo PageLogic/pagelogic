@@ -40,21 +40,21 @@ describe('runtime/replication', () => {
     );
   });
 
-  // it.only('002', () => {
-  //   const { page } = load('<html><body><ul>'
-  //     + '<:foreach :item=${["a", "b", "c"]}>'
-  //     + '<li>Item ${item}</li>'
-  //     + '</:foreach>'
-  //     + '</ul></body></html>');
-  //   assert.equal(
-  //     page.global.doc.toString(),
-  //     '<html data-pl="0"><head data-pl="1"></head><body data-pl="2"><ul>'
-  //     + '<li data-pl="-4">Item <!---t0-->a<!----></li>'
-  //     + '<li data-pl="-4">Item <!---t0-->b<!----></li>'
-  //     + '<li data-pl="-4">Item <!---t0-->c<!----></li>'
-  //     + '<template data-pl="3"><li data-pl="4">Item <!---t0--><!----></li></template>'
-  //     + '</ul></body></html>'
-  //   );
-  // });
+  it('002', () => {
+    const { page } = load('<html><body><ul>'
+      + '<:foreach :item=${["a", "b", "c"]}>'
+      + '<li>Item ${item}</li>'
+      + '</:foreach>'
+      + '</ul></body></html>');
+    assert.equal(
+      page.global.doc.toString(),
+      '<html data-pl="0"><head data-pl="1"></head><body data-pl="2"><ul>'
+      + '<li data-pl="-4">Item <!---t0-->a<!----></li>'
+      + '<li data-pl="-4">Item <!---t0-->b<!----></li>'
+      + '<li data-pl="-4">Item <!---t0-->c<!----></li>'
+      + '<template data-pl="3"><li data-pl="4">Item <!---t0--><!----></li></template>'
+      + '</ul></body></html>'
+    );
+  });
 
 });

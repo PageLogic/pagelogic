@@ -20,7 +20,7 @@ function load(html: string): { page: Page, root: ScopeObj } {
   const page = new RuntimePage(page => {
     return new ServerGlobal(
       page, doc, comp.global.props as unknown as PageProps
-    )
+    );
   });
   return { page, root: page.root.obj };
 }

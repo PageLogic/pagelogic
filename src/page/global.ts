@@ -42,23 +42,23 @@ export abstract class Global extends Scope {
     return null;
   }
 
-  getLocalElements(root: Element, id: string): Element[] {
-    const ret = new Array<Element>();
-    function f(e: Element) {
-      e.childNodes.forEach(n => {
-        if (n.nodeType !== ELEMENT_NODE) {
-          return;
-        }
-        if ((n as Element).getAttribute(k.DOM_ID_ATTR) === id) {
-          ret.push(e);
-          return;
-        }
-        f(n as Element);
-      });
-    }
-    f(root);
-    return ret;
-  }
+  // getLocalElements(root: Element, id: string): Element[] {
+  //   const ret = new Array<Element>();
+  //   function f(e: Element) {
+  //     e.childNodes.forEach(n => {
+  //       if (n.nodeType !== ELEMENT_NODE) {
+  //         return;
+  //       }
+  //       if ((n as Element).getAttribute(k.DOM_ID_ATTR) === id) {
+  //         ret.push(e);
+  //         return;
+  //       }
+  //       f(n as Element);
+  //     });
+  //   }
+  //   f(root);
+  //   return ret;
+  // }
 
   cloneTemplate(template: Element): Element {
     const ret = this.cloneTemplateImpl(template);

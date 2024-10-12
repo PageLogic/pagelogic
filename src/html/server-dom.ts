@@ -1,5 +1,4 @@
 import * as acorn from 'acorn';
-import { DOM_ID_ATTR } from '../page/consts';
 import {
   Attribute, Comment,
   DIRECTIVE_TAG_PREFIX,

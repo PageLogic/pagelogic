@@ -1,5 +1,4 @@
 import * as dom from '../html/dom';
-import * as k from '../page/consts';
 import { Global } from '../page/global';
 
 export class ClientGlobal extends Global {

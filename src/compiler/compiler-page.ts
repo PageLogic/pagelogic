@@ -80,7 +80,7 @@ export class CompilerPage extends pg.Page {
     !this.hasErrors() && resolveValueDependencies(this);
   }
 
-  override load(props: ScopeProps, p: Scope): Scope {
+  override load(props: ScopeProps, p: Scope, _: dom.Element): Scope {
     // nop
     return p;
   }
