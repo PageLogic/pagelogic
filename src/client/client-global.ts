@@ -8,7 +8,7 @@ export class ClientGlobal extends Global {
   }
 
   override cloneTemplateImpl(t: dom.Element): dom.Element {
-    return (t as unknown as HTMLTemplateElement).content
+    return (t as unknown as HTMLTemplateElement).content.children[0]
       .cloneNode(true) as unknown as dom.Element;
   }
 }

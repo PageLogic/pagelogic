@@ -21,7 +21,7 @@ export class ForeachScope extends Scope {
       if (this.props.children) {
         const clonesProps = this.props.children![0];
         const clonesID = `-${clonesProps.dom}`;
-        const ee = this.e.parent?.childNodes.filter(n =>
+        const ee = [...this.e.parentElement?.childNodes ?? []].filter(n =>
           n.nodeType === ELEMENT_NODE &&
           (n as Element).getAttribute(DOM_ID_ATTR) === clonesID
         ) as Element[];
@@ -95,7 +95,7 @@ export class ForeachScope extends Scope {
 
   addClone(data: unknown) {
     const dom = this.global!.cloneTemplate(this.e);
-    this.e.parent!.insertBefore(dom, this.e);
+    this.e.parentElement!.insertBefore(dom, this.e);
     const clone = this.page.load(this.props.children![0], this.parent!, dom);
     clone.obj[RT_FOREACH_ITEM_VALUE] = data;
     this.page.refresh(clone);

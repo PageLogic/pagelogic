@@ -20,7 +20,7 @@ export interface SourceLocation extends acorn.SourceLocation {
 
 export abstract class ServerNode implements Node {
   ownerDocument: ServerDocument | null;
-  parent: ServerElement | null;
+  parentElement: ServerElement | null;
   nodeType: number;
   loc: SourceLocation;
 
@@ -30,18 +30,18 @@ export abstract class ServerNode implements Node {
     loc: SourceLocation
   ) {
     this.ownerDocument = doc;
-    this.parent = null;
+    this.parentElement = null;
     this.nodeType = type;
     this.loc = loc;
   }
 
   unlink(): this {
-    this.parent?.removeChild(this);
+    this.parentElement?.removeChild(this);
     return this;
   }
 
   get nextSibling(): Node | null {
-    const nn = this.parent?.childNodes;
+    const nn = this.parentElement?.childNodes;
     const i = nn ? nn.indexOf(this) : -1;
     if (i >= 0 && (i + 1) < (nn ? nn.length : 0)) {
       return nn![i + 1];
@@ -220,14 +220,14 @@ export class ServerElement extends ServerNode implements Element {
     let i = ref ? this.childNodes.indexOf(ref) : -1;
     i = i < 0 ? this.childNodes.length : i;
     this.childNodes.splice(i, 0, n);
-    n.parent = this;
+    n.parentElement = this;
     return n;
   }
 
   removeChild(n: Node) {
     const i = this.childNodes.indexOf(n);
     i >= 0 && this.childNodes.splice(i, 1);
-    n.parent = null;
+    n.parentElement = null;
   }
 
   getAttributeNames(): Set<string> {

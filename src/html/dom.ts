@@ -10,7 +10,7 @@ export const NodeType = {
 
 export interface Node {
   ownerDocument: Document | null;
-  parent: Element | null;
+  parentElement: Element | null;
   nodeType: unknown;
   loc: unknown;
 

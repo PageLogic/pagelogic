@@ -50,7 +50,7 @@ export class Scope {
     i = i < 0 ? p.children.length : i;
     p.children.splice(i, 0, this);
     this.parent = p;
-    !this.e.parent
+    !this.e.parentElement
       && this.e.tagName !== 'HTML'
       && p.e.insertBefore(this.e, ref?.e ?? null);
     if (this.name) {

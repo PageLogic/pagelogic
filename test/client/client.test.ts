@@ -4,6 +4,7 @@ import path from 'path';
 import { Browser, chromium, Page } from 'playwright';
 import * as k from '../../src/page/consts';
 import { Server } from '../../src/server/server';
+import { normalizeText } from 'trillo/preprocessor/util';
 
 process.env.NODE_ENV = 'test';
 

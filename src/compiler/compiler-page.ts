@@ -21,7 +21,7 @@ import { qualifyPageIdentifiers } from './ast/qualifier';
 import { resolveValueDependencies } from './ast/resolver';
 import { dashToCamel, encodeEventName } from './util';
 
-//TODO: prevent classic functions ${} expressions (error if there are)
+//TODO: prevent classic functions in ${} expressions (error if there are)
 export class CompilerPage extends pg.Page {
   ast!: ObjectExpression;
   scopes!: Array<Scope>;
@@ -107,13 +107,13 @@ export class CompilerPage extends pg.Page {
     const l = e.loc as SourceLocation;
     e.tagName = 'TEMPLATE';
     const ret = new ForeachScope(this, props, e, this.global);
-    const ee = e.childNodes.filter(n => n.nodeType === ELEMENT_NODE);
+    const ee = [...e.childNodes].filter(n => n.nodeType === ELEMENT_NODE);
     if (ee.length !== 1) {
       this.errors.push(new PageError(
         'error', '<:foreach> should contain a single element', l
       ));
     }
-    const nn = e.childNodes.filter(n => n.nodeType !== ELEMENT_NODE);
+    const nn = [...e.childNodes].filter(n => n.nodeType !== ELEMENT_NODE);
     while (nn.length) {
       nn.pop()?.unlink();
     }
